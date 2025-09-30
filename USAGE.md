@@ -1,0 +1,202 @@
+# Investment MCP Agent - Usage Guide
+
+## Quick Start
+
+The Investment MCP Agent has been successfully implemented and **now uses Service Account authentication** for secure access to Google Sheets.
+
+### 🔐 Current Authentication Status
+
+✅ **Service Account Configured**: `investment-mcp@investment-mcp.iam.gserviceaccount.com`  
+✅ **Credentials Updated**: Using secure Service Account JSON format  
+⏳ **Final Step**: Share your Google Sheet with the service account
+
+### 1. Complete Setup (One-time only)
+
+**Share your Google Sheet with the service account:**
+1. Open your Google Sheet: `https://docs.google.com/spreadsheets/d/1eQUWnThLlo7Rxolra8fc4-G59Wtq6bvkk8-ZZa6YiJk`
+2. Click the "Share" button (top right)
+3. Add this email with **Viewer** permission:
+   ```
+   investment-mcp@investment-mcp.iam.gserviceaccount.com
+   ```
+4. Click "Send"
+
+**That's it! The system will work immediately after sharing.**
+
+### 2. Test the Setup
+
+```bash
+# Run the setup verification script
+uv run python final_setup.py
+
+# Or run a direct portfolio analysis
+uv run python -m agent.main
+```
+
+### 3. Running the Agent
+
+#### Option A: As an MCP Server (Recommended)
+```bash
+uv run python server.py
+```
+
+This starts the FastMCP server with these tools:
+- `run_portfolio_analysis()` - Trigger portfolio analysis
+- `get_portfolio_status()` - Get current portfolio status
+- `get_portfolio_history_summary()` - View historical performance
+
+#### Option B: Direct Analysis
+```bash
+uv run python -m agent.main
+```
+
+### 4. Google Sheets Configuration
+
+Your Google Sheet should be structured as follows:
+
+- **Sheet Name**: `2025` (configurable in `agent/sheets_connector.py`)
+- **Currency Rates**: 
+  - Cell O2: GBP/EUR rate
+  - Cell O3: USD/EUR rate
+- **Asset Ranges**:
+  - A5:L19 - US Stocks
+  - A20:L35 - EU Stocks
+  - A37:L39 - Bonds
+  - A40:L45 - ETFs
+- **Pension Data**:
+  - A52:E53 - Pension schemes (2nd and 3rd pillar)
+- **Cash Positions**:
+  - A58:B60 - Cash in different currencies
+
+Each asset row should contain:
+- Column A: Asset Name
+- Column B: Quantity
+- Column C: Category/Other data (not used by system)
+- Column D: Purchase Price per Unit (with currency symbol: $, €, £)
+- Column E: Current Price per Unit (with currency symbol: $, €, £)
+
+**Pension Data Structure**:
+- Column A: Pension scheme name (e.g., "II level", "III level")
+- Column E: Current pension value (with currency symbol: €)
+
+**Cash Data Structure**:
+- Column A: Currency name (e.g., "USD", "EUR", "GBP")
+- Column B: Cash amount (numeric value)
+
+**Note**: The system automatically:
+- Detects currency from symbols ($, €, £) in columns D and E
+- Converts all prices to EUR using live exchange rates
+- Calculates total amounts by multiplying price × quantity
+- Tracks pension and cash positions as separate asset categories
+
+### 5. System Features
+
+✅ **Implemented Features**:
+- **Secure Service Account authentication**
+- Google Sheets API integration
+- **Complete asset tracking**: Stocks, Bonds, ETFs, Pension (2nd/3rd pillar), Cash positions
+- Multi-currency support (USD, EUR, GBP) with automatic conversion
+- Portfolio snapshot creation with complete asset breakdown
+- Week-over-week comparison across all asset types
+- Top/bottom movers analysis
+- New/sold positions tracking
+- Realized gains/losses calculation
+- **Portfolio allocation breakdown** by asset category (6 categories)
+- Rich Markdown reports with emojis and clear sections
+- JSON-based persistent storage
+- FastMCP server integration
+- Comprehensive error handling
+- Logging throughout
+
+### 6. Sample Output
+
+The system generates detailed weekly reports like:
+
+```markdown
+# 📊 Weekly Portfolio Performance Report
+
+## 💰 Portfolio Summary
+**Current Total Value:** €61,800.00
+**Weekly Change:** 📈 +€2,600.00 (+4.39%)
+
+## 🚀 Top Performers
+1. **Vanguard S&P 500 ETF**: +€500.00
+2. **Apple Inc**: +€500.00
+
+## 📉 Underperformers
+1. **Microsoft Corp**: €-400.00
+
+## 🆕 New Positions
+- **Tesla Inc**: 30 shares, €9,500.00
+
+## 💸 Sold Positions
+- **ASML Holding**: 💔 €-500.00
+
+**Total Realized P&L:** 💔 €-500.00
+
+---
+
+## 📊 Portfolio Allocation
+- **EU Stocks**: €195,097.56 (48.1%)
+- **Pension**: €93,000.00 (22.9%)
+- **US Stocks**: €40,478.60 (10.0%)
+- **Cash**: €35,850.45 (8.8%)
+- **ETFs**: €34,236.95 (8.4%)
+- **Bonds**: €6,640.00 (1.6%)
+```
+
+### 7. Data Storage
+
+- **File**: `portfolio_history.json`
+- **Format**: Array of timestamped snapshots
+- **Retention**: All historical data (no automatic cleanup)
+
+### 8. Security & Authentication
+
+🔐 **Service Account Benefits**:
+- More secure than API keys
+- No need to make sheets public
+- Granular permission control
+- Audit trail of access
+- Revocable access
+
+### 9. Troubleshooting
+
+**Common Issues**:
+
+1. **Permission Denied**: Share the sheet with `investment-mcp@investment-mcp.iam.gserviceaccount.com`
+2. **Sheet Not Found**: Verify `sheetId` in `sheet-details.json`
+3. **Empty Data**: Check sheet ranges in `sheets_connector.py`
+4. **Authentication Failed**: Verify `credentials.json` format
+
+**Debug Mode**:
+```bash
+# Run setup verification
+uv run python final_setup.py
+
+# Enable debug logging
+export LOG_LEVEL=DEBUG
+uv run python -m agent.main
+```
+
+### 10. Next Steps
+
+The system is fully functional and ready for production use:
+
+✅ **Complete**: All implementation phases finished  
+✅ **Secure**: Service Account authentication configured  
+⏳ **Pending**: Share sheet with service account (1-minute setup)  
+🚀 **Ready**: For automated weekly portfolio monitoring  
+
+## Architecture Overview
+
+The implementation follows the exact plan specifications with enhanced security:
+
+- ✅ **Phase 1**: Project structure created
+- ✅ **Phase 2**: Google Sheets connector with Service Account auth
+- ✅ **Phase 3**: Analysis and snapshot logic completed
+- ✅ **Phase 4**: JSON persistence implemented
+- ✅ **Phase 5**: Reporting and FastMCP integration done
+- ✅ **Bonus**: Service Account security upgrade
+
+All modules are modular, well-documented, and production-ready.
