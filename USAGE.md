@@ -2,32 +2,45 @@
 
 ## Quick Start
 
-The Investment MCP Agent has been successfully implemented and **now uses Service Account authentication** for secure access to Google Sheets.
+The Investment MCP Agent has been successfully implemented and **uses macOS Keychain for secure credential storage**.
 
 ### 🔐 Current Authentication Status
 
-✅ **Service Account Configured**: `investment-mcp@investment-mcp.iam.gserviceaccount.com`  
-✅ **Credentials Updated**: Using secure Service Account JSON format  
-⏳ **Final Step**: Share your Google Sheet with the service account
+✅ **Keychain Integration**: Credentials loaded from macOS Keychain  
+✅ **Service Account Configured**: Uses secure Service Account authentication  
+⏳ **Setup Required**: Store Service Account JSON in Keychain (one-time setup)
 
-### 1. Complete Setup (One-time only)
+### 1. Keychain Credential Setup (Required)
 
-**Share your Google Sheet with the service account:**
-1. Open your Google Sheet: `https://docs.google.com/spreadsheets/d/1eQUWnThLlo7Rxolra8fc4-G59Wtq6bvkk8-ZZa6YiJk`
-2. Click the "Share" button (top right)
-3. Add this email with **Viewer** permission:
-   ```
-   investment-mcp@investment-mcp.iam.gserviceaccount.com
-   ```
-4. Click "Send"
+**Store your Google Cloud Service Account credentials in Keychain:**
 
-**That's it! The system will work immediately after sharing.**
+```bash
+# Replace 'your-service-account.json' with your actual file path
+security add-generic-password \
+  -a "mcp-portfolio-agent" \
+  -s "google-sheets-credentials" \
+  -w "$(cat your-service-account.json | xxd -p | tr -d '\n')" \
+  -T ""
+```
 
-### 2. Test the Setup
+**Verify the setup:**
+```bash
+# This should return your hex-encoded credentials
+security find-generic-password \
+  -a "mcp-portfolio-agent" \
+  -s "google-sheets-credentials" \
+  -w
+```
+
+### 2. Share Google Sheet with Service Account
+
+After storing credentials in Keychain, share your Google Sheet with the service account email found in your JSON file (typically something like `investment-mcp@your-project.iam.gserviceaccount.com`).
+
+### 3. Test the Setup
 
 ```bash
 # Run the setup verification script
-uv run python final_setup.py
+uv run python check_setup.py
 
 # Or run a direct portfolio analysis
 uv run python -m agent.main
@@ -164,22 +177,66 @@ The system generates detailed weekly reports like:
 
 **Common Issues**:
 
-1. **Permission Denied**: Share the sheet with `investment-mcp@investment-mcp.iam.gserviceaccount.com`
-2. **Sheet Not Found**: Verify `sheetId` in `sheet-details.json`
-3. **Empty Data**: Check sheet ranges in `sheets_connector.py`
-4. **Authentication Failed**: Verify `credentials.json` format
+1. **Keychain Access Denied**: Ensure the credentials are properly stored in Keychain
+   ```bash
+   # Verify credentials exist in keychain
+   security find-generic-password \
+     -a "mcp-portfolio-agent" \
+     -s "google-sheets-credentials" \
+     -w
+   ```
+
+2. **Permission Denied**: Ensure your sheet is shared with the service account email
+   - Find your service account email in the keychain credentials
+   - Share the Google Sheet with this email (Viewer permission)
+
+3. **Sheet Not Found**: Verify `sheetId` in `sheet-details.json`
+
+4. **Empty Data**: Check sheet ranges in `sheets_connector.py`
 
 **Debug Mode**:
 ```bash
+# Test keychain credential access
+security find-generic-password \
+  -a "mcp-portfolio-agent" \
+  -s "google-sheets-credentials" \
+  -w
+
 # Run setup verification
-uv run python final_setup.py
+uv run python check_setup.py
 
 # Enable debug logging
 export LOG_LEVEL=DEBUG
 uv run python -m agent.main
 ```
 
-### 10. Next Steps
+**Keychain Setup Command** (if credentials missing):
+```bash
+# Store service account JSON in keychain
+security add-generic-password \
+  -a "mcp-portfolio-agent" \
+  -s "google-sheets-credentials" \
+  -w "$(cat your-service-account.json | xxd -p | tr -d '\n')" \
+  -T ""
+```
+
+### 10. Security & Credentials
+
+🔐 **Keychain Integration**:
+- Service Account credentials stored securely in macOS Keychain
+- No plain-text credential files in the repository
+- Hex-encoded storage for additional security
+- Automatic credential retrieval during runtime
+
+**Security Benefits**:
+- Credentials never stored in plain text files
+- No risk of accidental credential commits to version control
+- Leverages macOS security infrastructure
+- Granular permission control via Service Account
+- Audit trail of access
+- Revocable access
+
+### 11. Next Steps
 
 The system is fully functional and ready for production use:
 

@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
 Setup verification and status check for Investment MCP Agent.
-Run this script to verify your configuration and test the system.
+Run this script to verify your keychain configuration and test the system.
 """
 
 import json
 import sys
 
 def check_credentials():
-    """Check credentials configuration."""
+    """Check keychain credentials configuration."""
     try:
-        with open('credentials.json', 'r') as f:
-            credentials = json.load(f)
+        from agent.sheets_connector import load_credentials_from_keychain
+        
+        credentials = load_credentials_from_keychain()
         
         if credentials.get('type') == 'service_account':
             email = credentials.get('client_email')
@@ -20,10 +21,16 @@ def check_credentials():
             print(f"📋 Project: {project}")
             return email
         else:
-            print("❌ Invalid credentials format")
+            print("❌ Invalid credentials format in keychain")
             return None
     except Exception as e:
-        print(f"❌ Credentials error: {e}")
+        print(f"❌ Keychain credentials error: {e}")
+        print("💡 Run this command to store credentials:")
+        print("   security add-generic-password \\")
+        print("     -a 'mcp-portfolio-agent' \\")
+        print("     -s 'google-sheets-credentials' \\")
+        print("     -w \"$(cat your-service-account.json | xxd -p | tr -d '\\n')\" \\")
+        print("     -T \"\"")
         return None
 
 def check_sheet_config():
@@ -66,7 +73,7 @@ if __name__ == "__main__":
     print("🔍 Investment MCP Agent - System Check")
     print("=" * 45)
     
-    print("\n1. Checking credentials...")
+    print("\n1. Checking keychain credentials...")
     service_email = check_credentials()
     
     print("\n2. Checking sheet configuration...")
@@ -82,5 +89,7 @@ if __name__ == "__main__":
             print(f"🔗 Sheet URL: https://docs.google.com/spreadsheets/d/{sheet_id}")
     else:
         print(f"\n❌ Configuration incomplete")
+        if not service_email:
+            print("🔐 Store Service Account credentials in Keychain first")
     
     print("=" * 45)
