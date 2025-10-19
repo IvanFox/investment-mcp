@@ -122,6 +122,92 @@ def get_portfolio_history_summary() -> str:
         return error_msg
 
 
+@mcp.tool()
+def get_upcoming_events() -> str:
+    """
+    Get upcoming dividend payouts and earnings reports for portfolio stocks.
+    
+    Returns upcoming events within the next 2 months, sorted chronologically.
+    Events are fetched from Alpha Vantage API and matched against portfolio stocks
+    using the ticker_mapping.json file.
+    
+    Returns:
+        str: Formatted list of upcoming events or error message
+    """
+    try:
+        from . import events_tracker
+        
+        logger.info("Fetching upcoming events for portfolio...")
+        
+        raw_data = sheets_connector.fetch_portfolio_data()
+        normalized_data = sheets_connector.parse_and_normalize_data(raw_data)
+        
+        result = events_tracker.get_portfolio_upcoming_events(normalized_data)
+        
+        if not result.get("success", False):
+            if result.get("unmapped_stocks"):
+                error_lines = [result.get("error", "Error")]
+                error_lines.extend(result.get("unmapped_stocks", []))
+                error_lines.append("")
+                error_lines.append(result.get("action", ""))
+                return "\n".join(error_lines)
+            else:
+                return result.get("error", "Unknown error occurred")
+        
+        events = result.get("events", [])
+        
+        if not events:
+            return """📅 Upcoming Events
+
+No upcoming dividend payouts or earnings reports found within the next 2 months for your portfolio stocks.
+
+**Note:** Ensure that:
+1. Your Alpha Vantage API key is properly configured
+2. All portfolio stocks are mapped in ticker_mapping.json
+3. Your stocks are covered by Alpha Vantage API"""
+        
+        output_lines = ["📅 Upcoming Events (Next 2 Months)", "", ""]
+        
+        for event in events:
+            event_type = event.get("type", "")
+            ticker = event.get("ticker", "")
+            company = event.get("company_name", "")
+            date = event.get("date", "")
+            days_until = event.get("days_until", 0)
+            
+            output_lines.append(f"**{event_type}**")
+            output_lines.append(f"- Ticker: {ticker}")
+            output_lines.append(f"- Company: {company}")
+            output_lines.append(f"- Date: {date} ({days_until} days)")
+            
+            if event_type == "Earnings Report":
+                estimate = event.get("estimate")
+                if estimate:
+                    output_lines.append(f"- Estimate: {estimate}")
+            elif event_type == "Dividend Payout":
+                amount = event.get("amount")
+                payment_date = event.get("payment_date")
+                if amount:
+                    output_lines.append(f"- Amount: {amount}")
+                if payment_date:
+                    output_lines.append(f"- Payment Date: {payment_date}")
+            
+            output_lines.append("")
+        
+        output_lines.append(f"**Summary:**")
+        output_lines.append(f"- Total Events: {result.get('total_events', 0)}")
+        output_lines.append(f"- Earnings Reports: {result.get('earnings_count', 0)}")
+        output_lines.append(f"- Dividend Payouts: {result.get('dividends_count', 0)}")
+        output_lines.append(f"- Last Updated: {result.get('as_of', 'Unknown')}")
+        
+        return "\n".join(output_lines)
+        
+    except Exception as e:
+        error_msg = f"Failed to get upcoming events: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return error_msg
+
+
 def _run_weekly_analysis() -> str:
     """
     Core function that performs the weekly portfolio analysis workflow.

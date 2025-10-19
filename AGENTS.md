@@ -23,7 +23,41 @@
 - **Returns**: Always specify return types and document return values in docstrings
 
 ## Project Structure
-- `agent/` - Core modules (main.py, analysis.py, sheets_connector.py, storage.py, reporting.py)
+- `agent/` - Core modules (main.py, analysis.py, sheets_connector.py, storage.py, reporting.py, events_tracker.py)
 - `server.py` - FastMCP server entry point
 - `pyproject.toml` - Project configuration with dependencies
+- `ticker_mapping.json` - Mapping of portfolio stock names to ticker symbols
 - Credentials stored securely in macOS Keychain, never in files
+
+## Alpha Vantage API Setup
+
+### 1. Store API Key in Keychain
+```bash
+./setup_alpha_vantage.sh
+```
+Or manually:
+```bash
+security add-generic-password -a "mcp-portfolio-agent" -s "alpha-vantage-api-key" -w "YOUR_API_KEY_HERE" -U
+```
+
+### 2. Configure Ticker Mappings
+Edit `ticker_mapping.json` and add mappings for all stocks in your portfolio:
+```json
+{
+  "mappings": {
+    "Apple Inc": "AAPL",
+    "Microsoft Corporation": "MSFT",
+    "ASML Holding": "ASML",
+    "Wise": "WISE.L"
+  }
+}
+```
+
+### 3. Available Tools
+- `get_upcoming_events()` - Fetches upcoming dividend payouts and earnings reports for portfolio stocks within the next 2 months, sorted chronologically
+
+### Notes
+- Events are filtered to show only those within 60 days (2 months)
+- Missing ticker mappings will trigger an error with clear instructions to update `ticker_mapping.json`
+- For European stocks, include the exchange suffix (e.g., `.L` for London, `.PA` for Paris)
+- Cash positions are automatically excluded from event tracking
