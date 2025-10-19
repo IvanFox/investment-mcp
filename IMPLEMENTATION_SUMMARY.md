@@ -1,7 +1,7 @@
-# Dividend & Earnings Events Tracker - Implementation Summary
+# Earnings Events Tracker - Implementation Summary
 
 ## Overview
-A complete solution for tracking upcoming dividend payouts and earnings reports for portfolio stocks using the Alpha Vantage API. All events are filtered to the next 2 months, sorted chronologically, and presented to the user in a clean format.
+A solution for tracking upcoming earnings reports for portfolio stocks using the Alpha Vantage API. Events are filtered to the next 2 months, sorted chronologically, and presented to the user in a clean format.
 
 ## Files Created
 
@@ -11,13 +11,12 @@ Core module handling all event tracking logic:
 - **`load_ticker_mapping()`** - Loads stock name to ticker symbol mappings
 - **`get_ticker_for_asset()`** - Maps portfolio asset names to ticker symbols with error handling
 - **`fetch_earnings_calendar()`** - Calls Alpha Vantage EARNINGS_CALENDAR endpoint
-- **`fetch_dividend_calendar()`** - Calls Alpha Vantage DIVIDEND_CALENDAR endpoint
 - **`parse_date()`** - Handles multiple date formats from API responses
 - **`filter_upcoming_events()`** - Filters events to 60-day window (2 months)
 - **`sort_events_chronologically()`** - Sorts all events by date (earliest first)
 - **`get_portfolio_upcoming_events()`** - Main orchestration function that:
   - Validates all stocks are mapped
-  - Fetches both earnings and dividends
+  - Fetches earnings reports
   - Filters and sorts events
   - Returns structured result with error handling
 
@@ -40,10 +39,10 @@ Added new tool `get_upcoming_events()`:
 - Retrieves normalized portfolio data from Google Sheets
 - Calls events_tracker to get upcoming events
 - Formats results beautifully with:
-  - Event type (Earnings Report / Dividend Payout)
+  - Event type (Earnings Report)
   - Ticker symbol & company name
   - Event date & days until event
-  - Additional info (earnings estimate, dividend amount, payment date)
+  - Additional info (earnings estimate)
   - Summary statistics
 - Provides helpful error messages for:
   - Missing API key
@@ -65,9 +64,8 @@ Enhanced documentation with:
 - Prevents overwhelming users with distant future events
 
 ### ✅ Chronological Sorting
-- All events sorted by date (earliest first)
-- Easy to see what's coming up next
-- Consistent ordering across earnings and dividends
+- All earnings events sorted by date (earliest first)
+- Easy to see upcoming earnings announcements
 
 ### ✅ Error Handling
 Three-tier error handling:
@@ -96,19 +94,13 @@ Three-tier error handling:
 ### Event Structure (Output)
 ```python
 {
-    "type": "Earnings Report" | "Dividend Payout",
+    "type": "Earnings Report",
     "ticker": "AAPL",
     "company_name": "Apple Inc",
     "date": "2025-11-15",
     "days_until": 27,
-    
-    # For Earnings
-    "estimate": "1.25",
-    
-    # For Dividends
-    "amount": "0.25",
-    "payment_date": "2025-12-05",
-    "ex_dividend_date": "2025-11-15"
+    "report_date": "2025-11-15",
+    "estimate": "1.25"
 }
 ```
 
@@ -124,15 +116,10 @@ Three-tier error handling:
 
 ## API Endpoints Used
 
-1. **Alpha Vantage - EARNINGS_CALENDAR**
-   - Fetches upcoming earnings report dates
-   - Includes earnings estimates
-   - Returns: `reportDate`, `symbol`, `estimate`
-
-2. **Alpha Vantage - DIVIDEND_CALENDAR**
-   - Fetches upcoming dividend payment information
-   - Includes ex-dividend and payment dates
-   - Returns: `exDividendDate`, `symbol`, `amount`, `paymentDate`
+**Alpha Vantage - EARNINGS_CALENDAR**
+- Fetches upcoming earnings report dates
+- Includes earnings estimates
+- Returns: `reportDate`, `symbol`, `estimate`
 
 ## Setup Instructions
 
@@ -162,10 +149,11 @@ get_upcoming_events()
 
 ## Important Notes
 
-- **Rate Limiting**: Alpha Vantage has rate limits (5 calls/min for free tier). The app handles rate limits gracefully.
+- **Rate Limiting**: Alpha Vantage has rate limits (5 calls/min for free tier). Single API call per invocation.
 - **Stock Coverage**: Not all stocks are available on Alpha Vantage. European stocks need proper exchange suffix.
-- **Data Freshness**: Alpha Vantage updates calendar data periodically (not real-time).
-- **Timezone**: All dates are handled in UTC internally, displayed in local format.
+- **Data Freshness**: Alpha Vantage updates earnings calendar data periodically (not real-time).
+- **Timezone**: All dates are handled in UTC internally.
+- **API Calls**: 1 per invocation (earnings only)
 
 ## Future Enhancements
 

@@ -1,7 +1,7 @@
 """
-Events Tracker Module for Dividend and Earnings Calendar
+Events Tracker Module for Earnings Calendar
 
-This module fetches dividend and earnings event data from Alpha Vantage API
+This module fetches earnings event data from Alpha Vantage API
 and filters/sorts events for portfolio stocks.
 """
 
@@ -145,76 +145,37 @@ def fetch_earnings_calendar(api_key: str) -> List[Dict[str, Any]]:
             "horizon": "12month",
         }
 
+        logger.debug(f"Fetching earnings calendar from Alpha Vantage with params: {params}")
         response = requests.get(ALPHA_VANTAGE_BASE_URL, params=params, timeout=10)
         response.raise_for_status()
 
+        logger.debug(f"Response status: {response.status_code}, Content-Type: {response.headers.get('content-type')}, Length: {len(response.text)}")
+
         if not response.text or len(response.text.strip()) == 0:
-            logger.warning("Empty response from Alpha Vantage API")
+            logger.warning("Empty response from Alpha Vantage API for earnings calendar")
             return []
 
         try:
             data = response.json()
+            logger.debug(f"Parsed JSON response with keys: {list(data.keys())}")
+            
             if "Note" in data:
-                logger.warning("Alpha Vantage API rate limit reached")
+                logger.warning(f"Alpha Vantage API rate limit: {data['Note']}")
                 return []
             if "Error Message" in data:
                 logger.error(f"Alpha Vantage API error: {data['Error Message']}")
                 return []
             earnings_data = data.get("data", [])
-        except (ValueError, json.JSONDecodeError):
+            logger.info(f"Successfully fetched {len(earnings_data)} earnings events (JSON format)")
+        except (ValueError, json.JSONDecodeError) as e:
+            logger.debug(f"Failed to parse JSON response, attempting CSV parse: {e}")
             earnings_data = _parse_csv_response(response.text)
+            logger.info(f"Successfully fetched {len(earnings_data)} earnings events (CSV format)")
 
-        logger.info(f"Fetched {len(earnings_data)} earnings events from Alpha Vantage")
         return earnings_data
 
     except requests.RequestException as e:
         logger.error(f"Failed to fetch earnings calendar: {e}")
-        raise
-
-
-def fetch_dividend_calendar(api_key: str) -> List[Dict[str, Any]]:
-    """
-    Fetch dividend calendar data from Alpha Vantage.
-
-    Args:
-        api_key: Alpha Vantage API key
-
-    Returns:
-        list: List of dividend events
-
-    Raises:
-        requests.RequestException: If API request fails
-    """
-    try:
-        params = {
-            "function": "DIVIDEND_CALENDAR",
-            "apikey": api_key,
-        }
-
-        response = requests.get(ALPHA_VANTAGE_BASE_URL, params=params, timeout=10)
-        response.raise_for_status()
-
-        if not response.text or len(response.text.strip()) == 0:
-            logger.warning("Empty response from Alpha Vantage API")
-            return []
-
-        try:
-            data = response.json()
-            if "Note" in data:
-                logger.warning("Alpha Vantage API rate limit reached")
-                return []
-            if "Error Message" in data:
-                logger.error(f"Alpha Vantage API error: {data['Error Message']}")
-                return []
-            dividend_data = data.get("data", [])
-        except (ValueError, json.JSONDecodeError):
-            dividend_data = _parse_csv_response(response.text)
-
-        logger.info(f"Fetched {len(dividend_data)} dividend events from Alpha Vantage")
-        return dividend_data
-
-    except requests.RequestException as e:
-        logger.error(f"Failed to fetch dividend calendar: {e}")
         raise
 
 
@@ -295,7 +256,7 @@ def get_portfolio_upcoming_events(
     portfolio_assets: List[Dict[str, Any]],
 ) -> Dict[str, Any]:
     """
-    Get upcoming dividend and earnings events for all portfolio assets.
+    Get upcoming earnings events for all portfolio assets.
 
     Args:
         portfolio_assets: List of normalized asset dictionaries from sheets
@@ -317,11 +278,16 @@ def get_portfolio_upcoming_events(
 
     unmapped_stocks = []
     ticker_to_asset = {}
+    skipped_assets = []
+
+    SKIP_CATEGORIES = {"Bonds", "Pension", "Cash"}
 
     for asset in portfolio_assets:
         asset_name = asset.get("name", "")
+        asset_category = asset.get("category", "")
 
-        if asset_name.startswith("Cash"):
+        if asset_category in SKIP_CATEGORIES:
+            skipped_assets.append(f"{asset_name} ({asset_category})")
             continue
 
         try:
@@ -329,6 +295,9 @@ def get_portfolio_upcoming_events(
             ticker_to_asset[ticker] = asset_name
         except ValueError as e:
             unmapped_stocks.append(str(e))
+
+    if skipped_assets:
+        logger.info(f"Skipped {len(skipped_assets)} assets (bonds/pensions/cash): {', '.join(skipped_assets[:5])}{'...' if len(skipped_assets) > 5 else ''}")
 
     if unmapped_stocks:
         return {
@@ -340,55 +309,50 @@ def get_portfolio_upcoming_events(
 
     try:
         earnings_events = fetch_earnings_calendar(api_key)
-        dividend_events = fetch_dividend_calendar(api_key)
     except requests.RequestException as e:
+        logger.error(f"Failed to fetch earnings calendar from Alpha Vantage: {str(e)}")
         return {
             "success": False,
-            "error": f"Failed to fetch events from Alpha Vantage: {str(e)}",
+            "error": f"Failed to fetch earnings data: {str(e)}",
         }
 
     earnings_upcoming = filter_upcoming_events(earnings_events, "reportDate")
-    dividends_upcoming = filter_upcoming_events(dividend_events, "exDividendDate")
-
     earnings_upcoming = sort_events_chronologically(earnings_upcoming)
-    dividends_upcoming = sort_events_chronologically(dividends_upcoming)
 
     portfolio_tickers = set(ticker_to_asset.keys())
     portfolio_earnings = [
         e for e in earnings_upcoming if e.get("symbol") in portfolio_tickers
     ]
-    portfolio_dividends = [
-        d for d in dividends_upcoming if d.get("symbol") in portfolio_tickers
-    ]
+
+    tickers_with_no_events = portfolio_tickers - {
+        e.get("symbol") for e in portfolio_earnings
+    }
+
+    if tickers_with_no_events:
+        logger.debug(
+            f"No upcoming events found for tickers: {', '.join(sorted(tickers_with_no_events))}"
+        )
 
     all_events = []
 
     for earning in portfolio_earnings:
-        all_events.append(
-            {
-                "type": "Earnings Report",
-                "ticker": earning.get("symbol"),
-                "company_name": ticker_to_asset.get(earning.get("symbol"), ""),
-                "date": earning.get("reportDate"),
-                "days_until": earning.get("days_until"),
-                "report_date": earning.get("reportDate"),
-                "estimate": earning.get("estimate"),
-            }
-        )
-
-    for dividend in portfolio_dividends:
-        all_events.append(
-            {
-                "type": "Dividend Payout",
-                "ticker": dividend.get("symbol"),
-                "company_name": ticker_to_asset.get(dividend.get("symbol"), ""),
-                "date": dividend.get("exDividendDate"),
-                "days_until": dividend.get("days_until"),
-                "ex_dividend_date": dividend.get("exDividendDate"),
-                "amount": dividend.get("amount"),
-                "payment_date": dividend.get("paymentDate"),
-            }
-        )
+        try:
+            all_events.append(
+                {
+                    "type": "Earnings Report",
+                    "ticker": earning.get("symbol"),
+                    "company_name": ticker_to_asset.get(earning.get("symbol"), ""),
+                    "date": earning.get("reportDate"),
+                    "days_until": earning.get("days_until"),
+                    "report_date": earning.get("reportDate"),
+                    "estimate": earning.get("estimate"),
+                }
+            )
+        except Exception as e:
+            logger.error(
+                f"Error processing earnings event for {earning.get('symbol')}: {str(e)}"
+            )
+            continue
 
     all_events = sort_events_chronologically(all_events)
 
@@ -397,6 +361,5 @@ def get_portfolio_upcoming_events(
         "events": all_events,
         "total_events": len(all_events),
         "earnings_count": len(portfolio_earnings),
-        "dividends_count": len(portfolio_dividends),
         "as_of": datetime.now(timezone.utc).isoformat(),
     }

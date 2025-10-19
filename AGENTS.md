@@ -54,10 +54,11 @@ Edit `ticker_mapping.json` and add mappings for all stocks in your portfolio:
 ```
 
 ### 3. Available Tools
-- `get_upcoming_events()` - Fetches upcoming dividend payouts and earnings reports for portfolio stocks within the next 2 months, sorted chronologically
+- `get_upcoming_events()` - Fetches upcoming earnings reports for portfolio stocks within the next 2 months, sorted chronologically
 
 ### Notes
-- Events are filtered to show only those within 60 days (2 months)
+- Earnings reports are filtered to show only those within 60 days (2 months)
+- Only EARNINGS_CALENDAR endpoint is used (dividend data not available from Alpha Vantage)
 - Missing ticker mappings will trigger an error with clear instructions to update `ticker_mapping.json`
 - For European stocks, include the exchange suffix (e.g., `.L` for London, `.PA` for Paris)
-- Cash positions are automatically excluded from event tracking
+- Cash, bonds, and pension positions are automatically excluded from event tracking

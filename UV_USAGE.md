@@ -19,16 +19,16 @@ This is the recommended approach because:
 ### Example Output
 ```
 ======================================================================
-📅 Portfolio Events Tracker
+📅 Portfolio Earnings Tracker
 ======================================================================
 
 Fetching portfolio data...
 Found 30 assets in portfolio
 
-Fetching upcoming events from Alpha Vantage...
+Fetching upcoming earnings from Alpha Vantage...
 ✅ Success!
 
-📅 Upcoming Events (Next 2 Months)
+📅 Upcoming Earnings Reports (Next 2 Months)
 
 **Earnings Report**
 - Ticker: AAPL
@@ -36,17 +36,15 @@ Fetching upcoming events from Alpha Vantage...
 - Date: 2025-11-15 (27 days)
 - Estimate: 1.25
 
-**Dividend Payout**
+**Earnings Report**
 - Ticker: MSFT
 - Company: Microsoft Corporation
 - Date: 2025-11-10 (22 days)
-- Amount: 0.68
-- Payment Date: 2025-12-05
+- Estimate: 3.45
 
 Summary:
-- Total Events: 8
+- Total Reports: 5
 - Earnings Reports: 5
-- Dividend Payouts: 3
 ```
 
 ## Method 2: Direct Python with uv
@@ -209,7 +207,7 @@ if result.returncode != 0:
 
 - First run with `uv`: May take 2-3 seconds to initialize
 - Subsequent runs: ~2-5 seconds depending on API response time
-- API calls: 2 per invocation (earnings + dividends)
+- API calls: 1 per invocation (earnings only)
 - Rate limit: 5 calls/min on free Alpha Vantage tier
 
 ## Summary

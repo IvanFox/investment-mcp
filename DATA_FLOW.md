@@ -1,4 +1,4 @@
-# Data Flow: Upcoming Events Tracker
+# Data Flow: Earnings Events Tracker
 
 ## Request Flow
 
@@ -53,16 +53,9 @@
 │    │ Returns: [{symbol, reportDate, estimate, ...}]     │                 │
 │    └─────────────────────────────────────────────────────┘                 │
 │                                    │                                        │
-│    ┌─────────────────────────────────────────────────────┐                 │
-│    │ fetch_dividend_calendar(api_key)                    │                 │
-│    │ DIVIDEND_CALENDAR endpoint                          │                 │
-│    │ Returns: [{symbol, exDividendDate, amount, ...}]   │                 │
-│    └─────────────────────────────────────────────────────┘                 │
-│                                    │                                        │
 │                                    ▼                                        │
 │ 4. Filter Events (60-day window)                                            │
-│    filter_upcoming_events(earnings, "reportDate")                           │
-│    filter_upcoming_events(dividends, "exDividendDate")                      │
+│    filter_upcoming_events(earnings, "reportDate")                      │
 │                                    │                                        │
 │    For each event:                                                          │
 │    - Parse date                                                             │
@@ -86,19 +79,18 @@
 │      "success": True,                                                       │
 │      "events": [                                                            │
 │        {                                                                    │
-│          "type": "Earnings Report" | "Dividend Payout",                     │
+│          "type": "Earnings Report",                                         │
 │          "ticker": "AAPL",                                                  │
 │          "company_name": "Apple Inc",                                       │
 │          "date": "2025-11-15",                                              │
 │          "days_until": 27,                                                  │
-│          "estimate": "1.25" | "amount": "0.25",                             │
-│          "payment_date": "2025-12-05" (dividends only)                      │
+│          "report_date": "2025-11-15",                                       │
+│          "estimate": "1.25"                                                 │
 │        },                                                                   │
 │        ...                                                                  │
 │      ],                                                                     │
-│      "total_events": 8,                                                     │
+│      "total_events": 5,                                                     │
 │      "earnings_count": 5,                                                   │
-│      "dividends_count": 3,                                                  │
 │      "as_of": "2025-10-23T15:30:45.123456+00:00"                            │
 │    }                                                                        │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -109,7 +101,7 @@
 │                                                                              │
 │ Convert structured result to user-friendly markdown:                        │
 │                                                                              │
-│ 📅 Upcoming Events (Next 2 Months)                                           │
+│ 📅 Upcoming Earnings Reports (Next 2 Months)                                 │
 │                                                                              │
 │ **Earnings Report**                                                         │
 │ - Ticker: AAPL                                                              │
@@ -117,24 +109,22 @@
 │ - Date: 2025-11-15 (27 days)                                                │
 │ - Estimate: 1.25                                                            │
 │                                                                              │
-│ **Dividend Payout**                                                         │
+│ **Earnings Report**                                                         │
 │ - Ticker: MSFT                                                              │
 │ - Company: Microsoft Corporation                                            │
 │ - Date: 2025-11-10 (22 days)                                                │
-│ - Amount: 0.68                                                              │
-│ - Payment Date: 2025-12-05                                                  │
+│ - Estimate: 3.45                                                            │
 │                                                                              │
 │ Summary:                                                                    │
-│ - Total Events: 8                                                           │
+│ - Total Reports: 5                                                          │
 │ - Earnings Reports: 5                                                       │
-│ - Dividend Payouts: 3                                                       │
 │ - Last Updated: 2025-10-23T15:30:45.123456+00:00                            │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ USER RECEIVES: Formatted event list                                         │
+│ USER RECEIVES: Formatted earnings report list                                │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -217,7 +207,7 @@ Input: {name: "Apple Inc", quantity: 10, ...}
 Output: "AAPL"
 ```
 
-### Raw API Event → Filtered Event
+### Raw API Event → Filtered Earnings Event
 ```
 Input: {
   symbol: "AAPL",
@@ -236,6 +226,7 @@ Output: {
   company_name: "Apple Inc",
   date: "2025-11-15",
   days_until: 27,
+  report_date: "2025-11-15",
   estimate: "1.25"
 }
 ```
@@ -252,9 +243,9 @@ Input: [
        2. Format each event
        3. Add summary stats
        ↓
-Output: "📅 Upcoming Events (Next 2 Months)
-         **Dividend Payout**
+Output: "📅 Upcoming Earnings Reports (Next 2 Months)
+         **Earnings Report**
          - Date: 2025-11-08 (20 days)
          ...
-         Summary: Total Events: 3"
+         Summary: Total Reports: 3"
 ```

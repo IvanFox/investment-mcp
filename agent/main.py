@@ -125,11 +125,11 @@ def get_portfolio_history_summary() -> str:
 @mcp.tool()
 def get_upcoming_events() -> str:
     """
-    Get upcoming dividend payouts and earnings reports for portfolio stocks.
-    
-    Returns upcoming events within the next 2 months, sorted chronologically.
-    Events are fetched from Alpha Vantage API and matched against portfolio stocks
-    using the ticker_mapping.json file.
+     Get upcoming earnings reports for portfolio stocks.
+     
+     Returns upcoming earnings reports within the next 2 months, sorted chronologically.
+     Events are fetched from Alpha Vantage API and matched against portfolio stocks
+     using the ticker_mapping.json file.
     
     Returns:
         str: Formatted list of upcoming events or error message
@@ -157,16 +157,16 @@ def get_upcoming_events() -> str:
         events = result.get("events", [])
         
         if not events:
-            return """📅 Upcoming Events
+            return """📅 Upcoming Earnings Reports
 
-No upcoming dividend payouts or earnings reports found within the next 2 months for your portfolio stocks.
+No upcoming earnings reports found within the next 2 months for your portfolio stocks.
 
 **Note:** Ensure that:
-1. Your Alpha Vantage API key is properly configured
-2. All portfolio stocks are mapped in ticker_mapping.json
-3. Your stocks are covered by Alpha Vantage API"""
+1. All portfolio stocks are mapped in ticker_mapping.json
+2. Your stocks have upcoming earnings announcements
+3. Alpha Vantage API key is properly configured"""
         
-        output_lines = ["📅 Upcoming Events (Next 2 Months)", "", ""]
+        output_lines = ["📅 Upcoming Earnings Reports (Next 2 Months)", "", ""]
         
         for event in events:
             event_type = event.get("type", "")
@@ -184,20 +184,12 @@ No upcoming dividend payouts or earnings reports found within the next 2 months 
                 estimate = event.get("estimate")
                 if estimate:
                     output_lines.append(f"- Estimate: {estimate}")
-            elif event_type == "Dividend Payout":
-                amount = event.get("amount")
-                payment_date = event.get("payment_date")
-                if amount:
-                    output_lines.append(f"- Amount: {amount}")
-                if payment_date:
-                    output_lines.append(f"- Payment Date: {payment_date}")
             
             output_lines.append("")
         
         output_lines.append(f"**Summary:**")
-        output_lines.append(f"- Total Events: {result.get('total_events', 0)}")
+        output_lines.append(f"- Total Reports: {result.get('total_events', 0)}")
         output_lines.append(f"- Earnings Reports: {result.get('earnings_count', 0)}")
-        output_lines.append(f"- Dividend Payouts: {result.get('dividends_count', 0)}")
         output_lines.append(f"- Last Updated: {result.get('as_of', 'Unknown')}")
         
         return "\n".join(output_lines)

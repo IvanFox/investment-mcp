@@ -1,4 +1,4 @@
-# Quick Start: Dividend & Earnings Events Tracker
+# Quick Start: Earnings Events Tracker
 
 ## 1️⃣ Setup Alpha Vantage API Key
 
@@ -49,7 +49,7 @@ get_upcoming_events()
 ## 📋 What You'll See
 
 ```
-📅 Upcoming Events (Next 2 Months)
+📅 Upcoming Earnings Reports (Next 2 Months)
 
 **Earnings Report**
 - Ticker: AAPL
@@ -57,17 +57,15 @@ get_upcoming_events()
 - Date: 2025-11-15 (27 days)
 - Estimate: 1.25
 
-**Dividend Payout**
+**Earnings Report**
 - Ticker: MSFT
 - Company: Microsoft Corporation
 - Date: 2025-11-10 (22 days)
-- Amount: 0.68
-- Payment Date: 2025-12-05
+- Estimate: 3.45
 
 Summary:
-- Total Events: 8
+- Total Reports: 5
 - Earnings Reports: 5
-- Dividend Payouts: 3
 ```
 
 ## ⚠️ Troubleshooting
@@ -89,9 +87,9 @@ Possible reasons:
 
 ## 📊 Features
 
-✅ Upcoming events within 60 days (2 months)  
+✅ Upcoming earnings reports within 60 days (2 months)  
 ✅ Chronologically sorted  
-✅ Both earnings reports and dividends  
+✅ Earnings estimates included  
 ✅ Easy error messages with clear actions  
 ✅ Secure API key storage  
 ✅ Support for US and European stocks  
