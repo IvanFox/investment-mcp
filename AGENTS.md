@@ -23,10 +23,11 @@
 - **Returns**: Always specify return types and document return values in docstrings
 
 ## Project Structure
-- `agent/` - Core modules (main.py, analysis.py, sheets_connector.py, storage.py, reporting.py, events_tracker.py)
+- `agent/` - Core modules (main.py, analysis.py, sheets_connector.py, storage.py, reporting.py, events_tracker.py, risk_analysis.py)
 - `server.py` - FastMCP server entry point
 - `pyproject.toml` - Project configuration with dependencies
 - `ticker_mapping.json` - Mapping of portfolio stock names to ticker symbols
+- `cache/` - Cached historical price data from Alpha Vantage (auto-created)
 - Credentials stored securely in macOS Keychain, never in files
 
 ## Alpha Vantage API Setup
@@ -53,12 +54,32 @@ Edit `ticker_mapping.json` and add mappings for all stocks in your portfolio:
 }
 ```
 
-### 3. Available Tools
+### 3. Available MCP Tools
+
+#### Portfolio Analysis & Tracking
+- `run_portfolio_analysis()` - Triggers full portfolio analysis and generates weekly performance report
+- `get_portfolio_status()` - Returns current portfolio total value, asset count, and last update timestamp
+- `get_portfolio_history_summary()` - Shows portfolio performance since first snapshot
+- `get_latest_positions()` - Displays all current positions organized by category (Stocks, Bonds, ETFs, Pension, Cash) with gain/loss details
+
+#### Events & Risk Analysis
 - `get_upcoming_events()` - Fetches upcoming earnings reports for portfolio stocks within the next 2 months, sorted chronologically
+- `analyze_portfolio_risk()` - Performs comprehensive risk analysis including:
+  - Portfolio beta (market sensitivity vs S&P 500)
+  - Value at Risk (VaR) at 95% and 99% confidence levels
+  - Concentration risk score (HHI index)
+  - Correlation matrix between holdings
+  - Sector/geography exposure breakdown
+  - Volatility by asset class
+  - Downside risk metrics (Sortino ratio, max drawdown, CVaR)
+  
+  **Note:** Risk analysis fetches historical price data from Alpha Vantage and may take several minutes due to API rate limits (12s delay between calls)
 
 ### Notes
 - Earnings reports are filtered to show only those within 60 days (2 months)
 - Only EARNINGS_CALENDAR endpoint is used (dividend data not available from Alpha Vantage)
 - Missing ticker mappings will trigger an error with clear instructions to update `ticker_mapping.json`
 - For European stocks, include the exchange suffix (e.g., `.L` for London, `.PA` for Paris)
-- Cash, bonds, and pension positions are automatically excluded from event tracking
+- Cash, bonds, and pension positions are automatically excluded from event tracking and risk analysis
+- Historical price data is cached for 24 hours in the `cache/` directory to minimize API calls
+- Risk analysis uses 252 trading days (1 year) of historical data for calculations

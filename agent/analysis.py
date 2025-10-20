@@ -163,3 +163,88 @@ def compare_snapshots(current_snapshot: Dict[str, Any], previous_snapshot: Dict[
     except Exception as e:
         logger.error(f"Failed to compare snapshots: {e}")
         raise
+
+
+def organize_positions_by_category(snapshot: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Organizes portfolio positions by category with aggregated statistics.
+    
+    Args:
+        snapshot: Portfolio snapshot dictionary
+        
+    Returns:
+        dict: Organized positions by category with structure:
+        {
+            "timestamp": str,
+            "total_value_eur": float,
+            "categories": {
+                "US Stocks": {
+                    "total_value": float,
+                    "percentage": float,
+                    "positions": [
+                        {
+                            "name": str,
+                            "quantity": float,
+                            "current_value_eur": float,
+                            "purchase_price_total_eur": float,
+                            "gain_loss_eur": float,
+                            "gain_loss_percent": float
+                        }
+                    ]
+                }
+            }
+        }
+    """
+    try:
+        timestamp = snapshot.get('timestamp', 'Unknown')
+        total_value_eur = snapshot.get('total_value_eur', 0.0)
+        assets = snapshot.get('assets', [])
+        
+        categories = {}
+        
+        for asset in assets:
+            category = asset.get('category', 'Other')
+            
+            if category not in categories:
+                categories[category] = {
+                    'total_value': 0.0,
+                    'percentage': 0.0,
+                    'positions': []
+                }
+            
+            current_value = asset.get('current_value_eur', 0.0)
+            purchase_price = asset.get('purchase_price_total_eur', 0.0)
+            quantity = asset.get('quantity', 0.0)
+            
+            gain_loss_eur = current_value - purchase_price
+            gain_loss_percent = (gain_loss_eur / purchase_price * 100) if purchase_price > 0 else 0.0
+            
+            position = {
+                'name': asset.get('name', 'Unknown'),
+                'quantity': quantity,
+                'current_value_eur': current_value,
+                'purchase_price_total_eur': purchase_price,
+                'gain_loss_eur': round(gain_loss_eur, 2),
+                'gain_loss_percent': round(gain_loss_percent, 2)
+            }
+            
+            categories[category]['positions'].append(position)
+            categories[category]['total_value'] += current_value
+        
+        for category_name, category_data in categories.items():
+            category_data['total_value'] = round(category_data['total_value'], 2)
+            category_data['percentage'] = round((category_data['total_value'] / total_value_eur * 100), 2) if total_value_eur > 0 else 0.0
+            category_data['positions'].sort(key=lambda x: x['current_value_eur'], reverse=True)
+        
+        result = {
+            'timestamp': timestamp,
+            'total_value_eur': total_value_eur,
+            'categories': categories
+        }
+        
+        logger.info(f"Organized {len(assets)} positions into {len(categories)} categories")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Failed to organize positions by category: {e}")
+        raise

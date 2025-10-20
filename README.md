@@ -97,6 +97,7 @@ Available MCP tools:
 - `run_portfolio_analysis()` - Trigger portfolio analysis and generate report
 - `get_portfolio_status()` - Get current portfolio status
 - `get_portfolio_history_summary()` - View historical performance
+- `get_latest_positions()` - View all current positions organized by category
 - `get_upcoming_events()` - Fetch upcoming earnings reports (next 2 months)
 
 ### Direct Analysis
