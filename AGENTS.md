@@ -23,16 +23,18 @@
 - **Returns**: Always specify return types and document return values in docstrings
 
 ## Project Structure
-- `agent/` - Core modules (main.py, analysis.py, sheets_connector.py, storage.py, reporting.py, events_tracker.py, risk_analysis.py)
+- `agent/` - Core modules (main.py, analysis.py, sheets_connector.py, storage.py, reporting.py, events_tracker.py, risk_analysis.py, insider_trading.py)
 - `server.py` - FastMCP server entry point
 - `pyproject.toml` - Project configuration with dependencies
 - `ticker_mapping.json` - Mapping of portfolio stock names to ticker symbols
 - `cache/` - Cached historical price data from Alpha Vantage (auto-created)
 - Credentials stored securely in macOS Keychain, never in files
 
-## Alpha Vantage API Setup
+## API Setup
 
-### 1. Store API Key in Keychain
+### Alpha Vantage API (Events & Risk Analysis)
+
+#### 1. Store API Key in Keychain
 ```bash
 ./setup_alpha_vantage.sh
 ```
@@ -41,7 +43,18 @@ Or manually:
 security add-generic-password -a "mcp-portfolio-agent" -s "alpha-vantage-api-key" -w "YOUR_API_KEY_HERE" -U
 ```
 
-### 2. Configure Ticker Mappings
+### Fintel API (Insider Trading)
+
+#### 1. Store API Key in Keychain
+```bash
+./setup_fintel.sh
+```
+Or manually:
+```bash
+security add-generic-password -a "mcp-portfolio-agent" -s "fintel-api-key" -w "YOUR_API_KEY_HERE" -U
+```
+
+### Ticker Mappings
 Edit `ticker_mapping.json` and add mappings for all stocks in your portfolio:
 ```json
 {
@@ -75,11 +88,36 @@ Edit `ticker_mapping.json` and add mappings for all stocks in your portfolio:
   
   **Note:** Risk analysis fetches historical price data from Alpha Vantage and may take several minutes due to API rate limits (12s delay between calls)
 
+#### Insider Trading
+- `get_insider_trades(ticker)` - Fetches insider trading data for a specific stock ticker over the last 90 days:
+  - Buy/sell transaction counts and values
+  - Net sentiment (Bullish/Neutral/Bearish based on 2:1 buy/sell ratio)
+  - Recent transaction details (insider name, date, type, shares, value)
+  - Data from Fintel.io Web Data API
+  
+- `get_portfolio_insider_trades()` - Analyzes insider trading for all portfolio stocks:
+  - Stocks organized by sentiment (Bullish/Neutral/Bearish)
+  - Summary statistics per stock
+  - Automatically excludes bonds, ETFs, pension, and cash positions
+  - Uses ticker_mapping.json to resolve stock tickers
+  
+  **Note:** All outputs include "Data provided by Fintel.io" attribution as required by Fintel's terms
+
 ### Notes
-- Earnings reports are filtered to show only those within 60 days (2 months)
-- Only EARNINGS_CALENDAR endpoint is used (dividend data not available from Alpha Vantage)
-- Missing ticker mappings will trigger an error with clear instructions to update `ticker_mapping.json`
-- For European stocks, include the exchange suffix (e.g., `.L` for London, `.PA` for Paris)
-- Cash, bonds, and pension positions are automatically excluded from event tracking and risk analysis
-- Historical price data is cached for 24 hours in the `cache/` directory to minimize API calls
-- Risk analysis uses 252 trading days (1 year) of historical data for calculations
+- **Earnings & Risk Analysis:**
+  - Earnings reports are filtered to show only those within 60 days (2 months)
+  - Only EARNINGS_CALENDAR endpoint is used (dividend data not available from Alpha Vantage)
+  - Historical price data is cached for 24 hours in the `cache/` directory to minimize API calls
+  - Risk analysis uses 252 trading days (1 year) of historical data for calculations
+  - Risk analysis may take several minutes due to API rate limits (12s delay between calls)
+  
+- **Insider Trading:**
+  - Data is filtered to last 90 days
+  - Sentiment is based on 2:1 buy/sell value ratio (>2x buys = Bullish, >2x sells = Bearish)
+  - Option exercises with null values are counted as buys but excluded from value calculations
+  - All insider trading outputs must include Fintel.io attribution
+  
+- **General:**
+  - Missing ticker mappings will trigger an error with clear instructions to update `ticker_mapping.json`
+  - For European stocks, include the exchange suffix (e.g., `.L` for London, `.PA` for Paris, `.AS` for Amsterdam)
+  - Cash, bonds, and pension positions are automatically excluded from event tracking, risk analysis, and insider trading

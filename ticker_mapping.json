@@ -36,7 +36,8 @@
     "VWCE": "VWCE.DE",
     "MEUD": "MEUD.MI",
     "II level": "II.LEVEL",
-    "III level": "III.LEVEL"
+    "III level": "III.LEVEL",
+    "Fiserv": "FI"
   },
   "_notes": [
     "For European stocks, use the appropriate exchange suffix (e.g., .L for London, .PA for Paris)",
