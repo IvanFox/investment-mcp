@@ -19,6 +19,7 @@ from . import storage
 from . import reporting
 from . import risk_analysis
 from . import insider_trading
+from . import short_volume
 
 # Configure logging
 logging.basicConfig(
@@ -522,6 +523,260 @@ No assets found in portfolio snapshot.
         error_msg = f"Failed to get portfolio insider trades: {str(e)}"
         logger.error(error_msg, exc_info=True)
         return f"""# 📊 Portfolio Insider Trading
+
+## ❌ Error
+{error_msg}
+
+*Data provided by [Fintel.io](https://fintel.io)*"""
+
+
+@mcp.tool()
+def get_short_volume(ticker: str, days: int = 30) -> str:
+    """
+    Get short volume data for a specific stock ticker.
+    
+    Shows daily short selling activity over the specified period,
+    including short volume ratio, trends, and risk assessment based
+    on short selling patterns.
+    
+    Args:
+        ticker: Stock ticker symbol (e.g., "AAPL", "MSFT", "WISE.L")
+        days: Number of days to look back (default: 30)
+    
+    Returns:
+        str: Formatted short volume report with metrics and analysis
+    """
+    try:
+        logger.info(f"Fetching short volume for {ticker}...")
+        
+        result = short_volume.get_short_volume_for_ticker(ticker, days)
+        
+        if not result.get('success'):
+            error_msg = result.get('error', 'Unknown error')
+            help_text = result.get('help', '')
+            return f"""# 📊 Short Volume Analysis - {ticker}
+
+## ❌ Error
+{error_msg}
+
+{help_text}
+
+*Data provided by [Fintel.io](https://fintel.io)*"""
+        
+        if result.get('metrics', {}).get('data_points', 0) == 0:
+            return f"""# 📊 Short Volume Analysis - {ticker}
+
+No short volume data available for this ticker.
+
+*Data provided by [Fintel.io](https://fintel.io)*"""
+        
+        metrics = result['metrics']
+        
+        output_lines = [
+            f"# 📊 Short Volume Analysis - {ticker}",
+            "",
+            f"## Current Metrics ({metrics['data_points']} days)",
+            "",
+            f"**Average Short Ratio:** {metrics['avg_short_ratio']:.2f}%",
+            f"**Latest Short Ratio:** {metrics['latest_short_ratio']:.2f}% ({metrics['latest_date']})",
+            f"**7-Day Average:** {metrics['avg_7day']:.2f}%",
+            f"**30-Day Average:** {metrics['avg_30day']:.2f}%",
+            "",
+            f"**Trend:** {metrics['trend']}",
+            "",
+        ]
+        
+        risk = result.get('risk_analysis', {})
+        if risk:
+            output_lines.append("## Risk Assessment")
+            output_lines.append("")
+            output_lines.append(f"**Risk Level:** {risk['risk_emoji']} {risk['risk_level']}")
+            output_lines.append(f"**Description:** {risk['description']}")
+            if risk.get('factors'):
+                output_lines.append("")
+                output_lines.append("**Factors:**")
+                for factor in risk['factors']:
+                    output_lines.append(f"- {factor}")
+            output_lines.append("")
+        
+        data_records = result.get('data', [])
+        if data_records:
+            sorted_records = sorted(data_records, key=lambda x: x.get('marketDate', ''), reverse=True)
+            output_lines.append("## Recent Activity (Last 5 Days)")
+            output_lines.append("")
+            
+            for record in sorted_records[:5]:
+                date = record.get('marketDate', 'Unknown')
+                short_vol = record.get('shortVolume', 0)
+                total_vol = record.get('totalVolume', 0)
+                ratio = record.get('shortVolumeRatio', 0) * 100
+                
+                output_lines.append(f"**{date}**")
+                output_lines.append(f"- Short Volume: {short_vol:,} shares")
+                output_lines.append(f"- Total Volume: {total_vol:,} shares")
+                output_lines.append(f"- Short Ratio: {ratio:.2f}%")
+                output_lines.append("")
+        
+        output_lines.append("---")
+        output_lines.append(f"**As of:** {result.get('as_of', 'Unknown')}")
+        output_lines.append("")
+        output_lines.append("*Data provided by [Fintel.io](https://fintel.io)*")
+        
+        return "\n".join(output_lines)
+        
+    except Exception as e:
+        error_msg = f"Failed to get short volume: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return f"""# 📊 Short Volume Analysis - {ticker}
+
+## ❌ Error
+{error_msg}
+
+*Data provided by [Fintel.io](https://fintel.io)*"""
+
+
+@mcp.tool()
+def get_portfolio_short_analysis() -> str:
+    """
+    Analyze short selling activity across all portfolio stocks.
+    
+    Identifies stocks with high short volume ratios, unusual short
+    selling patterns, and potential risks. Organizes results by risk
+    level (High/Medium/Low) based on short volume patterns.
+    
+    Note: Only analyzes stocks (excludes bonds, ETFs, pension, cash).
+    Uses ticker_mapping.json to map portfolio stock names to tickers.
+    
+    Returns:
+        str: Formatted portfolio-wide short volume analysis
+    """
+    try:
+        logger.info("Fetching short volume analysis for portfolio...")
+        
+        latest_snapshot = storage.get_latest_snapshot()
+        
+        if not latest_snapshot:
+            return """# 📊 Portfolio Short Volume Analysis
+
+## ❌ Error
+No portfolio snapshots available. Please run `run_portfolio_analysis()` first to create a snapshot.
+
+*Data provided by [Fintel.io](https://fintel.io)*"""
+        
+        portfolio_assets = latest_snapshot.get('assets', [])
+        
+        if not portfolio_assets:
+            return """# 📊 Portfolio Short Volume Analysis
+
+## ❌ Error
+No assets found in portfolio snapshot.
+
+*Data provided by [Fintel.io](https://fintel.io)*"""
+        
+        result = short_volume.get_portfolio_short_analysis(portfolio_assets)
+        
+        if not result.get('success'):
+            error_msg = result.get('error', 'Unknown error')
+            help_text = result.get('help', '')
+            
+            if result.get('unmapped_stocks'):
+                unmapped_list = "\n".join([f"- {stock}" for stock in result['unmapped_stocks']])
+                return f"""# 📊 Portfolio Short Volume Analysis
+
+## ❌ Error
+{error_msg}
+
+**Unmapped stocks:**
+{unmapped_list}
+
+{help_text}
+
+*Data provided by [Fintel.io](https://fintel.io)*"""
+            
+            return f"""# 📊 Portfolio Short Volume Analysis
+
+## ❌ Error
+{error_msg}
+
+{help_text}
+
+*Data provided by [Fintel.io](https://fintel.io)*"""
+        
+        output_lines = [
+            "# 📊 Portfolio Short Volume Analysis",
+            "",
+            "## Summary",
+            "",
+            f"**Stocks Analyzed:** {result.get('stocks_analyzed', 0)}",
+            f"**Stocks with Data:** {result.get('stocks_with_data', 0)}",
+            f"**Average Short Ratio:** {result.get('avg_short_ratio', 0):.2f}%",
+            "",
+            f"**High Risk Stocks:** {result.get('high_risk_count', 0)}",
+            f"**Medium Risk Stocks:** {result.get('medium_risk_count', 0)}",
+            f"**Low Risk Stocks:** {result.get('low_risk_count', 0)}",
+            "",
+        ]
+        
+        by_risk = result.get('by_risk', {})
+        
+        if by_risk.get('high'):
+            output_lines.append("## 🔴 High Risk (Elevated Short Activity)")
+            output_lines.append("")
+            
+            for stock_data in by_risk['high']:
+                ticker = stock_data.get('ticker', 'Unknown')
+                metrics = stock_data.get('metrics', {})
+                risk = stock_data.get('risk_analysis', {})
+                
+                output_lines.append(f"### {ticker}")
+                output_lines.append(f"- Average Short Ratio: {metrics.get('avg_short_ratio', 0):.2f}%")
+                output_lines.append(f"- Trend: {metrics.get('trend', 'Unknown')}")
+                output_lines.append(f"- Risk: {risk.get('description', 'Unknown')}")
+                if risk.get('factors'):
+                    for factor in risk['factors']:
+                        output_lines.append(f"  - {factor}")
+                output_lines.append("")
+        
+        if by_risk.get('medium'):
+            output_lines.append("## 🟡 Medium Risk (Moderate Short Activity)")
+            output_lines.append("")
+            
+            for stock_data in by_risk['medium']:
+                ticker = stock_data.get('ticker', 'Unknown')
+                metrics = stock_data.get('metrics', {})
+                
+                output_lines.append(f"### {ticker}")
+                output_lines.append(f"- Average Short Ratio: {metrics.get('avg_short_ratio', 0):.2f}%")
+                output_lines.append(f"- Trend: {metrics.get('trend', 'Unknown')}")
+                output_lines.append("")
+        
+        if by_risk.get('low'):
+            output_lines.append("## 🟢 Low Risk (Normal Short Activity)")
+            output_lines.append("")
+            low_tickers = [s.get('ticker', 'Unknown') for s in by_risk['low']]
+            output_lines.append(", ".join(low_tickers[:10]))
+            if len(low_tickers) > 10:
+                output_lines.append(f"... and {len(low_tickers) - 10} more")
+            output_lines.append("")
+        
+        stocks_no_data = result.get('stocks_no_data', [])
+        if stocks_no_data:
+            output_lines.append("## No Data Available")
+            output_lines.append("")
+            output_lines.append(", ".join(stocks_no_data))
+            output_lines.append("")
+        
+        output_lines.append("---")
+        output_lines.append(f"**As of:** {result.get('as_of', 'Unknown')}")
+        output_lines.append("")
+        output_lines.append("*Data provided by [Fintel.io](https://fintel.io)*")
+        
+        return "\n".join(output_lines)
+        
+    except Exception as e:
+        error_msg = f"Failed to get portfolio short analysis: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return f"""# 📊 Portfolio Short Volume Analysis
 
 ## ❌ Error
 {error_msg}

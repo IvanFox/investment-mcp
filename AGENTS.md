@@ -23,7 +23,7 @@
 - **Returns**: Always specify return types and document return values in docstrings
 
 ## Project Structure
-- `agent/` - Core modules (main.py, analysis.py, sheets_connector.py, storage.py, reporting.py, events_tracker.py, risk_analysis.py, insider_trading.py)
+- `agent/` - Core modules (main.py, analysis.py, sheets_connector.py, storage.py, reporting.py, events_tracker.py, risk_analysis.py, insider_trading.py, short_volume.py)
 - `server.py` - FastMCP server entry point
 - `pyproject.toml` - Project configuration with dependencies
 - `ticker_mapping.json` - Mapping of portfolio stock names to ticker symbols
@@ -103,6 +103,24 @@ Edit `ticker_mapping.json` and add mappings for all stocks in your portfolio:
   
   **Note:** All outputs include "Data provided by Fintel.io" attribution as required by Fintel's terms
 
+#### Short Volume Tracking
+- `get_short_volume(ticker, days=30)` - Fetches short selling activity for a specific stock over specified period:
+  - Daily short volume and total volume data
+  - Short volume ratio (percentage of daily volume that's short)
+  - 7-day and 30-day average short ratios
+  - Trend analysis (Increasing/Decreasing/Stable)
+  - Risk assessment based on short selling patterns
+  - Data from Fintel.io `/ss/` endpoint
+  
+- `get_portfolio_short_analysis()` - Analyzes short selling activity across all portfolio stocks:
+  - Stocks organized by risk level (High/Medium/Low)
+  - Average short ratio per stock with trend indicators
+  - Risk scoring based on short volume patterns
+  - Automatically excludes bonds, ETFs, pension, and cash positions
+  - Uses ticker_mapping.json to resolve stock tickers
+  
+  **Note:** Short interest data (% of float, days to cover) not available in current Fintel API tier
+
 ### Notes
 - **Earnings & Risk Analysis:**
   - Earnings reports are filtered to show only those within 60 days (2 months)
@@ -117,7 +135,14 @@ Edit `ticker_mapping.json` and add mappings for all stocks in your portfolio:
   - Option exercises with null values are counted as buys but excluded from value calculations
   - All insider trading outputs must include Fintel.io attribution
   
+- **Short Volume:**
+  - Shows daily short selling activity (typically 10+ days of historical data)
+  - Short volume ratio = (short volume / total volume) × 100
+  - Trend analysis compares recent 7-day avg vs previous 7-day avg (±10% threshold)
+  - Risk scoring: High (>40% ratio or score ≥5), Medium (30-40% or score 3-4), Low (<30% or score <3)
+  - All short volume outputs must include Fintel.io attribution
+  
 - **General:**
   - Missing ticker mappings will trigger an error with clear instructions to update `ticker_mapping.json`
   - For European stocks, include the exchange suffix (e.g., `.L` for London, `.PA` for Paris, `.AS` for Amsterdam)
-  - Cash, bonds, and pension positions are automatically excluded from event tracking, risk analysis, and insider trading
+  - Cash, bonds, and pension positions are automatically excluded from event tracking, risk analysis, insider trading, and short volume

@@ -11,6 +11,7 @@ An automated portfolio monitoring and performance analysis system built with Fas
 - **Upcoming Events**: Earnings reports from Alpha Vantage API
 - **Risk Analysis**: Beta, VaR, concentration risk, correlation matrix, sector exposure
 - **Insider Trading**: Track insider buys/sells for portfolio stocks via Fintel API
+- **Short Volume Tracking**: Monitor short selling activity and trends via Fintel API
 - **Rich Reporting**: Markdown reports with detailed breakdowns
 - **Secure Storage**: macOS Keychain for all credentials
 - **MCP Integration**: FastMCP tools for portfolio management
@@ -120,6 +121,8 @@ Available MCP tools:
 - `analyze_portfolio_risk()` - Perform comprehensive risk analysis
 - `get_insider_trades(ticker)` - Get insider trading activity for a specific stock
 - `get_portfolio_insider_trades()` - Get insider trading for all portfolio stocks
+- `get_short_volume(ticker, days)` - Get short selling activity for a specific stock
+- `get_portfolio_short_analysis()` - Analyze short selling across portfolio stocks
 
 ### Direct Analysis
 
