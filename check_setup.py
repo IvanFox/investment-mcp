@@ -33,6 +33,34 @@ def check_credentials():
         print("     -T \"\"")
         return None
 
+def check_alpha_vantage_key():
+    """Check Alpha Vantage API key."""
+    try:
+        from agent.events_tracker import load_alpha_vantage_api_key
+        
+        api_key = load_alpha_vantage_api_key()
+        masked_key = api_key[:8] + "..." if len(api_key) > 8 else "..."
+        print(f"✅ Alpha Vantage API Key: {masked_key}")
+        return True
+    except Exception as e:
+        print(f"❌ Alpha Vantage API key error: {e}")
+        print("💡 Run: ./setup_alpha_vantage.sh")
+        return False
+
+def check_fintel_key():
+    """Check Fintel API key."""
+    try:
+        from agent.insider_trading import load_fintel_api_key
+        
+        api_key = load_fintel_api_key()
+        masked_key = api_key[:8] + "..." if len(api_key) > 8 else "..."
+        print(f"✅ Fintel API Key: {masked_key}")
+        return True
+    except Exception as e:
+        print(f"❌ Fintel API key error: {e}")
+        print("💡 Run: ./setup_fintel.sh")
+        return False
+
 def check_sheet_config():
     """Check sheet configuration."""
     try:
@@ -76,11 +104,17 @@ if __name__ == "__main__":
     print("\n1. Checking keychain credentials...")
     service_email = check_credentials()
     
-    print("\n2. Checking sheet configuration...")
+    print("\n2. Checking Alpha Vantage API key...")
+    has_alpha_vantage = check_alpha_vantage_key()
+    
+    print("\n3. Checking Fintel API key...")
+    has_fintel = check_fintel_key()
+    
+    print("\n4. Checking sheet configuration...")
     sheet_id = check_sheet_config()
     
     if service_email and sheet_id:
-        print(f"\n3. Testing system...")
+        print(f"\n5. Testing system...")
         if test_system():
             print(f"\n🎉 System is fully operational!")
             print(f"🛠️  Start MCP server: uv run python server.py")

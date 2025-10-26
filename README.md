@@ -9,6 +9,9 @@ An automated portfolio monitoring and performance analysis system built with Fas
 - **Performance Analysis**: Week-over-week comparison with top/bottom movers
 - **Portfolio Allocation**: Breakdown by 6 asset categories
 - **Upcoming Events**: Earnings reports from Alpha Vantage API
+- **Risk Analysis**: Beta, VaR, concentration risk, correlation matrix, sector exposure
+- **Insider Trading**: Track insider buys/sells for portfolio stocks via Fintel API
+- **Short Volume Tracking**: Monitor short selling activity and trends via Fintel API
 - **Rich Reporting**: Markdown reports with detailed breakdowns
 - **Secure Storage**: macOS Keychain for all credentials
 - **MCP Integration**: FastMCP tools for portfolio management
@@ -42,9 +45,9 @@ security add-generic-password \
 
 **Important**: Share your Google Sheet with the service account email found in your JSON file (e.g., `investment-mcp@your-project.iam.gserviceaccount.com`)
 
-#### Alpha Vantage API (Events Tracking)
+#### Alpha Vantage API (Events & Risk Analysis)
 
-Store your Alpha Vantage API key for earnings tracking:
+Store your Alpha Vantage API key for earnings tracking and risk analysis:
 
 ```bash
 # Automated setup (recommended)
@@ -54,6 +57,22 @@ Store your Alpha Vantage API key for earnings tracking:
 security add-generic-password \
   -a "mcp-portfolio-agent" \
   -s "alpha-vantage-api-key" \
+  -w "YOUR_API_KEY_HERE" \
+  -U
+```
+
+#### Fintel API (Insider Trading)
+
+Store your Fintel API key for insider trading data:
+
+```bash
+# Automated setup (recommended)
+./setup_fintel.sh
+
+# Or manual setup
+security add-generic-password \
+  -a "mcp-portfolio-agent" \
+  -s "fintel-api-key" \
   -w "YOUR_API_KEY_HERE" \
   -U
 ```
@@ -99,6 +118,11 @@ Available MCP tools:
 - `get_portfolio_history_summary()` - View historical performance
 - `get_latest_positions()` - View all current positions organized by category
 - `get_upcoming_events()` - Fetch upcoming earnings reports (next 2 months)
+- `analyze_portfolio_risk()` - Perform comprehensive risk analysis
+- `get_insider_trades(ticker)` - Get insider trading activity for a specific stock
+- `get_portfolio_insider_trades()` - Get insider trading for all portfolio stocks
+- `get_short_volume(ticker, days)` - Get short selling activity for a specific stock
+- `get_portfolio_short_analysis()` - Analyze short selling across portfolio stocks
 
 ### Direct Analysis
 
