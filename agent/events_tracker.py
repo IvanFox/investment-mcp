@@ -1,61 +1,38 @@
 """
 Events Tracker Module for Earnings Calendar
 
-This module fetches earnings event data from Alpha Vantage API
-and filters/sorts events for portfolio stocks.
+This module fetches earnings event data using pluggable data providers.
+Default provider is Yahoo Finance (free, no API key required).
 """
 
 import json
-import subprocess
 import logging
-import csv
-import io
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Any
-import requests
+
+from .providers.yahoo_earnings_provider import YahooEarningsProvider
+from .earnings_models import EarningsEvent
 
 logger = logging.getLogger(__name__)
 
-ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query"
 DAYS_THRESHOLD = 60
 
+# Default earnings data provider
+_earnings_provider = None
 
-def load_alpha_vantage_api_key() -> str:
+
+def get_earnings_provider() -> YahooEarningsProvider:
     """
-    Load Alpha Vantage API key from macOS Keychain.
-
+    Get the configured earnings data provider.
+    
     Returns:
-        str: Alpha Vantage API key
-
-    Raises:
-        ValueError: If API key cannot be retrieved from keychain
+        YahooEarningsProvider: The earnings data provider instance
     """
-    try:
-        result = subprocess.run(
-            [
-                "security",
-                "find-generic-password",
-                "-a",
-                "mcp-portfolio-agent",
-                "-s",
-                "alpha-vantage-api-key",
-                "-w",
-            ],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        api_key = result.stdout.strip()
-        if not api_key:
-            raise ValueError("API key is empty")
-        logger.info("Successfully loaded Alpha Vantage API key from keychain")
-        return api_key
-    except subprocess.CalledProcessError as e:
-        raise ValueError(
-            f"Failed to retrieve Alpha Vantage API key from keychain: {e.stderr}"
-        )
-    except Exception as e:
-        raise ValueError(f"Failed to load Alpha Vantage API key: {e}")
+    global _earnings_provider
+    if _earnings_provider is None:
+        _earnings_provider = YahooEarningsProvider()
+        logger.info(f"Initialized earnings provider: {_earnings_provider.provider_name}")
+    return _earnings_provider
 
 
 def load_ticker_mapping() -> Dict[str, str]:
@@ -107,149 +84,92 @@ def get_ticker_for_asset(asset_name: str) -> str:
     return ticker_map[asset_name]
 
 
-def _parse_csv_response(csv_text: str) -> List[Dict[str, Any]]:
-    """
-    Parse CSV response from Alpha Vantage API.
-
-    Args:
-        csv_text: CSV formatted response text
-
-    Returns:
-        list: List of dictionaries parsed from CSV
-    """
-    try:
-        reader = csv.DictReader(io.StringIO(csv_text))
-        return list(reader) if reader else []
-    except Exception as e:
-        logger.error(f"Failed to parse CSV response: {e}")
-        return []
-
-
-def fetch_earnings_calendar(api_key: str) -> List[Dict[str, Any]]:
-    """
-    Fetch earnings calendar data from Alpha Vantage.
-
-    Args:
-        api_key: Alpha Vantage API key
-
-    Returns:
-        list: List of earnings events
-
-    Raises:
-        requests.RequestException: If API request fails
-    """
-    try:
-        params = {
-            "function": "EARNINGS_CALENDAR",
-            "apikey": api_key,
-            "horizon": "12month",
-        }
-
-        logger.debug(f"Fetching earnings calendar from Alpha Vantage with params: {params}")
-        response = requests.get(ALPHA_VANTAGE_BASE_URL, params=params, timeout=10)
-        response.raise_for_status()
-
-        logger.debug(f"Response status: {response.status_code}, Content-Type: {response.headers.get('content-type')}, Length: {len(response.text)}")
-
-        if not response.text or len(response.text.strip()) == 0:
-            logger.warning("Empty response from Alpha Vantage API for earnings calendar")
-            return []
-
-        try:
-            data = response.json()
-            logger.debug(f"Parsed JSON response with keys: {list(data.keys())}")
-            
-            if "Note" in data:
-                logger.warning(f"Alpha Vantage API rate limit: {data['Note']}")
-                return []
-            if "Error Message" in data:
-                logger.error(f"Alpha Vantage API error: {data['Error Message']}")
-                return []
-            earnings_data = data.get("data", [])
-            logger.info(f"Successfully fetched {len(earnings_data)} earnings events (JSON format)")
-        except (ValueError, json.JSONDecodeError) as e:
-            logger.debug(f"Failed to parse JSON response, attempting CSV parse: {e}")
-            earnings_data = _parse_csv_response(response.text)
-            logger.info(f"Successfully fetched {len(earnings_data)} earnings events (CSV format)")
-
-        return earnings_data
-
-    except requests.RequestException as e:
-        logger.error(f"Failed to fetch earnings calendar: {e}")
-        raise
-
-
-def parse_date(date_str: str) -> Optional[datetime]:
-    """
-    Parse date string from API response.
-
-    Args:
-        date_str: Date string in various formats
-
-    Returns:
-        datetime: Parsed datetime or None if parsing fails
-    """
-    if not date_str:
-        return None
-
-    for fmt in ["%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%d %b %Y"]:
-        try:
-            return datetime.strptime(date_str, fmt).replace(tzinfo=timezone.utc)
-        except ValueError:
-            continue
-
-    logger.warning(f"Could not parse date: {date_str}")
-    return None
-
-
 def filter_upcoming_events(
-    events: List[Dict[str, Any]], date_field: str = "reportDate"
-) -> List[Dict[str, Any]]:
+    events: List[EarningsEvent], days_threshold: int = DAYS_THRESHOLD
+) -> List[EarningsEvent]:
     """
-    Filter events that are within the next 2 months.
+    Filter events that are within the specified time threshold.
 
     Args:
-        events: List of event dictionaries
-        date_field: Field name containing the date
+        events: List of EarningsEvent objects
+        days_threshold: Number of days to look ahead (default: 60)
 
     Returns:
-        list: Filtered events within 2-month window
+        list: Filtered events within the time window
     """
     now = datetime.now(timezone.utc)
-    threshold_date = now + timedelta(days=DAYS_THRESHOLD)
+    threshold_date = now + timedelta(days=days_threshold)
 
     filtered_events = []
 
     for event in events:
-        date_str = event.get(date_field, "")
-        event_date = parse_date(date_str)
-
-        if event_date is None:
-            continue
-
+        # Ensure event date is timezone-aware
+        event_date = event.report_date
+        if event_date.tzinfo is None:
+            event_date = event_date.replace(tzinfo=timezone.utc)
+        
         if now <= event_date <= threshold_date:
-            days_until = (event_date - now).days
-            event_copy = event.copy()
-            event_copy["days_until"] = days_until
-            event_copy["parsed_date"] = event_date
-            filtered_events.append(event_copy)
+            filtered_events.append(event)
 
     return filtered_events
 
 
-def sort_events_chronologically(
-    events: List[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
+def sort_events_chronologically(events: List[EarningsEvent]) -> List[EarningsEvent]:
     """
     Sort events chronologically by date.
 
     Args:
-        events: List of event dictionaries
+        events: List of EarningsEvent objects
 
     Returns:
         list: Events sorted by date (earliest first)
     """
-    return sorted(events, key=lambda e: e.get("parsed_date", datetime.now(timezone.utc)))
+    return sorted(events, key=lambda e: e.report_date)
+
+
+def get_earnings_for_ticker(ticker: str) -> Optional[Dict[str, Any]]:
+    """
+    Get next earnings date for a specific ticker.
+    
+    Args:
+        ticker: Stock ticker symbol (e.g., "AAPL", "MSFT", "WISE.L")
+    
+    Returns:
+        dict: Earnings event information or error details
+    """
+    try:
+        provider = get_earnings_provider()
+        event = provider.fetch_earnings_for_ticker(ticker)
+        
+        if event is None:
+            return {
+                "success": False,
+                "error": f"No earnings date found for {ticker}",
+                "ticker": ticker,
+            }
+        
+        now = datetime.now(timezone.utc)
+        days_until = event.days_until(now)
+        
+        return {
+            "success": True,
+            "ticker": event.ticker,
+            "company_name": event.company_name,
+            "report_date": event.report_date.isoformat(),
+            "days_until": days_until,
+            "estimate": event.estimate,
+            "fiscal_period": event.fiscal_period,
+            "source": event.source,
+            "as_of": now.isoformat(),
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch earnings for {ticker}: {e}")
+        return {
+            "success": False,
+            "error": f"Failed to fetch earnings data: {str(e)}",
+            "ticker": ticker,
+        }
 
 
 def get_portfolio_upcoming_events(
@@ -265,22 +185,13 @@ def get_portfolio_upcoming_events(
         dict: Organized upcoming events or error information
 
     Raises:
-        ValueError: If unmapped stocks are found or API key is missing
+        ValueError: If unmapped stocks are found
     """
-    try:
-        api_key = load_alpha_vantage_api_key()
-    except ValueError as e:
-        return {
-            "success": False,
-            "error": f"Alpha Vantage API Key Error: {str(e)}",
-            "help": "Please store your Alpha Vantage API key in keychain using setup_alpha_vantage.sh",
-        }
-
     unmapped_stocks = []
     ticker_to_asset = {}
     skipped_assets = []
 
-    SKIP_CATEGORIES = {"Bonds", "Pension", "Cash"}
+    SKIP_CATEGORIES = {"Bonds", "Pension", "Cash", "ETFs"}
 
     for asset in portfolio_assets:
         asset_name = asset.get("name", "")
@@ -297,7 +208,7 @@ def get_portfolio_upcoming_events(
             unmapped_stocks.append(str(e))
 
     if skipped_assets:
-        logger.info(f"Skipped {len(skipped_assets)} assets (bonds/pensions/cash): {', '.join(skipped_assets[:5])}{'...' if len(skipped_assets) > 5 else ''}")
+        logger.info(f"Skipped {len(skipped_assets)} assets (bonds/ETFs/pensions/cash): {', '.join(skipped_assets[:5])}{'...' if len(skipped_assets) > 5 else ''}")
 
     if unmapped_stocks:
         return {
@@ -308,58 +219,68 @@ def get_portfolio_upcoming_events(
         }
 
     try:
-        earnings_events = fetch_earnings_calendar(api_key)
-    except requests.RequestException as e:
-        logger.error(f"Failed to fetch earnings calendar from Alpha Vantage: {str(e)}")
+        provider = get_earnings_provider()
+        portfolio_tickers = list(ticker_to_asset.keys())
+        
+        logger.info(f"Fetching earnings for {len(portfolio_tickers)} portfolio stocks from {provider.provider_name}...")
+        
+        # Fetch earnings for all portfolio tickers
+        earnings_events = provider.fetch_earnings_for_tickers(
+            portfolio_tickers, 
+            horizon_months=2  # 2 months = 60 days
+        )
+        
+        logger.info(f"Fetched {len(earnings_events)} earnings events from {provider.provider_name}")
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch earnings calendar: {str(e)}")
         return {
             "success": False,
             "error": f"Failed to fetch earnings data: {str(e)}",
         }
 
-    earnings_upcoming = filter_upcoming_events(earnings_events, "reportDate")
+    # Filter to only upcoming events within threshold
+    earnings_upcoming = filter_upcoming_events(earnings_events, DAYS_THRESHOLD)
     earnings_upcoming = sort_events_chronologically(earnings_upcoming)
 
-    portfolio_tickers = set(ticker_to_asset.keys())
-    portfolio_earnings = [
-        e for e in earnings_upcoming if e.get("symbol") in portfolio_tickers
-    ]
-
-    tickers_with_no_events = portfolio_tickers - {
-        e.get("symbol") for e in portfolio_earnings
-    }
+    tickers_with_events = {e.ticker for e in earnings_upcoming}
+    tickers_with_no_events = set(portfolio_tickers) - tickers_with_events
 
     if tickers_with_no_events:
         logger.debug(
             f"No upcoming events found for tickers: {', '.join(sorted(tickers_with_no_events))}"
         )
 
+    # Convert EarningsEvent objects to dictionaries
     all_events = []
+    now = datetime.now(timezone.utc)
 
-    for earning in portfolio_earnings:
+    for event in earnings_upcoming:
         try:
+            days_until = event.days_until(now)
             all_events.append(
                 {
                     "type": "Earnings Report",
-                    "ticker": earning.get("symbol"),
-                    "company_name": ticker_to_asset.get(earning.get("symbol"), ""),
-                    "date": earning.get("reportDate"),
-                    "days_until": earning.get("days_until"),
-                    "report_date": earning.get("reportDate"),
-                    "estimate": earning.get("estimate"),
+                    "ticker": event.ticker,
+                    "company_name": event.company_name,
+                    "date": event.report_date.strftime("%Y-%m-%d"),
+                    "days_until": days_until,
+                    "report_date": event.report_date.strftime("%Y-%m-%d"),
+                    "estimate": event.estimate,
+                    "source": event.source,
                 }
             )
         except Exception as e:
             logger.error(
-                f"Error processing earnings event for {earning.get('symbol')}: {str(e)}"
+                f"Error processing earnings event for {event.ticker}: {str(e)}"
             )
             continue
-
-    all_events = sort_events_chronologically(all_events)
 
     return {
         "success": True,
         "events": all_events,
         "total_events": len(all_events),
-        "earnings_count": len(portfolio_earnings),
-        "as_of": datetime.now(timezone.utc).isoformat(),
+        "earnings_count": len(all_events),
+        "provider": provider.provider_name,
+        "as_of": now.isoformat(),
     }
