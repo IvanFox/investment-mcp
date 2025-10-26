@@ -173,7 +173,7 @@ def get_upcoming_events() -> str:
      Get upcoming earnings reports for portfolio stocks.
      
      Returns upcoming earnings reports within the next 2 months, sorted chronologically.
-     Events are fetched from Alpha Vantage API and matched against portfolio stocks
+     Events are fetched from Yahoo Finance API and matched against portfolio stocks
      using the ticker_mapping.json file.
     
     Returns:
@@ -208,8 +208,7 @@ No upcoming earnings reports found within the next 2 months for your portfolio s
 
 **Note:** Ensure that:
 1. All portfolio stocks are mapped in ticker_mapping.json
-2. Your stocks have upcoming earnings announcements
-3. Alpha Vantage API key is properly configured"""
+2. Your stocks have upcoming earnings announcements"""
         
         output_lines = ["📅 Upcoming Earnings Reports (Next 2 Months)", "", ""]
         
@@ -235,6 +234,7 @@ No upcoming earnings reports found within the next 2 months for your portfolio s
         output_lines.append(f"**Summary:**")
         output_lines.append(f"- Total Reports: {result.get('total_events', 0)}")
         output_lines.append(f"- Earnings Reports: {result.get('earnings_count', 0)}")
+        output_lines.append(f"- Data Source: {result.get('provider', 'Unknown')}")
         output_lines.append(f"- Last Updated: {result.get('as_of', 'Unknown')}")
         
         return "\n".join(output_lines)
@@ -243,6 +243,77 @@ No upcoming earnings reports found within the next 2 months for your portfolio s
         error_msg = f"Failed to get upcoming events: {str(e)}"
         logger.error(error_msg, exc_info=True)
         return error_msg
+
+
+@mcp.tool()
+def get_earnings_date(ticker: str) -> str:
+    """
+    Get the next earnings date for a specific stock ticker.
+    
+    Fetches the upcoming earnings report date for any stock ticker symbol
+    using Yahoo Finance API. No API key required.
+    
+    Args:
+        ticker: Stock ticker symbol (e.g., "AAPL", "MSFT", "WISE.L")
+    
+    Returns:
+        str: Formatted earnings date information or error message
+    """
+    try:
+        from . import events_tracker
+        
+        logger.info(f"Fetching earnings date for {ticker}...")
+        
+        result = events_tracker.get_earnings_for_ticker(ticker)
+        
+        if not result.get("success", False):
+            return f"""# 📅 Earnings Date - {ticker}
+
+## ❌ Error
+{result.get('error', 'Unknown error occurred')}
+
+*Data provided by Yahoo Finance*"""
+        
+        days_until = result.get("days_until", 0)
+        report_date = result.get("report_date", "Unknown")
+        company_name = result.get("company_name", ticker)
+        estimate = result.get("estimate")
+        
+        output_lines = [
+            f"# 📅 Earnings Date - {ticker}",
+            "",
+            f"**Company:** {company_name}",
+            f"**Report Date:** {report_date}",
+            f"**Days Until:** {days_until} days",
+            "",
+        ]
+        
+        if estimate:
+            output_lines.append(f"**Earnings Estimate:** ${estimate:.2f}")
+            output_lines.append("")
+        
+        fiscal_period = result.get("fiscal_period")
+        if fiscal_period:
+            output_lines.append(f"**Fiscal Period:** {fiscal_period}")
+            output_lines.append("")
+        
+        output_lines.append("---")
+        output_lines.append(f"**Data Source:** {result.get('source', 'Unknown')}")
+        output_lines.append(f"**Last Updated:** {result.get('as_of', 'Unknown')}")
+        output_lines.append("")
+        output_lines.append("*Data provided by Yahoo Finance*")
+        
+        return "\n".join(output_lines)
+        
+    except Exception as e:
+        error_msg = f"Failed to get earnings date: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return f"""# 📅 Earnings Date - {ticker}
+
+## ❌ Error
+{error_msg}
+
+*Data provided by Yahoo Finance*"""
 
 
 @mcp.tool()
