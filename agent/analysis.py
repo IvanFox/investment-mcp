@@ -110,8 +110,24 @@ def compare_snapshots(
 
             current_value = current_asset.get("current_value_eur", 0.0)
             previous_value = previous_asset.get("current_value_eur", 0.0)
+            current_qty = current_asset.get("quantity", 0.0)
+            previous_qty = previous_asset.get("quantity", 0.0)
 
-            change_eur = current_value - previous_value
+            # Check if quantity changed
+            if abs(current_qty - previous_qty) > 0.01:
+                # Normalize value change to account for quantity change
+                # Calculate what the current value would be if quantity hadn't changed
+                if current_qty > 0 and previous_qty > 0:
+                    current_price_per_share = current_value / current_qty
+                    normalized_current_value = current_price_per_share * previous_qty
+                    change_eur = normalized_current_value - previous_value
+                else:
+                    # Edge case: all shares sold or quantity is zero
+                    change_eur = 0.0
+            else:
+                # No quantity change, use actual value change
+                change_eur = current_value - previous_value
+
             asset_changes.append({"name": name, "change_eur": round(change_eur, 2)})
 
         # Sort by absolute change to find top movers
