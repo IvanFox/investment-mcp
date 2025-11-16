@@ -24,6 +24,9 @@
 
 ## Project Structure
 - `agent/` - Core modules (main.py, analysis.py, sheets_connector.py, storage.py, reporting.py, events_tracker.py, risk_analysis.py, insider_trading.py, short_volume.py)
+- `agent/providers/` - Data provider implementations (yahoo_earnings_provider.py)
+- `agent/earnings_models.py` - Generic earnings data models
+- `agent/earnings_provider.py` - Abstract earnings provider interface
 - `server.py` - FastMCP server entry point
 - `pyproject.toml` - Project configuration with dependencies
 - `ticker_mapping.json` - Mapping of portfolio stock names to ticker symbols
@@ -32,7 +35,9 @@
 
 ## API Setup
 
-### Alpha Vantage API (Events & Risk Analysis)
+### Alpha Vantage API (Risk Analysis Only)
+
+**Note:** Alpha Vantage is now only used for risk analysis (historical price data). Earnings dates are fetched from Yahoo Finance (no API key required).
 
 #### 1. Store API Key in Keychain
 ```bash
@@ -75,8 +80,18 @@ Edit `ticker_mapping.json` and add mappings for all stocks in your portfolio:
 - `get_portfolio_history_summary()` - Shows portfolio performance since first snapshot
 - `get_latest_positions()` - Displays all current positions organized by category (Stocks, Bonds, ETFs, Pension, Cash) with gain/loss details
 
-#### Events & Risk Analysis
-- `get_upcoming_events()` - Fetches upcoming earnings reports for portfolio stocks within the next 2 months, sorted chronologically
+#### Events & Earnings Tracking
+- `get_upcoming_events()` - Fetches upcoming earnings reports for portfolio stocks within the next 2 months, sorted chronologically:
+  - Data from Yahoo Finance (free, no API key required)
+  - Automatically excludes bonds, ETFs, pension, and cash positions
+  - Uses ticker_mapping.json to resolve stock tickers
+  
+- `get_earnings_date(ticker)` - Get next earnings date for a specific stock ticker:
+  - Supports any ticker symbol (e.g., "AAPL", "MSFT", "WISE.L")
+  - Returns report date, company name, days until, and earnings estimate
+  - Data from Yahoo Finance (free, no API key required)
+
+#### Risk Analysis
 - `analyze_portfolio_risk()` - Performs comprehensive risk analysis including:
   - Portfolio beta (market sensitivity vs S&P 500)
   - Value at Risk (VaR) at 95% and 99% confidence levels
@@ -122,12 +137,17 @@ Edit `ticker_mapping.json` and add mappings for all stocks in your portfolio:
   **Note:** Short interest data (% of float, days to cover) not available in current Fintel API tier
 
 ### Notes
-- **Earnings & Risk Analysis:**
+- **Earnings Tracking:**
   - Earnings reports are filtered to show only those within 60 days (2 months)
-  - Only EARNINGS_CALENDAR endpoint is used (dividend data not available from Alpha Vantage)
+  - Data is fetched from Yahoo Finance (free, no API key required)
+  - Provider architecture allows easy switching to other data sources in the future
+  - All earnings data includes source attribution
+  
+- **Risk Analysis:**
   - Historical price data is cached for 24 hours in the `cache/` directory to minimize API calls
   - Risk analysis uses 252 trading days (1 year) of historical data for calculations
   - Risk analysis may take several minutes due to API rate limits (12s delay between calls)
+  - Uses Alpha Vantage API (requires API key)
   
 - **Insider Trading:**
   - Data is filtered to last 90 days
