@@ -31,8 +31,8 @@ ASSET_RANGES = {
 RATES_RANGE = f"{ACTIVE_SHEET_NAME}!O2:O3"  # Assuming GBP/EUR is B2, USD/EUR is B3
 
 # Define ranges for pension and cash data
-PENSION_RANGE = f"{ACTIVE_SHEET_NAME}!A52:E53"  # Pension schemes (2nd and 3rd pillar)
-CASH_RANGE = f"{ACTIVE_SHEET_NAME}!A58:B60"  # Cash positions in different currencies
+PENSION_RANGE = f"{ACTIVE_SHEET_NAME}!A53:E54"  # Pension schemes (2nd and 3rd pillar)
+CASH_RANGE = f"{ACTIVE_SHEET_NAME}!A58:B61"  # Cash positions in different currencies
 
 logger = logging.getLogger(__name__)
 

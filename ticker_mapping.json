@@ -24,6 +24,7 @@
     "Confluent": "CFLT",
     "Artea bank": "ART.L",
     "LHV": "LHV.EE",
+    "Vinci": "EPA:DG",
     "Ignitis": "IGN.LT",
     "ASML": "ASML.AS",
     "Siemens": "SIE.DE",
@@ -35,10 +36,11 @@
     "Liven": "LIVEN.TL",
     "VWCE": "VWCE.DE",
     "MEUD": "MEUD.MI",
+    "CIBR": "NASDAQ:CIBR",
     "II level": "II.LEVEL",
     "III level": "III.LEVEL",
     "Fiserv": "FI",
-    "Nebius": "NBIS",
+    "Nebius": "NBIS"
   },
   "_notes": [
     "For European stocks, use the appropriate exchange suffix (e.g., .L for London, .PA for Paris)",
