@@ -232,15 +232,62 @@ uv run python -m agent.main
 
 ## Data Storage
 
-- **File**: `portfolio_history.json`
-- **Format**: Array of timestamped snapshots
+Portfolio history is stored in **Google Cloud Storage** for automatic cross-machine synchronization:
+
+- **Primary Storage**: Google Cloud Storage bucket `investment_snapshots` (europe-north1)
+- **Backup Storage**: Local file `portfolio_history.json` (automatic dual-write)
+- **Format**: JSON array of timestamped snapshots
 - **Retention**: All historical data (no automatic cleanup)
+- **Sync**: Automatic with fallback to local when offline
+
+### Storage Behavior
+
+The system uses a **hybrid storage backend** with intelligent fallback:
+
+1. **Normal Operation**: Saves to both GCP and local file simultaneously
+2. **Offline Mode**: If GCP unavailable, saves locally and queues for retry
+3. **Auto-Sync**: When GCP becomes available, automatically uploads queued snapshots
+4. **Read Priority**: Always reads from GCP when available, falls back to local
+
+### Checking Storage Status
+
+Use the MCP tool to check storage backend status:
+
+```python
+get_storage_status()  # Shows GCP availability, sync status, pending uploads
+```
+
+### Manual Access
+
+**View data in GCP:**
+```bash
+# Using gsutil (if installed)
+gsutil cat gs://investment_snapshots/portfolio_history.json
+
+# Using gcloud
+gcloud storage cat gs://investment_snapshots/portfolio_history.json
+```
+
+**View local backup:**
+```bash
+cat portfolio_history.json
+```
+
+### Migration
+
+If you have existing local data, migrate it to GCP:
+
+```bash
+uv run python migrate_to_gcp.py
+```
+
+This uploads your existing `portfolio_history.json` to Google Cloud Storage.
 
 ## Technical Stack
 
 - **Language**: Python 3.12+
 - **Framework**: FastMCP
-- **APIs**: Google Sheets API, Alpha Vantage API
-- **Storage**: JSON file persistence
+- **APIs**: Google Sheets API, Alpha Vantage API, Fintel API, Yahoo Finance
+- **Storage**: Google Cloud Storage (primary) + Local JSON (backup)
 - **Security**: macOS Keychain
 - **Package Manager**: uv

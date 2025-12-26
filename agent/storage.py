@@ -1,169 +1,176 @@
 """
-Data Persistence in JSON
+Data Persistence Layer
 
-This module handles all file I/O for portfolio_history.json.
+This module provides the public interface for portfolio history storage,
+using pluggable backends (local files, GCP, etc.).
 """
 
 import json
-import os
-import shutil
-import tempfile
-from typing import Dict, List, Optional, Any
 import logging
+import subprocess
+from typing import Dict, List, Optional, Any
+
+from .storage_backend import StorageBackend
+from .backends.local_storage import LocalFileBackend
+from .backends.gcp_storage import GCPStorageBackend
+from .backends.hybrid_storage import HybridStorageBackend
 
 logger = logging.getLogger(__name__)
 
-HISTORY_FILE = "portfolio_history.json"
-BACKUP_FILE = "portfolio_history.json.bak"
-TEMP_FILE = "portfolio_history.json.tmp"
+# Global storage backend instance
+_storage_backend: Optional[StorageBackend] = None
+
+
+def _get_storage_backend() -> StorageBackend:
+    """
+    Get or initialize the storage backend.
+    
+    Lazy initialization on first use. Uses hybrid storage with:
+    - Primary: GCP Cloud Storage
+    - Fallback: Local file storage
+    
+    Returns:
+        StorageBackend: Configured storage backend
+    """
+    global _storage_backend
+    
+    if _storage_backend is None:
+        # Initialize backends
+        try:
+            # Local fallback backend (always initialize)
+            local_backend = LocalFileBackend(data_dir=".")
+            logger.info("Local file backend initialized")
+            
+            # Try to initialize GCP backend
+            try:
+                credentials_dict = _load_gcp_credentials()
+                gcp_backend = GCPStorageBackend(
+                    bucket_name="investment_snapshots",
+                    credentials_dict=credentials_dict
+                )
+                
+                # Use hybrid with GCP primary + local fallback
+                _storage_backend = HybridStorageBackend(
+                    primary=gcp_backend,
+                    fallback=local_backend
+                )
+                logger.info("Storage initialized: GCP primary + local fallback")
+                
+            except Exception as e:
+                # If GCP fails to initialize, use local only
+                logger.warning(f"GCP storage unavailable, using local only: {e}")
+                _storage_backend = local_backend
+        
+        except Exception as e:
+            logger.error(f"Failed to initialize storage backend: {e}")
+            raise
+    
+    return _storage_backend
+
+
+def _load_gcp_credentials() -> Dict[str, Any]:
+    """
+    Load GCP credentials from macOS Keychain.
+    
+    Returns:
+        dict: Service account credentials dictionary
+    """
+    try:
+        # Retrieve from Keychain (same account as Google Sheets)
+        result = subprocess.run(
+            [
+                "security",
+                "find-generic-password",
+                "-a", "mcp-portfolio-agent",
+                "-s", "google-sheets-credentials",
+                "-w"
+            ],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        
+        hex_data = result.stdout.strip()
+        
+        # Decode from hex
+        json_bytes = bytes.fromhex(hex_data)
+        json_str = json_bytes.decode('utf-8')
+        
+        credentials = json.loads(json_str)
+        
+        logger.info("GCP credentials loaded from Keychain")
+        return credentials
+        
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to retrieve credentials from Keychain: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Failed to parse credentials: {e}")
+        raise
 
 
 def _validate_snapshot_structure(snapshot_data: Dict[str, Any]) -> None:
     """
     Validates that snapshot data has the required structure.
-
+    
     Args:
         snapshot_data: Dictionary to validate
-
+        
     Raises:
         ValueError: If snapshot structure is invalid
     """
     required_fields = ["timestamp", "total_value_eur", "assets"]
-
+    
     for field in required_fields:
         if field not in snapshot_data:
             raise ValueError(f"Invalid snapshot: missing required field '{field}'")
-
+    
     if not isinstance(snapshot_data["assets"], list):
         raise ValueError("Invalid snapshot: 'assets' must be a list")
-
+    
     if not isinstance(snapshot_data["total_value_eur"], (int, float)):
         raise ValueError("Invalid snapshot: 'total_value_eur' must be a number")
 
 
 def save_snapshot(snapshot_data: Dict[str, Any]) -> None:
     """
-    Appends a new snapshot to the portfolio_history.json file with data protection.
-
-    Safety features:
-    - Validates snapshot structure before writing
-    - Fails fast on corrupted JSON (preserves corrupted file for recovery)
-    - Creates .bak backup before overwriting
-    - Uses atomic write (temp file + rename) to prevent partial writes
-    - Comprehensive error logging
-
+    Save a portfolio snapshot to storage.
+    
+    Validates snapshot structure and saves to configured backend
+    (GCP primary with local fallback).
+    
     Args:
-        snapshot_data: Dictionary conforming to the Snapshot JSON Schema
-
+        snapshot_data: Dictionary conforming to Snapshot JSON Schema
+        
     Raises:
         ValueError: If snapshot data is invalid
-        IOError: If file operations fail
-        json.JSONDecodeError: If existing file contains invalid JSON
+        IOError: If all storage backends fail
     """
     try:
-        # Step 1: Validate input data structure
+        # Validate input
         logger.info("Validating snapshot data structure...")
         _validate_snapshot_structure(snapshot_data)
-
-        # Step 2: Read existing history with fail-fast on corruption
-        history = []
-        if os.path.exists(HISTORY_FILE):
-            logger.info(f"Reading existing history from {HISTORY_FILE}...")
-            try:
-                with open(HISTORY_FILE, "r") as f:
-                    content = f.read().strip()
-                    if content:
-                        history = json.loads(content)
-
-                # Validate history is a list
-                if not isinstance(history, list):
-                    raise ValueError(
-                        f"History file {HISTORY_FILE} has invalid format: expected list, got {type(history).__name__}"
-                    )
-
-                logger.info(f"Successfully loaded {len(history)} existing snapshots")
-
-            except json.JSONDecodeError as e:
-                # FAIL FAST: Do not overwrite corrupted file
-                error_msg = (
-                    f"CRITICAL: History file {HISTORY_FILE} contains invalid JSON and cannot be parsed.\n"
-                    f"JSON Error: {e}\n"
-                    f"The file has been preserved and will NOT be overwritten.\n"
-                    f"Action required:\n"
-                    f"  1. Inspect the file at: {os.path.abspath(HISTORY_FILE)}\n"
-                    f"  2. Fix the JSON syntax manually, or\n"
-                    f"  3. Restore from backup: {os.path.abspath(BACKUP_FILE)} (if available), or\n"
-                    f"  4. Rename/move the corrupted file and restart with fresh history"
+        
+        # Get backend
+        backend = _get_storage_backend()
+        
+        # Save snapshot
+        logger.info("Saving snapshot to storage...")
+        success = backend.save_snapshot(snapshot_data)
+        
+        if not success:
+            raise IOError("All storage backends failed to save snapshot")
+        
+        logger.info("Snapshot saved successfully")
+        
+        # Log sync status if using hybrid storage
+        if isinstance(backend, HybridStorageBackend):
+            status = backend.get_sync_status()
+            if not status["fully_synced"]:
+                logger.warning(
+                    f"Snapshot saved locally, {status['pending_syncs']} pending GCP syncs"
                 )
-                logger.error(error_msg)
-                raise json.JSONDecodeError(
-                    f"Corrupted history file preserved at {os.path.abspath(HISTORY_FILE)}: {e.msg}",
-                    e.doc,
-                    e.pos,
-                ) from e
-
-            except IOError as e:
-                error_msg = f"Failed to read history file {HISTORY_FILE}: {e}"
-                logger.error(error_msg)
-                raise IOError(error_msg) from e
-        else:
-            logger.info(f"No existing history file found. Starting fresh.")
-
-        # Step 3: Create backup of existing file (if it exists)
-        if os.path.exists(HISTORY_FILE):
-            logger.info(f"Creating backup: {HISTORY_FILE} -> {BACKUP_FILE}")
-            try:
-                shutil.copy2(HISTORY_FILE, BACKUP_FILE)
-                logger.info("Backup created successfully")
-            except IOError as e:
-                error_msg = f"Failed to create backup file {BACKUP_FILE}: {e}"
-                logger.error(error_msg)
-                raise IOError(error_msg) from e
-
-        # Step 4: Append new snapshot
-        history.append(snapshot_data)
-        logger.info(f"Appended new snapshot. Total snapshots: {len(history)}")
-
-        # Step 5: Validate that the full history can be serialized to JSON
-        try:
-            json_content = json.dumps(history, indent=2, ensure_ascii=False)
-        except (TypeError, ValueError) as e:
-            error_msg = f"Failed to serialize history to JSON: {e}"
-            logger.error(error_msg)
-            raise ValueError(error_msg) from e
-
-        # Step 6: Atomic write using temp file + rename
-        logger.info(f"Writing to temporary file: {TEMP_FILE}")
-        try:
-            # Write to temp file
-            with open(TEMP_FILE, "w") as f:
-                f.write(json_content)
-                f.flush()  # Ensure data is written to disk
-                os.fsync(f.fileno())  # Force OS to write to disk
-
-            logger.info(
-                f"Temp file written successfully. Renaming {TEMP_FILE} -> {HISTORY_FILE}"
-            )
-
-            # Atomic rename (POSIX guarantees atomicity)
-            os.replace(TEMP_FILE, HISTORY_FILE)
-
-            logger.info(
-                f"Successfully saved snapshot to {HISTORY_FILE}. Total snapshots: {len(history)}"
-            )
-
-        except IOError as e:
-            error_msg = f"Failed to write history file: {e}"
-            logger.error(error_msg)
-            # Clean up temp file if it exists
-            if os.path.exists(TEMP_FILE):
-                try:
-                    os.remove(TEMP_FILE)
-                    logger.info(f"Cleaned up temporary file {TEMP_FILE}")
-                except:
-                    pass
-            raise IOError(error_msg) from e
-
+        
     except Exception as e:
         logger.error(f"Failed to save snapshot: {e}", exc_info=True)
         raise
@@ -171,76 +178,65 @@ def save_snapshot(snapshot_data: Dict[str, Any]) -> None:
 
 def get_latest_snapshot() -> Optional[Dict[str, Any]]:
     """
-    Retrieves the most recent snapshot from the history file.
-
+    Retrieves the most recent snapshot from storage.
+    
     Returns:
-        dict: The latest snapshot object, or None if the file is empty
+        dict: The latest snapshot object, or None if unavailable
     """
     try:
-        if not os.path.exists(HISTORY_FILE):
-            logger.info(f"History file {HISTORY_FILE} does not exist")
-            return None
-
-        with open(HISTORY_FILE, "r") as f:
-            content = f.read().strip()
-            if not content:
-                logger.info("History file is empty")
-                return None
-
-            history = json.loads(content)
-
-            if not isinstance(history, list):
-                logger.warning("History file format invalid")
-                return None
-
-            if len(history) == 0:
-                logger.info("No snapshots in history")
-                return None
-
-            latest = history[-1]
-            logger.info(
-                f"Retrieved latest snapshot from {latest.get('timestamp', 'unknown time')}"
-            )
-            return latest
-
-    except (json.JSONDecodeError, IOError) as e:
-        logger.error(f"Failed to read latest snapshot: {e}")
-        return None
+        backend = _get_storage_backend()
+        snapshot = backend.get_latest_snapshot()
+        
+        if snapshot:
+            logger.info(f"Retrieved latest snapshot from {snapshot.get('timestamp', 'unknown time')}")
+        
+        return snapshot
+        
     except Exception as e:
-        logger.error(f"Unexpected error reading latest snapshot: {e}")
+        logger.error(f"Failed to get latest snapshot: {e}")
         return None
 
 
 def get_all_snapshots() -> List[Dict[str, Any]]:
     """
-    Retrieves all snapshots from the history file.
-
+    Retrieves all snapshots from storage.
+    
     Returns:
-        list: All snapshot objects, or empty list if file doesn't exist or is empty
+        list: All snapshot objects, or empty list if unavailable
     """
     try:
-        if not os.path.exists(HISTORY_FILE):
-            logger.info(f"History file {HISTORY_FILE} does not exist")
-            return []
-
-        with open(HISTORY_FILE, "r") as f:
-            content = f.read().strip()
-            if not content:
-                logger.info("History file is empty")
-                return []
-
-            history = json.loads(content)
-
-            if not isinstance(history, list):
-                logger.warning("History file format invalid")
-                return []
-
-            logger.info(f"Retrieved {len(history)} snapshots from history")
-            return history
-
-    except (json.JSONDecodeError, IOError) as e:
-        logger.error(f"Failed to read snapshots: {e}")
-        return []
+        backend = _get_storage_backend()
+        snapshots = backend.get_all_snapshots()
+        
+        logger.info(f"Retrieved {len(snapshots)} snapshots from storage")
+        return snapshots
+        
     except Exception as e:
-        logger.error(f"Unexpected error reading snapshots: {e}")
+        logger.error(f"Failed to get all snapshots: {e}")
         return []
+
+
+def get_storage_status() -> Dict[str, Any]:
+    """
+    Get current storage backend status.
+    
+    Returns:
+        dict: Storage status information
+    """
+    try:
+        backend = _get_storage_backend()
+        
+        status = {
+            "backend_type": backend.__class__.__name__,
+            "available": backend.is_available()
+        }
+        
+        # Add hybrid-specific status
+        if isinstance(backend, HybridStorageBackend):
+            status.update(backend.get_sync_status())
+        
+        return status
+        
+    except Exception as e:
+        logger.error(f"Failed to get storage status: {e}")
+        return {"error": str(e)}
