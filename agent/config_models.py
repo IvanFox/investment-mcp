@@ -10,32 +10,65 @@ from typing import Dict, List, Literal
 
 
 class CurrencyCells(BaseModel):
-    """Currency conversion cell locations in Google Sheets."""
-    gbp_to_eur: str = "O2"
-    usd_to_eur: str = "O3"
+    """
+    Currency conversion cell locations in Google Sheets.
+    
+    These are USER-CONFIGURABLE and subject to change based on your sheet structure.
+    Defaults are provided but can be overridden in config.yaml.
+    """
+    gbp_to_eur: str = Field(default="O2", description="Cell containing GBP to EUR rate")
+    usd_to_eur: str = Field(default="O3", description="Cell containing USD to EUR rate")
 
 
 class DataRanges(BaseModel):
-    """Google Sheets data ranges for different asset types."""
-    us_stocks: str = "A5:L19"
-    eu_stocks: str = "A20:L35"
-    bonds: str = "A37:L39"
-    etfs: str = "A40:L45"
-    pension: str = "A52:E53"
-    cash: str = "A58:B60"
+    """
+    Google Sheets data ranges for different asset types.
+    
+    These are USER-CONFIGURABLE and subject to change based on your sheet structure.
+    Defaults match the standard template but can be customized in config.yaml.
+    No validation is performed - if ranges are incorrect, Google Sheets API will return clear errors.
+    """
+    us_stocks: str = Field(default="A5:L19", description="Range for US stocks data")
+    eu_stocks: str = Field(default="A20:L35", description="Range for EU stocks data")
+    bonds: str = Field(default="A37:L39", description="Range for bonds data")
+    etfs: str = Field(default="A40:L45", description="Range for ETFs data")
+    pension: str = Field(default="A52:E53", description="Range for pension data")
+    cash: str = Field(default="A58:B60", description="Range for cash positions data")
 
 
 class GoogleSheetsConfig(BaseModel):
-    """Google Sheets configuration."""
-    sheet_id: str = Field(..., description="Google Sheet ID (required)")
-    sheet_name: str = "2025"
-    currency_cells: CurrencyCells = Field(default_factory=CurrencyCells)
-    ranges: DataRanges = Field(default_factory=DataRanges)
+    """
+    Google Sheets configuration.
+    
+    REQUIRED: Only sheet_id is required (external provider credential).
+    OPTIONAL: sheet_name, currency_cells, and ranges are user-configurable with sensible defaults.
+    """
+    # REQUIRED: External provider credential
+    sheet_id: str = Field(..., description="Google Sheet ID (REQUIRED)")
+    
+    # OPTIONAL: User-configurable data structure (defaults provided)
+    sheet_name: str = Field(
+        default="2025", 
+        description="Active sheet tab name (optional, default: '2025')"
+    )
+    currency_cells: CurrencyCells = Field(
+        default_factory=CurrencyCells,
+        description="Currency conversion cell locations (optional, defaults provided)"
+    )
+    ranges: DataRanges = Field(
+        default_factory=DataRanges,
+        description="Data ranges for asset types (optional, defaults provided)"
+    )
     
     @field_validator('sheet_id')
     @classmethod
     def validate_sheet_id(cls, v: str) -> str:
-        """Validate sheet_id is set and not a placeholder."""
+        """
+        Validate sheet_id is set and not a placeholder.
+        
+        This is the ONLY required field for Google Sheets connection.
+        All other fields (sheet_name, currency_cells, ranges) are optional user configurations.
+        """
         if not v or v.strip() == "" or "YOUR_SHEET_ID" in v.upper():
             raise ValueError(
                 "sheet_id must be set to your actual Google Sheet ID. "

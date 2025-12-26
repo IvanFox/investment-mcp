@@ -17,26 +17,50 @@ import logging
 
 from . import config
 
-# Constants
-ACTIVE_SHEET_NAME = "2025"
-
-# Define the specific cell ranges for each asset category
-# Column mapping: A=Name, B=Quantity, C=(Other), D=Purchase Price Total, E=Current Value Total
-ASSET_RANGES = {
-    "stocks_us": f"{ACTIVE_SHEET_NAME}!A4:L19",
-    "stocks_eu": f"{ACTIVE_SHEET_NAME}!A20:L35",
-    "bonds": f"{ACTIVE_SHEET_NAME}!A37:L39",
-    "etfs": f"{ACTIVE_SHEET_NAME}!A40:L45",
-}
-
-# Define the cells containing currency conversion rates
-RATES_RANGE = f"{ACTIVE_SHEET_NAME}!O2:O3"  # Assuming GBP/EUR is B2, USD/EUR is B3
-
-# Define ranges for pension and cash data
-PENSION_RANGE = f"{ACTIVE_SHEET_NAME}!A53:E54"  # Pension schemes (2nd and 3rd pillar)
-CASH_RANGE = f"{ACTIVE_SHEET_NAME}!A58:B61"  # Cash positions in different currencies
-
 logger = logging.getLogger(__name__)
+
+
+# ============================================================================
+# Dynamic range getters - read from config instead of hardcoded constants
+# ============================================================================
+
+def _get_sheet_name() -> str:
+    """Get active sheet name from config."""
+    return config.get_sheet_name()
+
+
+def _get_asset_ranges() -> Dict[str, str]:
+    """Get asset ranges from config with sheet name prefix."""
+    ranges = config.get_data_ranges()
+    sheet_name = _get_sheet_name()
+    return {
+        "stocks_us": f"{sheet_name}!{ranges.us_stocks}",
+        "stocks_eu": f"{sheet_name}!{ranges.eu_stocks}",
+        "bonds": f"{sheet_name}!{ranges.bonds}",
+        "etfs": f"{sheet_name}!{ranges.etfs}",
+    }
+
+
+def _get_rates_range() -> str:
+    """Get currency rates range from config."""
+    cells = config.get_currency_cells()
+    sheet_name = _get_sheet_name()
+    # Construct range from first cell to last cell
+    return f"{sheet_name}!{cells.gbp_to_eur}:{cells.usd_to_eur}"
+
+
+def _get_pension_range() -> str:
+    """Get pension range from config."""
+    ranges = config.get_data_ranges()
+    sheet_name = _get_sheet_name()
+    return f"{sheet_name}!{ranges.pension}"
+
+
+def _get_cash_range() -> str:
+    """Get cash range from config."""
+    ranges = config.get_data_ranges()
+    sheet_name = _get_sheet_name()
+    return f"{sheet_name}!{ranges.cash}"
 
 
 def parse_currency_value(value_str):
@@ -191,9 +215,15 @@ def fetch_portfolio_data() -> Dict[str, Any]:
         if not spreadsheet_id:
             raise ValueError("Sheet ID not found in configuration")
 
+        # Get ranges from config
+        asset_ranges = _get_asset_ranges()
+        rates_range = _get_rates_range()
+        pension_range = _get_pension_range()
+        cash_range = _get_cash_range()
+
         # Prepare batch request for all ranges
         ranges = (
-            [RATES_RANGE] + list(ASSET_RANGES.values()) + [PENSION_RANGE, CASH_RANGE]
+            [rates_range] + list(asset_ranges.values()) + [pension_range, cash_range]
         )
 
         # Batch get all ranges
@@ -212,16 +242,16 @@ def fetch_portfolio_data() -> Dict[str, Any]:
         # Extract rates (first range)
         rates = value_ranges[0].get("values", [])
 
-        # Extract asset data (ranges 1 to len(ASSET_RANGES))
+        # Extract asset data (ranges 1 to len(asset_ranges))
         assets = {}
-        for i, (category, _) in enumerate(ASSET_RANGES.items()):
+        for i, (category, _) in enumerate(asset_ranges.items()):
             assets[category] = value_ranges[i + 1].get("values", [])
 
         # Extract pension data (range after asset ranges)
-        pension_data = value_ranges[len(ASSET_RANGES) + 1].get("values", [])
+        pension_data = value_ranges[len(asset_ranges) + 1].get("values", [])
 
         # Extract cash data (last range)
-        cash_data = value_ranges[len(ASSET_RANGES) + 2].get("values", [])
+        cash_data = value_ranges[len(asset_ranges) + 2].get("values", [])
 
         raw_data = {
             "rates": rates,

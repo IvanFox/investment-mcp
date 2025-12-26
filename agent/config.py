@@ -11,7 +11,7 @@ from typing import Optional, Dict
 import logging
 
 from pydantic import ValidationError
-from .config_models import InvestmentConfig
+from .config_models import InvestmentConfig, CurrencyCells, DataRanges
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +181,16 @@ def get_sheet_id() -> str:
 def get_sheet_name() -> str:
     """Get Google Sheet name (tab)."""
     return get_config().google_sheets.sheet_name
+
+
+def get_currency_cells() -> CurrencyCells:
+    """Get currency conversion cell locations."""
+    return get_config().google_sheets.currency_cells
+
+
+def get_data_ranges() -> DataRanges:
+    """Get data ranges for asset types."""
+    return get_config().google_sheets.ranges
 
 
 def get_ticker_mappings() -> Dict[str, str]:

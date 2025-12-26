@@ -86,21 +86,15 @@ cp config.yaml.example config.yaml
 # Edit config.yaml with your Google Sheet ID and ticker mappings
 ```
 
-The `config.yaml` file contains all application settings:
+#### Required Configuration
+
+Only **two fields are required** to connect to external providers:
 
 ```yaml
 google_sheets:
-  sheet_id: YOUR_GOOGLE_SHEET_ID_HERE
+  sheet_id: YOUR_GOOGLE_SHEET_ID_HERE  # REQUIRED
 
-storage:
-  backend: hybrid  # Options: hybrid, gcp, local
-  gcp:
-    bucket_name: investment_snapshots
-    credentials_source: keychain
-  local:
-    file_path: ./portfolio_history.json
-
-ticker_mappings:
+ticker_mappings:  # REQUIRED
   Apple Inc: AAPL
   Microsoft Corporation: MSFT
   ASML Holding: ASML.AS
@@ -108,6 +102,36 @@ ticker_mappings:
 ```
 
 For European stocks, include the exchange suffix (e.g., `.L` for London, `.PA` for Paris, `.AS` for Amsterdam).
+
+#### Optional Configuration
+
+All other settings have sensible defaults and only need to be specified if you want to customize them:
+
+**Storage settings** (default: hybrid mode with `investment_snapshots` bucket):
+```yaml
+storage:
+  backend: hybrid  # Options: hybrid, gcp, local
+  gcp:
+    bucket_name: investment_snapshots
+```
+
+**Sheet structure** (only needed if your sheet layout differs from defaults):
+```yaml
+google_sheets:
+  sheet_name: "2025"  # Default sheet tab name
+  currency_cells:
+    gbp_to_eur: "O2"  # Cell with GBP/EUR rate
+    usd_to_eur: "O3"  # Cell with USD/EUR rate
+  ranges:
+    us_stocks: "A5:L19"
+    eu_stocks: "A20:L35"
+    bonds: "A37:L39"
+    etfs: "A40:L45"
+    pension: "A52:E53"
+    cash: "A58:B60"
+```
+
+**Note:** Data ranges are user-configurable and subject to change over time. The application does not validate these ranges - if they're incorrect, Google Sheets API will return clear error messages.
 
 #### Environment Variable Overrides
 

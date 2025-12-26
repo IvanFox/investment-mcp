@@ -10,26 +10,40 @@
 #   INVESTMENT_LOG_LEVEL      - Override logging.level
 
 # ============================================================================
-# REQUIRED: Google Sheets Configuration
+# Google Sheets Configuration
 # ============================================================================
 google_sheets:
-  # REQUIRED: Your Google Sheet ID (find in URL)
+  # *** REQUIRED *** - External provider credential
+  # Your Google Sheet ID (find in your sheet URL)
   # Example: https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID_HERE/edit
   sheet_id: "YOUR_SHEET_ID_HERE"
   
-  sheet_name: "2025"
+  # -------------------------------------------------------------------------
+  # OPTIONAL - User-configurable data structure (sensible defaults provided)
+  # Only customize these if your sheet structure differs from the standard
+  # If omitted, defaults will be used automatically
+  # -------------------------------------------------------------------------
   
-  currency_cells:
-    gbp_to_eur: "O2"
-    usd_to_eur: "O3"
+  # Active sheet tab name (default: "2025")
+  # Uncomment and modify if your active sheet has a different name
+  # sheet_name: "2025"
   
-  ranges:
-    us_stocks: "A5:L19"
-    eu_stocks: "A20:L35"
-    bonds: "A37:L39"
-    etfs: "A40:L45"
-    pension: "A52:E53"
-    cash: "A58:B60"
+  # Currency conversion cell locations (defaults: gbp_to_eur="O2", usd_to_eur="O3")
+  # Uncomment and modify if your currency rates are in different cells
+  # currency_cells:
+  #   gbp_to_eur: "O2"
+  #   usd_to_eur: "O3"
+  
+  # Data ranges for different asset types
+  # Format: "StartCell:EndCell" (e.g., "A5:L19")
+  # Uncomment and modify if your data ranges differ from defaults
+  # ranges:
+  #   us_stocks: "A5:L19"
+  #   eu_stocks: "A20:L35"
+  #   bonds: "A37:L39"
+  #   etfs: "A40:L45"
+  #   pension: "A52:E53"
+  #   cash: "A58:B60"
 
 # ============================================================================
 # Storage Configuration
