@@ -2,35 +2,136 @@
 
 ## Build/Test Commands
 - **Install dependencies**: `uv sync`
-- **Run server**: `python server.py`
-- **Run single test**: No test framework configured (add pytest for testing)
-- **Check setup**: `python check_setup.py`
-- **Package management**: Use `uv` for all dependency management
+- **Run server**: `uv run python server.py`
+- **Run all config tests**: `uv run python test_config.py`
+- **Run all GCP storage tests**: `uv run python test_gcp_storage.py`
+- **Run single test file**: `uv run python test_<name>.py`
+- **Check setup**: `uv run python check_setup.py`
+- **Package management**: Use `uv` for all dependency management (NOT pip)
 
 ## Code Style Guidelines
+
+### Imports
+- **Order**: Standard library, blank line, third-party, blank line, local imports
+- **From imports**: Use `from typing import Dict, List, Optional, Any` for type hints
+- **Module imports**: Use `import logging`, `import json`, etc. for standard library
+- **Relative imports**: Use `from . import config` and `from .config_models import InvestmentConfig`
+- **Example**:
+```python
+import json
+import logging
+from datetime import datetime
+from typing import Dict, List, Optional, Any
+
+import numpy as np
+import pandas as pd
+from pydantic import BaseModel, Field
+
+from . import config
+from .config_models import InvestmentConfig
+```
+
+### Formatting & Style
 - **Python version**: 3.12+ (as specified in pyproject.toml)
-- **Imports**: Standard library first, third-party, then local imports with blank lines between groups
-- **Formatting**: Use double quotes for strings, 4-space indentation
-- **Type hints**: Required for function signatures, use `typing` module imports
-- **Docstrings**: Google-style docstrings for all functions and classes
-- **Naming**: snake_case for functions/variables, PascalCase for classes
-- **Constants**: UPPER_CASE constants at module level
-- **Error handling**: Use try/except blocks with specific exception types, log errors with context
-- **Logging**: Use module-level logger = logging.getLogger(__name__)
-- **File organization**: Related functions in modules (sheets_connector, analysis, storage, reporting)
-- **Comments**: Focus on why not what, avoid inline comments unless necessary
-- **Line length**: Keep reasonable (appears to follow ~100 char limit from examples)
-- **Returns**: Always specify return types and document return values in docstrings
+- **Strings**: Always use double quotes (`"string"` not `'string'`)
+- **Indentation**: 4 spaces (no tabs)
+- **Line length**: ~100 characters max (flexible, prioritize readability)
+- **Trailing commas**: Use in multi-line lists, dicts, and function arguments
+
+### Type Hints
+- **Required**: All function signatures must have type hints
+- **Parameters**: Type hint all parameters
+- **Returns**: Always specify return type (use `None` if no return value)
+- **Example**:
+```python
+def get_ticker_for_stock(stock_name: str) -> Optional[str]:
+    """Get ticker symbol for a stock name."""
+    return get_config().ticker_mappings.get(stock_name)
+```
+
+### Docstrings
+- **Style**: Google-style docstrings for all public functions and classes
+- **Format**: Triple double-quotes, summary line, blank line, details
+- **Include**: Args, Returns, Raises sections as applicable
+- **Example**:
+```python
+def save_snapshot(snapshot_data: Dict[str, Any]) -> None:
+    """
+    Save a portfolio snapshot to storage.
+    
+    Validates snapshot structure and saves to configured backend
+    (GCP primary with local fallback).
+    
+    Args:
+        snapshot_data: Dictionary conforming to Snapshot JSON Schema
+        
+    Raises:
+        ValueError: If snapshot data is invalid
+        IOError: If all storage backends fail
+    """
+```
+
+### Naming Conventions
+- **Functions/variables**: `snake_case` (e.g., `get_latest_snapshot`, `total_value_eur`)
+- **Classes**: `PascalCase` (e.g., `InvestmentConfig`, `GCPStorageBackend`)
+- **Constants**: `UPPER_SNAKE_CASE` at module level (e.g., `CACHE_DIR`, `API_RATE_LIMIT_DELAY`)
+- **Private functions**: Prefix with `_` (e.g., `_get_storage_backend`, `_validate_snapshot_structure`)
+- **Module-level globals**: Prefix with `_` and type hint (e.g., `_config: Optional[InvestmentConfig] = None`)
+
+### Error Handling
+- **Specific exceptions**: Always catch specific exception types, never bare `except:`
+- **Context**: Log errors with context using `logger.error()`
+- **Re-raise**: Re-raise with enhanced error messages when appropriate
+- **Example**:
+```python
+try:
+    config = InvestmentConfig(**yaml_data)
+except ValidationError as e:
+    raise ValueError(
+        f"❌ CRITICAL: Configuration validation failed.\n\n"
+        f"Errors in {config_path}:\n{e}\n\n"
+        f"Please fix the configuration errors above."
+    )
+```
+
+### Logging
+- **Setup**: Use module-level logger: `logger = logging.getLogger(__name__)`
+- **Levels**: INFO for operations, WARNING for recoverable issues, ERROR for failures
+- **Messages**: Clear, actionable messages with context
+- **Example**: `logger.info(f"Retrieved {len(snapshots)} snapshots from storage")`
+
+### File Organization
+- **Module structure**: Related functions grouped in focused modules
+- **Core modules**: `agent/` directory (config.py, storage.py, sheets_connector.py, analysis.py, etc.)
+- **Backends**: `agent/backends/` for pluggable storage implementations
+- **Providers**: `agent/providers/` for external data source integrations
+- **Tests**: Root directory, named `test_<module>.py`
+
+### Comments & Documentation
+- **Focus on why**: Comments explain why, not what (code should be self-documenting)
+- **Inline comments**: Avoid unless necessary for complex logic
+- **Module docstrings**: Every module has a docstring explaining its purpose
+- **TODO comments**: Use `# TODO:` for future improvements (rare, prefer issues)
+
+### Configuration & Credentials
+- **Never hardcode**: No hardcoded credentials, API keys, or sensitive data in code
+- **Keychain**: Store all credentials in macOS Keychain
+- **Config file**: Use `config.yaml` for all configurable values
+- **Env vars**: Support environment variable overrides for testing/CI
 
 ## Project Structure
-- `agent/` - Core modules (main.py, analysis.py, sheets_connector.py, storage.py, reporting.py, events_tracker.py, risk_analysis.py, insider_trading.py, short_volume.py)
+- `agent/` - Core modules (config.py, storage.py, sheets_connector.py, analysis.py, reporting.py, events_tracker.py, risk_analysis.py, insider_trading.py, short_volume.py)
+- `agent/backends/` - Storage backend implementations (gcp_storage.py, local_storage.py, hybrid_storage.py)
 - `agent/providers/` - Data provider implementations (yahoo_earnings_provider.py)
+- `agent/config_models.py` - Pydantic v2 configuration schema models
 - `agent/earnings_models.py` - Generic earnings data models
 - `agent/earnings_provider.py` - Abstract earnings provider interface
 - `server.py` - FastMCP server entry point
-- `pyproject.toml` - Project configuration with dependencies
-- `ticker_mapping.json` - Mapping of portfolio stock names to ticker symbols
-- `cache/` - Cached historical price data from Alpha Vantage (auto-created)
+- `config.yaml` - Main configuration file (REQUIRED)
+- `config.yaml.example` - Template with documentation
+- `pyproject.toml` - Project metadata and dependencies
+- `cache/` - Cached historical price data (auto-created)
+- `test_*.py` - Test files (root directory)
 - Credentials stored securely in macOS Keychain, never in files
 
 ## API Setup
@@ -60,16 +161,13 @@ security add-generic-password -a "mcp-portfolio-agent" -s "fintel-api-key" -w "Y
 ```
 
 ### Ticker Mappings
-Edit `ticker_mapping.json` and add mappings for all stocks in your portfolio:
-```json
-{
-  "mappings": {
-    "Apple Inc": "AAPL",
-    "Microsoft Corporation": "MSFT",
-    "ASML Holding": "ASML",
-    "Wise": "WISE.L"
-  }
-}
+Edit `config.yaml` and add mappings for all stocks in your portfolio:
+```yaml
+ticker_mappings:
+  Apple Inc: AAPL
+  Microsoft Corporation: MSFT
+  ASML Holding: ASML
+  Wise: WISE.L
 ```
 
 ### 3. Available MCP Tools
@@ -84,7 +182,7 @@ Edit `ticker_mapping.json` and add mappings for all stocks in your portfolio:
 - `get_upcoming_events()` - Fetches upcoming earnings reports for portfolio stocks within the next 2 months, sorted chronologically:
   - Data from Yahoo Finance (free, no API key required)
   - Automatically excludes bonds, ETFs, pension, and cash positions
-  - Uses ticker_mapping.json to resolve stock tickers
+  - Uses ticker_mappings from config.yaml to resolve stock tickers
   
 - `get_earnings_date(ticker)` - Get next earnings date for a specific stock ticker:
   - Supports any ticker symbol (e.g., "AAPL", "MSFT", "WISE.L")
@@ -114,7 +212,7 @@ Edit `ticker_mapping.json` and add mappings for all stocks in your portfolio:
   - Stocks organized by sentiment (Bullish/Neutral/Bearish)
   - Summary statistics per stock
   - Automatically excludes bonds, ETFs, pension, and cash positions
-  - Uses ticker_mapping.json to resolve stock tickers
+  - Uses ticker_mappings from config.yaml to resolve stock tickers
   
   **Note:** All outputs include "Data provided by Fintel.io" attribution as required by Fintel's terms
 
@@ -132,7 +230,7 @@ Edit `ticker_mapping.json` and add mappings for all stocks in your portfolio:
   - Average short ratio per stock with trend indicators
   - Risk scoring based on short volume patterns
   - Automatically excludes bonds, ETFs, pension, and cash positions
-  - Uses ticker_mapping.json to resolve stock tickers
+  - Uses ticker_mappings from config.yaml to resolve stock tickers
   
   **Note:** Short interest data (% of float, days to cover) not available in current Fintel API tier
 
@@ -163,6 +261,6 @@ Edit `ticker_mapping.json` and add mappings for all stocks in your portfolio:
   - All short volume outputs must include Fintel.io attribution
   
 - **General:**
-  - Missing ticker mappings will trigger an error with clear instructions to update `ticker_mapping.json`
-  - For European stocks, include the exchange suffix (e.g., `.L` for London, `.PA` for Paris, `.AS` for Amsterdam)
+  - Missing ticker mappings will trigger an error with clear instructions to update `config.yaml`
+  - For European stocks, include the exchange suffix in ticker_mappings (e.g., `.L` for London, `.PA` for Paris, `.AS` for Amsterdam)
   - Cash, bonds, and pension positions are automatically excluded from event tracking, risk analysis, insider trading, and short volume
