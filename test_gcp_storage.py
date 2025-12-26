@@ -2,10 +2,24 @@
 """
 Test suite for GCP storage backend.
 
-NOTE: These are integration tests that require:
-1. GCP credentials in Keychain
-2. Access to investment_snapshots bucket  
-3. Internet connectivity
+SETUP REQUIRED:
+1. Create test bucket (one-time setup):
+   gsutil mb -l europe-north1 gs://investment_snapshots_test
+   
+   Or with custom region:
+   export INVESTMENT_TEST_REGION=us-central1
+   gsutil mb -l $INVESTMENT_TEST_REGION gs://investment_snapshots_test
+
+2. Ensure GCP credentials are in Keychain (uses same creds as production)
+
+3. (Optional) Override test bucket name:
+   export INVESTMENT_TEST_BUCKET=my-custom-test-bucket
+
+NOTE: 
+- These are integration tests that require internet connectivity
+- Tests write temporary data to test bucket
+- All test data is automatically cleaned up after execution
+- Production bucket (investment_snapshots) is NEVER touched
 
 Run with: uv run python test_gcp_storage.py
 """
@@ -23,6 +37,16 @@ import subprocess
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
+
+# Test bucket configuration
+# Override via environment variables:
+#   INVESTMENT_TEST_BUCKET - Custom test bucket name
+#   INVESTMENT_TEST_REGION - Custom region for bucket creation
+TEST_BUCKET_NAME = os.environ.get('INVESTMENT_TEST_BUCKET', 'investment_snapshots_test')
+TEST_BUCKET_REGION = os.environ.get('INVESTMENT_TEST_REGION', 'europe-north1')
+
+# Force test mode for this test suite - override config to use test bucket
+os.environ['INVESTMENT_GCP_BUCKET'] = TEST_BUCKET_NAME
 
 TEST_SNAPSHOT = {
     "timestamp": datetime.now().isoformat(),
@@ -52,6 +76,36 @@ def load_test_credentials():
     return json.loads(json_bytes.decode('utf-8'))
 
 
+def cleanup_test_bucket():
+    """
+    Clean up all test data from test bucket after test execution.
+    
+    This ensures test data doesn't pollute the test bucket between runs.
+    Uses the delete_all_snapshots() method which deletes the entire
+    portfolio_history.json file from the bucket.
+    """
+    print("\n" + "="*60)
+    print("CLEANUP: Deleting test data from test bucket")
+    print("="*60)
+    
+    try:
+        creds = load_test_credentials()
+        backend = GCPStorageBackend(TEST_BUCKET_NAME, creds)
+        
+        if backend.is_available():
+            success = backend.delete_all_snapshots()
+            if success:
+                print(f"✅ Test data deleted from gs://{TEST_BUCKET_NAME}")
+            else:
+                print(f"⚠️  Failed to delete test data (non-critical)")
+        else:
+            print("⚠️  Test bucket not available, skipping cleanup")
+    except Exception as e:
+        print(f"⚠️  Cleanup failed (non-critical): {e}")
+        import traceback
+        traceback.print_exc()
+
+
 def test_gcp_backend():
     """Test GCP backend directly."""
     print("\n" + "="*60)
@@ -59,7 +113,7 @@ def test_gcp_backend():
     print("="*60)
     
     creds = load_test_credentials()
-    backend = GCPStorageBackend("investment_snapshots", creds)
+    backend = GCPStorageBackend(TEST_BUCKET_NAME, creds)
     
     # Test availability
     print("Checking GCP availability...")
@@ -108,7 +162,7 @@ def test_hybrid_backend():
     
     try:
         creds = load_test_credentials()
-        gcp_backend = GCPStorageBackend("investment_snapshots", creds)
+        gcp_backend = GCPStorageBackend(TEST_BUCKET_NAME, creds)
         local_backend = LocalFileBackend(data_dir=test_dir)
         
         hybrid = HybridStorageBackend(gcp_backend, local_backend)
@@ -276,13 +330,31 @@ if __name__ == "__main__":
     print("\n" + "="*60)
     print("GCP STORAGE BACKEND TEST SUITE")
     print("="*60)
+    print(f"\nTest bucket: gs://{TEST_BUCKET_NAME}")
+    print(f"Test region: {TEST_BUCKET_REGION}")
     print("\nThis test suite will:")
     print("  1. Test direct GCP backend access")
     print("  2. Test hybrid backend with dual-write")
     print("  3. Test fallback behavior")
     print("  4. Test main storage module integration")
-    print("\nNOTE: This will add test snapshots to your GCS bucket")
+    print(f"\nNOTE: Test data will be written to gs://{TEST_BUCKET_NAME}")
+    print("      All test data will be cleaned up after execution")
+    print("      Production bucket is NEVER touched")
     print("="*60)
+    
+    # Check if test bucket exists
+    try:
+        creds = load_test_credentials()
+        test_backend = GCPStorageBackend(TEST_BUCKET_NAME, creds)
+        if not test_backend.is_available():
+            print(f"\n❌ ERROR: Test bucket gs://{TEST_BUCKET_NAME} not accessible")
+            print(f"\nCreate it with:")
+            print(f"  gsutil mb -l {TEST_BUCKET_REGION} gs://{TEST_BUCKET_NAME}")
+            exit(1)
+        print(f"\n✅ Test bucket accessible")
+    except Exception as e:
+        print(f"\n❌ ERROR: Cannot access test bucket: {e}")
+        exit(1)
     
     try:
         # Run all tests
@@ -300,7 +372,7 @@ if __name__ == "__main__":
         print("  ✅ Fallback to local storage working")
         print("  ✅ Main storage interface working")
         print("\nNext steps:")
-        print("  1. Check your data in GCS:")
+        print("  1. Check your production data in GCS:")
         print("     gsutil cat gs://investment_snapshots/portfolio_history.json | tail -50")
         print("  2. Test MCP tool:")
         print("     uv run python server.py")
@@ -315,3 +387,6 @@ if __name__ == "__main__":
         import traceback
         traceback.print_exc()
         exit(1)
+    finally:
+        # ALWAYS cleanup test data, even if tests fail
+        cleanup_test_bucket()

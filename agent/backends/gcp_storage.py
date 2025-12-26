@@ -145,6 +145,38 @@ class GCPStorageBackend(StorageBackend):
             logger.warning(f"GCPStorageBackend: GCS unavailable: {e}")
             return False
     
+    def delete_all_snapshots(self) -> bool:
+        """
+        Delete all snapshots from GCS by removing the portfolio_history.json file.
+        
+        ⚠️  WARNING: This is intended for TEST USE ONLY.
+        This operation is irreversible and will delete all portfolio history.
+        
+        Returns:
+            bool: True if deletion succeeded or file didn't exist, False on error
+        """
+        try:
+            blob = self.bucket.blob(self.blob_name)
+            
+            if not blob.exists():
+                logger.info(f"GCPStorageBackend: No data to delete (bucket empty)")
+                return True
+            
+            blob.delete()
+            logger.info(f"GCPStorageBackend: Deleted all snapshots from gs://{self.bucket_name}/{self.blob_name}")
+            return True
+            
+        except gcp_exceptions.NotFound:
+            # File already doesn't exist
+            logger.debug("GCPStorageBackend: Blob not found (already deleted)")
+            return True
+        except gcp_exceptions.GoogleAPIError as e:
+            logger.error(f"GCPStorageBackend: GCP API error deleting snapshots: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"GCPStorageBackend: Failed to delete snapshots from GCS: {e}")
+            return False
+    
     def _download_history(self) -> List[Dict[str, Any]]:
         """
         Download history from GCS.

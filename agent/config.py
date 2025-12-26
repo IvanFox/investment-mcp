@@ -48,11 +48,12 @@ def load_config(config_path: str = CONFIG_FILE) -> InvestmentConfig:
             f"❌ CRITICAL: Configuration file not found: {config_path}\n\n"
             f"The application requires config.yaml to run.\n\n"
             f"To create config.yaml:\n"
-            f"  1. If migrating from JSON files:\n"
-            f"     uv run python migrate_to_yaml.py\n\n"
-            f"  2. If starting fresh:\n"
-            f"     cp config.yaml.example config.yaml\n"
-            f"     # Then edit config.yaml with your settings\n\n"
+            f"  1. Copy the example configuration:\n"
+            f"     cp config.yaml.example config.yaml\n\n"
+            f"  2. Edit config.yaml with your settings:\n"
+            f"     - Add your Google Sheet ID\n"
+            f"     - Configure ticker mappings for your stocks\n"
+            f"     - Set storage backend (hybrid/gcp/local)\n\n"
             f"Application will not start without valid configuration."
         )
     

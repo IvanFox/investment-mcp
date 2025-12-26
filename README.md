@@ -79,26 +79,12 @@ security add-generic-password \
 
 ### 3. Configure Application Settings
 
-#### Option A: Migrate from Existing JSON Files (Recommended if upgrading)
-
-If you have existing `sheet-details.json` and `ticker_mapping.json` files:
-
-```bash
-uv run python migrate_to_yaml.py
-```
-
-This will create `config.yaml` with all your existing settings and create a timestamped backup of your JSON files.
-
-#### Option B: Start Fresh
-
 Copy the example configuration and edit it with your settings:
 
 ```bash
 cp config.yaml.example config.yaml
 # Edit config.yaml with your Google Sheet ID and ticker mappings
 ```
-
-#### Configuration Structure
 
 The `config.yaml` file contains all application settings:
 
@@ -246,7 +232,7 @@ security find-generic-password -a "mcp-portfolio-agent" -s "alpha-vantage-api-ke
 
 **Permission Denied**: Share your Google Sheet with the service account email from your credentials
 
-**Config File Missing**: Run `uv run python migrate_to_yaml.py` or `cp config.yaml.example config.yaml`
+**Config File Missing**: Run `cp config.yaml.example config.yaml` and edit with your settings
 
 **Sheet Not Found**: Verify `google_sheets.sheet_id` in `config.yaml`
 
