@@ -8,6 +8,7 @@ An automated portfolio monitoring and performance analysis system built with Fas
 - **Multi-Currency Support**: USD, EUR, GBP with automatic conversion
 - **Performance Analysis**: Week-over-week comparison with top/bottom movers
 - **Portfolio Allocation**: Breakdown by 6 asset categories
+- **Interactive Dashboard**: Plotly-based HTML dashboards with benchmark comparisons (SPY, VT)
 - **Upcoming Events**: Earnings reports from Alpha Vantage API
 - **Risk Analysis**: Beta, VaR, concentration risk, correlation matrix, sector exposure
 - **Insider Trading**: Track insider buys/sells for portfolio stocks via Fintel API
@@ -16,6 +17,56 @@ An automated portfolio monitoring and performance analysis system built with Fas
 - **Secure Storage**: macOS Keychain for all credentials
 - **MCP Integration**: FastMCP tools for portfolio management
 - **Persistent History**: JSON-based storage with full audit trail
+
+## Interactive Dashboard
+
+The agent automatically generates an interactive HTML dashboard after each portfolio analysis, providing comprehensive visualizations of your portfolio performance over time.
+
+### Features
+
+- **Portfolio Value Trend**: Compare your portfolio against S&P 500 (SPY) and All-World Index (VT) benchmarks
+- **Category Allocation**: Visualize how your asset mix evolves (stacked area chart)
+- **Individual Assets**: Track specific stocks/bonds with multi-select dropdown (top 10 shown by default)
+- **Top Holdings Evolution**: See how your largest positions change over time
+- **Gain/Loss Analysis**: Current profit/loss for each position (color-coded bars)
+- **Transaction Timeline**: Visualize buy/sell activity with markers
+- **Currency Exposure**: USD/EUR/GBP breakdown over time
+- **Risk Metrics**: Cumulative returns, maximum drawdown, rolling volatility, value change distribution
+
+### Interactive Controls
+
+- **Time Period Selector**: View last 7/30/90 days, 1 year, or all-time data
+- **Asset Selector**: Click legend items to show/hide individual assets
+- **Zoom & Pan**: Interactive chart controls for detailed analysis
+- **Hover Details**: Rich tooltips showing values, dates, and percentage changes
+
+### Usage
+
+```bash
+# Dashboard auto-generated after analysis
+uv run python server.py
+# Call run_portfolio_analysis() via MCP
+
+# Or manually generate for specific time period
+# Call generate_portfolio_dashboard("30d") via MCP
+
+# Open dashboard
+open dashboards/portfolio_dashboard.html
+```
+
+### Requirements
+
+- At least 2 portfolio snapshots in history
+- Internet connection (fetches benchmark data from Yahoo Finance)
+- Modern web browser (dashboard uses Plotly.js)
+
+### Technical Details
+
+- **Technology**: Plotly charts embedded in standalone HTML
+- **File Location**: `dashboards/portfolio_dashboard.html`
+- **File Size**: ~100-200KB (varies with data volume)
+- **Benchmarks**: Fetched from Yahoo Finance (SPY, VT), normalized to portfolio start date
+- **Mobile**: Responsive design with medium-priority mobile support
 
 ## Quick Start
 
@@ -159,10 +210,11 @@ uv run python server.py
 ```
 
 Available MCP tools:
-- `run_portfolio_analysis()` - Trigger portfolio analysis and generate report
+- `run_portfolio_analysis()` - Trigger portfolio analysis and generate report (auto-generates dashboard)
 - `get_portfolio_status()` - Get current portfolio status
 - `get_portfolio_history_summary()` - View historical performance
 - `get_latest_positions()` - View all current positions organized by category
+- `generate_portfolio_dashboard(time_period)` - Generate interactive HTML dashboard (7d/30d/90d/1y/all)
 - `get_upcoming_events()` - Fetch upcoming earnings reports (next 2 months)
 - `analyze_portfolio_risk()` - Perform comprehensive risk analysis
 - `get_insider_trades(ticker)` - Get insider trading activity for a specific stock
