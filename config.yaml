@@ -1,0 +1,68 @@
+# Investment MCP Configuration
+# Generated from sheet-details.json and ticker_mapping.json
+# Migration date: 2025-12-26 16:14:19
+#
+# Environment variable overrides:
+#   INVESTMENT_SHEET_ID - Override google_sheets.sheet_id
+#   INVESTMENT_GCP_BUCKET - Override storage.gcp.bucket_name
+#   INVESTMENT_STORAGE_BACKEND - Override storage.backend (hybrid/gcp/local)
+#   INVESTMENT_LOG_LEVEL - Override logging.level (DEBUG/INFO/WARNING/ERROR)
+
+google_sheets:
+  sheet_id: 1eQUWnThLlo7Rxolra8fc4-G59Wtq6bvkk8-ZZa6YiJk
+storage:
+  backend: hybrid
+  gcp:
+    bucket_name: investment_snapshots
+    credentials_source: keychain
+  local:
+    file_path: ./portfolio_history.json
+apis:
+  alpha_vantage:
+    credentials_source: keychain
+  fintel:
+    credentials_source: keychain
+analysis:
+  risk:
+    lookback_days: 252
+    var_confidence_levels:
+    - 0.95
+    - 0.99
+    cache_ttl_hours: 24
+  events:
+    upcoming_days: 60
+logging:
+  level: INFO
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+ticker_mappings:
+  Wise: WISE.L
+  Intel Corp: INTC
+  Apple Inc: AAPL
+  Johnson & Johnson: JNJ
+  Coca Cola: KO
+  Snowflake: SNOW
+  Dynatrace: DT
+  Okta: OKTA
+  NextEra Energy: NEE
+  Schlumberger: SLB
+  Google: GOOGL
+  Confluent: CFLT
+  Artea bank: ART.L
+  LHV: LHV.EE
+  Vinci: EPA:DG
+  Ignitis: IGN.LT
+  ASML: ASML.AS
+  Siemens: SIE.DE
+  AstraZeneca: AZN.L
+  Banco Santander: SAN.MC
+  Sanofi: SNFP.PA
+  VOW3.DE: VOW3.DE
+  InBank: LHVBK.EE
+  Liven: LIVEN.TL
+  VWCE: VWCE.DE
+  MEUD: MEUD.MI
+  CIBR: NASDAQ:CIBR
+  II level: II.LEVEL
+  III level: III.LEVEL
+  Fiserv: FI
+  Nebius: NBIS

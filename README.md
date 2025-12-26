@@ -77,26 +77,62 @@ security add-generic-password \
   -U
 ```
 
-### 3. Configure Sheet Details
+### 3. Configure Application Settings
 
-Edit `sheet-details.json` with your Google Sheet ID and settings.
+#### Option A: Migrate from Existing JSON Files (Recommended if upgrading)
 
-### 4. Configure Ticker Mappings
+If you have existing `sheet-details.json` and `ticker_mapping.json` files:
 
-Edit `ticker_mapping.json` to map your portfolio stock names to ticker symbols:
-
-```json
-{
-  "mappings": {
-    "Apple Inc": "AAPL",
-    "Microsoft Corporation": "MSFT",
-    "ASML Holding": "ASML.AS",
-    "Wise": "WISE.L"
-  }
-}
+```bash
+uv run python migrate_to_yaml.py
 ```
 
-For European stocks, include the exchange suffix (e.g., `.L` for London, `.PA` for Paris).
+This will create `config.yaml` with all your existing settings and create a timestamped backup of your JSON files.
+
+#### Option B: Start Fresh
+
+Copy the example configuration and edit it with your settings:
+
+```bash
+cp config.yaml.example config.yaml
+# Edit config.yaml with your Google Sheet ID and ticker mappings
+```
+
+#### Configuration Structure
+
+The `config.yaml` file contains all application settings:
+
+```yaml
+google_sheets:
+  sheet_id: YOUR_GOOGLE_SHEET_ID_HERE
+
+storage:
+  backend: hybrid  # Options: hybrid, gcp, local
+  gcp:
+    bucket_name: investment_snapshots
+    credentials_source: keychain
+  local:
+    file_path: ./portfolio_history.json
+
+ticker_mappings:
+  Apple Inc: AAPL
+  Microsoft Corporation: MSFT
+  ASML Holding: ASML.AS
+  Wise: WISE.L
+```
+
+For European stocks, include the exchange suffix (e.g., `.L` for London, `.PA` for Paris, `.AS` for Amsterdam).
+
+#### Environment Variable Overrides
+
+You can override any config value using environment variables:
+
+```bash
+export INVESTMENT_SHEET_ID="your-sheet-id"
+export INVESTMENT_GCP_BUCKET="custom-bucket-name"
+export INVESTMENT_STORAGE_BACKEND="local"  # or "gcp" or "hybrid"
+export INVESTMENT_LOG_LEVEL="DEBUG"  # or "INFO", "WARNING", "ERROR"
+```
 
 ### 5. Verify Setup
 
@@ -210,16 +246,27 @@ security find-generic-password -a "mcp-portfolio-agent" -s "alpha-vantage-api-ke
 
 **Permission Denied**: Share your Google Sheet with the service account email from your credentials
 
-**Sheet Not Found**: Verify `sheetId` in `sheet-details.json`
+**Config File Missing**: Run `uv run python migrate_to_yaml.py` or `cp config.yaml.example config.yaml`
 
-**Stock Not Mapped**: Add the stock to `ticker_mapping.json` in the "mappings" section
+**Sheet Not Found**: Verify `google_sheets.sheet_id` in `config.yaml`
+
+**Stock Not Mapped**: Add the stock to `ticker_mappings` section in `config.yaml`
 
 **Alpha Vantage Rate Limits**: Free tier allows 5 calls/minute
 
 **Debug Mode**:
 ```bash
-export LOG_LEVEL=DEBUG
+export INVESTMENT_LOG_LEVEL=DEBUG
 uv run python -m agent.main
+```
+
+**Test Configuration**:
+```bash
+# Verify config loads correctly
+uv run python -c "from agent import config; cfg = config.get_config(); print(f'✅ Config loaded: {len(cfg.ticker_mappings)} mappings')"
+
+# Run comprehensive config tests
+uv run python test_config.py
 ```
 
 ## Security Benefits

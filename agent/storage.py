@@ -10,6 +10,7 @@ import logging
 import subprocess
 from typing import Dict, List, Optional, Any
 
+from . import config
 from .storage_backend import StorageBackend
 from .backends.local_storage import LocalFileBackend
 from .backends.gcp_storage import GCPStorageBackend
@@ -44,8 +45,9 @@ def _get_storage_backend() -> StorageBackend:
             # Try to initialize GCP backend
             try:
                 credentials_dict = _load_gcp_credentials()
+                cfg = config.get_config()
                 gcp_backend = GCPStorageBackend(
-                    bucket_name="investment_snapshots",
+                    bucket_name=cfg.storage.gcp.bucket_name,
                     credentials_dict=credentials_dict
                 )
                 

@@ -15,6 +15,8 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials as OAuth2Credentials
 import logging
 
+from . import config
+
 # Constants
 ACTIVE_SHEET_NAME = "2025"
 
@@ -182,13 +184,12 @@ def fetch_portfolio_data() -> Dict[str, Any]:
     try:
         service = get_sheets_service()
 
-        # Load sheet details
-        with open("sheet-details.json", "r") as f:
-            sheet_details = json.load(f)
-
-        spreadsheet_id = sheet_details.get("sheetId")
+        # Get sheet ID from config
+        cfg = config.get_config()
+        spreadsheet_id = cfg.google_sheets.sheet_id
+        
         if not spreadsheet_id:
-            raise ValueError("Sheet ID not found in sheet-details.json")
+            raise ValueError("Sheet ID not found in configuration")
 
         # Prepare batch request for all ranges
         ranges = (

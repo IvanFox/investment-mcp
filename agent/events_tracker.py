@@ -10,6 +10,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Any
 
+from . import config
 from .providers.yahoo_earnings_provider import YahooEarningsProvider
 from .earnings_models import EarningsEvent
 
@@ -37,26 +38,19 @@ def get_earnings_provider() -> YahooEarningsProvider:
 
 def load_ticker_mapping() -> Dict[str, str]:
     """
-    Load the ticker mapping from ticker_mapping.json file.
+    Load the ticker mapping from configuration.
 
     Returns:
         dict: Mapping from asset names to ticker symbols
 
     Raises:
-        FileNotFoundError: If ticker_mapping.json not found
-        json.JSONDecodeError: If ticker_mapping.json is invalid
+        ValueError: If configuration cannot be loaded
     """
     try:
-        with open("ticker_mapping.json", "r") as f:
-            mapping_data = json.load(f)
-        mappings = mapping_data.get("mappings", {})
-        return {k: v for k, v in mappings.items() if not k.startswith("_")}
-    except FileNotFoundError:
-        raise FileNotFoundError(
-            "ticker_mapping.json not found. Please create it with stock mappings."
-        )
-    except json.JSONDecodeError as e:
-        raise ValueError(f"ticker_mapping.json is invalid JSON: {e}")
+        cfg = config.get_config()
+        return cfg.ticker_mappings
+    except Exception as e:
+        raise ValueError(f"Failed to load ticker mappings from configuration: {e}")
 
 
 def get_ticker_for_asset(asset_name: str) -> str:
