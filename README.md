@@ -77,26 +77,72 @@ security add-generic-password \
   -U
 ```
 
-### 3. Configure Sheet Details
+### 3. Configure Application Settings
 
-Edit `sheet-details.json` with your Google Sheet ID and settings.
+Copy the example configuration and edit it with your settings:
 
-### 4. Configure Ticker Mappings
-
-Edit `ticker_mapping.json` to map your portfolio stock names to ticker symbols:
-
-```json
-{
-  "mappings": {
-    "Apple Inc": "AAPL",
-    "Microsoft Corporation": "MSFT",
-    "ASML Holding": "ASML.AS",
-    "Wise": "WISE.L"
-  }
-}
+```bash
+cp config.yaml.example config.yaml
+# Edit config.yaml with your Google Sheet ID and ticker mappings
 ```
 
-For European stocks, include the exchange suffix (e.g., `.L` for London, `.PA` for Paris).
+#### Required Configuration
+
+Only **two fields are required** to connect to external providers:
+
+```yaml
+google_sheets:
+  sheet_id: YOUR_GOOGLE_SHEET_ID_HERE  # REQUIRED
+
+ticker_mappings:  # REQUIRED
+  Apple Inc: AAPL
+  Microsoft Corporation: MSFT
+  ASML Holding: ASML.AS
+  Wise: WISE.L
+```
+
+For European stocks, include the exchange suffix (e.g., `.L` for London, `.PA` for Paris, `.AS` for Amsterdam).
+
+#### Optional Configuration
+
+All other settings have sensible defaults and only need to be specified if you want to customize them:
+
+**Storage settings** (default: hybrid mode with `investment_snapshots` bucket):
+```yaml
+storage:
+  backend: hybrid  # Options: hybrid, gcp, local
+  gcp:
+    bucket_name: investment_snapshots
+```
+
+**Sheet structure** (only needed if your sheet layout differs from defaults):
+```yaml
+google_sheets:
+  sheet_name: "2025"  # Default sheet tab name
+  currency_cells:
+    gbp_to_eur: "O2"  # Cell with GBP/EUR rate
+    usd_to_eur: "O3"  # Cell with USD/EUR rate
+  ranges:
+    us_stocks: "A5:L19"
+    eu_stocks: "A20:L35"
+    bonds: "A37:L39"
+    etfs: "A40:L45"
+    pension: "A52:E53"
+    cash: "A58:B60"
+```
+
+**Note:** Data ranges are user-configurable and subject to change over time. The application does not validate these ranges - if they're incorrect, Google Sheets API will return clear error messages.
+
+#### Environment Variable Overrides
+
+You can override any config value using environment variables:
+
+```bash
+export INVESTMENT_SHEET_ID="your-sheet-id"
+export INVESTMENT_GCP_BUCKET="custom-bucket-name"
+export INVESTMENT_STORAGE_BACKEND="local"  # or "gcp" or "hybrid"
+export INVESTMENT_LOG_LEVEL="DEBUG"  # or "INFO", "WARNING", "ERROR"
+```
 
 ### 5. Verify Setup
 
@@ -210,16 +256,27 @@ security find-generic-password -a "mcp-portfolio-agent" -s "alpha-vantage-api-ke
 
 **Permission Denied**: Share your Google Sheet with the service account email from your credentials
 
-**Sheet Not Found**: Verify `sheetId` in `sheet-details.json`
+**Config File Missing**: Run `cp config.yaml.example config.yaml` and edit with your settings
 
-**Stock Not Mapped**: Add the stock to `ticker_mapping.json` in the "mappings" section
+**Sheet Not Found**: Verify `google_sheets.sheet_id` in `config.yaml`
+
+**Stock Not Mapped**: Add the stock to `ticker_mappings` section in `config.yaml`
 
 **Alpha Vantage Rate Limits**: Free tier allows 5 calls/minute
 
 **Debug Mode**:
 ```bash
-export LOG_LEVEL=DEBUG
+export INVESTMENT_LOG_LEVEL=DEBUG
 uv run python -m agent.main
+```
+
+**Test Configuration**:
+```bash
+# Verify config loads correctly
+uv run python -c "from agent import config; cfg = config.get_config(); print(f'✅ Config loaded: {len(cfg.ticker_mappings)} mappings')"
+
+# Run comprehensive config tests
+uv run python test_config.py
 ```
 
 ## Security Benefits

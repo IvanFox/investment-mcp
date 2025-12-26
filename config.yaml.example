@@ -1,0 +1,122 @@
+# Investment MCP Agent Configuration Template
+#
+# Copy this file to config.yaml and update with your settings:
+#   cp config.yaml.example config.yaml
+#
+# Environment Variable Overrides (optional):
+#   INVESTMENT_GCP_BUCKET     - Override storage.gcp.bucket_name
+#   INVESTMENT_SHEET_ID       - Override google_sheets.sheet_id
+#   INVESTMENT_STORAGE_BACKEND - Override storage.backend
+#   INVESTMENT_LOG_LEVEL      - Override logging.level
+
+# ============================================================================
+# Google Sheets Configuration
+# ============================================================================
+google_sheets:
+  # *** REQUIRED *** - External provider credential
+  # Your Google Sheet ID (find in your sheet URL)
+  # Example: https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID_HERE/edit
+  sheet_id: "YOUR_SHEET_ID_HERE"
+  
+  # -------------------------------------------------------------------------
+  # OPTIONAL - User-configurable data structure (sensible defaults provided)
+  # Only customize these if your sheet structure differs from the standard
+  # If omitted, defaults will be used automatically
+  # -------------------------------------------------------------------------
+  
+  # Active sheet tab name (default: "2025")
+  # Uncomment and modify if your active sheet has a different name
+  # sheet_name: "2025"
+  
+  # Currency conversion cell locations (defaults: gbp_to_eur="O2", usd_to_eur="O3")
+  # Uncomment and modify if your currency rates are in different cells
+  # currency_cells:
+  #   gbp_to_eur: "O2"
+  #   usd_to_eur: "O3"
+  
+  # Data ranges for different asset types
+  # Format: "StartCell:EndCell" (e.g., "A5:L19")
+  # Uncomment and modify if your data ranges differ from defaults
+  # ranges:
+  #   us_stocks: "A5:L19"
+  #   eu_stocks: "A20:L35"
+  #   bonds: "A37:L39"
+  #   etfs: "A40:L45"
+  #   pension: "A52:E53"
+  #   cash: "A58:B60"
+
+# ============================================================================
+# Storage Configuration
+# ============================================================================
+storage:
+  backend: "hybrid"  # hybrid (GCP + local), gcp (cloud only), or local (file only)
+  
+  gcp:
+    bucket_name: "investment_snapshots"
+    region: "europe-north1"
+    blob_name: "portfolio_history.json"
+  
+  local:
+    data_dir: "."
+    history_file: "portfolio_history.json"
+
+# ============================================================================
+# REQUIRED: Ticker Mappings
+# ============================================================================
+ticker_mappings:
+  # Add your stock mappings here
+  # Format: "Stock Name in Google Sheets": "TICKER_SYMBOL"
+  
+  # US Stocks (no suffix)
+  "Apple Inc": "AAPL"
+  "Microsoft Corporation": "MSFT"
+  
+  # European Stocks (with exchange suffix)
+  "ASML": "ASML.AS"        # .AS = Amsterdam
+  "Wise": "WISE.L"          # .L = London
+  "Sanofi": "SNFP.PA"      # .PA = Paris
+
+# ============================================================================
+# API Configuration
+# ============================================================================
+apis:
+  alpha_vantage:
+    rate_limit_delay: 12
+    cache_ttl: 86400
+  
+  fintel:
+    base_url: "https://api.fintel.io/public"
+  
+  yahoo_finance:
+    timeout: 30
+
+# ============================================================================
+# Analysis Settings
+# ============================================================================
+analysis:
+  risk:
+    analysis_period_days: 252
+    var_confidence_levels: [0.95, 0.99]
+    market_benchmark: "^GSPC"
+  
+  concentration:
+    high_single_position: 25
+    moderate_single_position: 15
+    high_top_5: 70
+    moderate_top_5: 50
+  
+  insider_trading:
+    lookback_days: 90
+    bullish_ratio: 2.0
+  
+  short_volume:
+    default_days: 30
+    high_risk_threshold: 40
+    medium_risk_threshold: 30
+
+# ============================================================================
+# Logging Configuration
+# ============================================================================
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
