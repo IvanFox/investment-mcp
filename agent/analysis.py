@@ -11,6 +11,50 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def find_matching_transactions_for_sell(
+    transactions: List[Dict[str, Any]],
+    asset_name: str,
+    previous_date: str,
+    current_date: str
+) -> List[Dict[str, Any]]:
+    """
+    Find transactions matching asset name within date range.
+    
+    Args:
+        transactions: List of all parsed transactions
+        asset_name: Asset name to match (case-sensitive exact match)
+        previous_date: Start of period (ISO format, exclusive)
+        current_date: End of period (ISO format, inclusive)
+    
+    Returns:
+        List of matching transaction dicts
+    """
+    # Parse date strings
+    prev_dt = datetime.fromisoformat(previous_date.replace('Z', '+00:00'))
+    curr_dt = datetime.fromisoformat(current_date.replace('Z', '+00:00'))
+    
+    matching = []
+    for txn in transactions:
+        # Exact name match (case-sensitive)
+        if txn.get("asset_name") != asset_name:
+            continue
+        
+        # Date range: previous < txn_date <= current
+        txn_date_str = txn.get("date")
+        if not txn_date_str:
+            continue
+        
+        try:
+            txn_date = datetime.fromisoformat(txn_date_str.replace('Z', '+00:00'))
+        except (ValueError, AttributeError):
+            continue
+        
+        if prev_dt < txn_date <= curr_dt:
+            matching.append(txn)
+    
+    return matching
+
+
 def create_portfolio_snapshot(normalized_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Creates a complete snapshot of the portfolio at a single point in time.
@@ -181,6 +225,34 @@ def compare_snapshots(
                     "current_total_value_eur": current_value,
                     "value_change_eur": round(current_value - previous_value, 2),
                 }
+                
+                # For partial sells, add explicit transaction info if available
+                if qty_change < -1.0:  # Partial sell (at least 1 full share)
+                    matching_txns = find_matching_transactions_for_sell(
+                        transactions=current_snapshot.get("transactions", []),
+                        asset_name=name,
+                        previous_date=previous_snapshot["timestamp"],
+                        current_date=current_snapshot["timestamp"]
+                    )
+                    
+                    if matching_txns:
+                        # Calculate realized gain from partial sell
+                        txn_total_value = sum(txn.get("total_value_eur", 0.0) for txn in matching_txns)
+                        txn_quantity = sum(txn.get("quantity", 0.0) for txn in matching_txns)
+                        
+                        # Pro-rata allocation of purchase price
+                        purchase_price_total = previous_asset.get("purchase_price_total_eur", 0.0)
+                        allocated_purchase_price = (
+                            (purchase_price_total * txn_quantity / previous_qty) 
+                            if previous_qty > 0 else 0
+                        )
+                        
+                        partial_gain_loss = txn_total_value - allocated_purchase_price
+                        
+                        change_info["partial_sell_gain_loss_eur"] = round(partial_gain_loss, 2)
+                        change_info["explicit_sell_value_eur"] = round(txn_total_value, 2)
+                        change_info["num_transactions"] = len(matching_txns)
+                
                 quantity_changes.append(change_info)
 
         # Sort quantity changes: purchases first (by quantity desc), then sales (by abs quantity desc)
@@ -200,19 +272,45 @@ def compare_snapshots(
                 }
             )
 
-        # Analyze sold positions
+        # Analyze sold positions with explicit transaction prices
         sold_positions = []
         for name in sold_names:
             asset = previous_assets[name]
             purchase_price = asset.get("purchase_price_total_eur", 0.0)
-            last_value = asset.get("current_value_eur", 0.0)
-
-            # Calculate realized gain/loss (approximated by last snapshot value)
-            realized_gain_loss = last_value - purchase_price
-
-            sold_positions.append(
-                {"name": name, "realized_gain_loss_eur": round(realized_gain_loss, 2)}
+            quantity_sold = asset.get("quantity", 0.0)
+            
+            # Find matching transactions (validated earlier, should exist)
+            matching_txns = find_matching_transactions_for_sell(
+                transactions=current_snapshot.get("transactions", []),
+                asset_name=name,
+                previous_date=previous_snapshot["timestamp"],
+                current_date=current_snapshot["timestamp"]
             )
+            
+            if matching_txns:
+                # Use explicit sell prices from transactions
+                total_sell_value = sum(txn.get("total_value_eur", 0.0) for txn in matching_txns)
+                avg_sell_price = total_sell_value / quantity_sold if quantity_sold > 0 else 0
+                price_source = "explicit"
+            else:
+                # Fallback to last snapshot value (should rarely happen due to validation)
+                total_sell_value = asset.get("current_value_eur", 0.0)
+                avg_sell_price = total_sell_value / quantity_sold if quantity_sold > 0 else 0
+                price_source = "estimated"
+                logger.warning(f"No transactions found for sold position: {name} (using estimated price)")
+            
+            realized_gain_loss = total_sell_value - purchase_price
+            
+            sold_positions.append({
+                "name": name,
+                "quantity_sold": quantity_sold,
+                "purchase_price_eur": round(purchase_price, 2),
+                "sell_value_eur": round(total_sell_value, 2),
+                "avg_sell_price_per_unit_eur": round(avg_sell_price, 4),
+                "realized_gain_loss_eur": round(realized_gain_loss, 2),
+                "price_source": price_source,
+                "num_transactions": len(matching_txns)
+            })
 
         # Calculate total portfolio changes
         current_total = current_snapshot.get("total_value_eur", 0.0)

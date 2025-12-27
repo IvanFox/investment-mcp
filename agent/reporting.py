@@ -14,6 +14,7 @@ def format_report_markdown(
     report_data: Dict[str, Any],
     current_total_value: float,
     current_snapshot: Optional[Dict[str, Any]] = None,
+    previous_snapshot: Optional[Dict[str, Any]] = None,
 ) -> str:
     """
     Converts the analysis data object into a formatted Markdown string.
@@ -22,6 +23,7 @@ def format_report_markdown(
         report_data: The dictionary returned by analysis.compare_snapshots
         current_total_value: The total value from the current snapshot
         current_snapshot: The current snapshot data for portfolio breakdown
+        previous_snapshot: The previous snapshot data for transaction filtering
 
     Returns:
         str: A multi-line string in Markdown format
@@ -126,6 +128,43 @@ def format_report_markdown(
                         report_lines.append(f"   - Position fully closed")
                 report_lines.append("")
 
+        # Transaction Activity Summary (from Transactions sheet)
+        if current_snapshot and "transactions" in current_snapshot:
+            # Filter transactions to the period between snapshots
+            all_transactions = current_snapshot.get("transactions", [])
+            if all_transactions and previous_snapshot:
+                from datetime import datetime
+                
+                prev_date = datetime.fromisoformat(previous_snapshot["timestamp"].replace('Z', '+00:00'))
+                curr_date = datetime.fromisoformat(current_snapshot["timestamp"].replace('Z', '+00:00'))
+                
+                period_transactions = []
+                for txn in all_transactions:
+                    try:
+                        txn_date = datetime.fromisoformat(txn.get("date", "").replace('Z', '+00:00'))
+                        if prev_date < txn_date <= curr_date:
+                            period_transactions.append(txn)
+                    except (ValueError, AttributeError):
+                        continue
+                
+                if period_transactions:
+                    report_lines.append("## 📋 Transaction Activity")
+                    report_lines.append(f"- {len(period_transactions)} sell transaction(s) recorded")
+                    
+                    total_sold_value = sum(txn.get("total_value_eur", 0.0) for txn in period_transactions)
+                    report_lines.append(f"- Total sold: €{total_sold_value:,.2f}")
+                    
+                    # Group by asset
+                    by_asset = {}
+                    for txn in period_transactions:
+                        asset = txn.get("asset_name", "Unknown")
+                        if asset not in by_asset:
+                            by_asset[asset] = []
+                        by_asset[asset].append(txn)
+                    
+                    report_lines.append(f"- Assets: {', '.join(by_asset.keys())}")
+                    report_lines.append("")
+
         # New Positions
         if new_positions:
             report_lines.append("## 🆕 New Positions")
@@ -138,7 +177,7 @@ def format_report_markdown(
                 )
             report_lines.append("")
 
-        # Sold Positions
+        # Sold Positions (Enhanced with transaction details)
         if sold_positions:
             report_lines.append("## 💸 Sold Positions")
             total_realized = sum(
@@ -147,12 +186,34 @@ def format_report_markdown(
 
             for position in sold_positions:
                 name = position.get("name", "Unknown")
+                quantity = position.get("quantity_sold", 0.0)
+                purchase_price = position.get("purchase_price_eur", 0.0)
+                sell_value = position.get("sell_value_eur", 0.0)
                 gain_loss = position.get("realized_gain_loss_eur", 0.0)
+                avg_price = position.get("avg_sell_price_per_unit_eur", 0.0)
+                price_source = position.get("price_source", "estimated")
+                num_txns = position.get("num_transactions", 0)
+                
                 gain_loss_emoji = "💰" if gain_loss >= 0 else "💔"
                 gain_loss_sign = "+" if gain_loss >= 0 else ""
+                gain_loss_text = "gain" if gain_loss >= 0 else "loss"
+                
+                # Main line
                 report_lines.append(
-                    f"- **{name}**: {gain_loss_emoji} {gain_loss_sign}€{gain_loss:,.2f}"
+                    f"- **{name}**: {gain_loss_emoji} {gain_loss_sign}€{gain_loss:,.2f} {gain_loss_text}"
                 )
+                
+                # Details
+                if num_txns > 1:
+                    report_lines.append(f"  - Sold {quantity:.0f} shares across {num_txns} transactions")
+                else:
+                    report_lines.append(f"  - Sold {quantity:.0f} shares")
+                
+                report_lines.append(f"  - Avg sell price: €{avg_price:.4f}/share")
+                report_lines.append(f"  - Purchase: €{purchase_price:,.2f} | Sell: €{sell_value:,.2f}")
+                
+                if price_source == "estimated":
+                    report_lines.append(f"  - ⚠️ *Using estimated price (no transaction record)*")
 
             report_lines.append("")
             total_emoji = "💰" if total_realized >= 0 else "💔"
