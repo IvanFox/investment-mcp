@@ -21,6 +21,7 @@ from . import risk_analysis
 from . import insider_trading
 from . import short_volume
 from .sell_validation import validate_sells_have_transactions, SellValidationError
+from .buy_validation import validate_buys_have_transactions, BuyValidationError
 
 # Configure logging
 logging.basicConfig(
@@ -1040,23 +1041,30 @@ def _run_weekly_analysis() -> str:
         # Fetch and parse transactions
         logger.info("Fetching transactions from Transactions sheet...")
         try:
+            # Fetch sell transactions
             transactions_raw = sheets_connector.fetch_transactions_data()
             # Extract currency rates from portfolio data
             rates = raw_data.get("rates", [])
             gbp_to_eur = float(rates[0][0]) if len(rates) > 0 and rates[0] else 1.1589
             usd_to_eur = float(rates[1][0]) if len(rates) > 1 and rates[1] else 0.8490
             transactions = sheets_connector.parse_transactions(transactions_raw, gbp_to_eur, usd_to_eur)
-            logger.info(f"Loaded {len(transactions)} transaction(s) from Transactions sheet")
+            logger.info(f"Loaded {len(transactions)} sell transaction(s) from Transactions sheet")
+            
+            # Fetch buy transactions
+            buy_transactions_raw = sheets_connector.fetch_buy_transactions_data()
+            buy_transactions = sheets_connector.parse_buy_transactions(buy_transactions_raw, gbp_to_eur, usd_to_eur)
+            logger.info(f"Loaded {len(buy_transactions)} buy transaction(s) from Transactions sheet")
         except Exception as e:
             error_msg = f"Failed to load transactions: {e}"
             logger.error(error_msg)
-            return f"❌ {error_msg}\n\nTransactions sheet is required for sell validation. Please ensure the Transactions sheet exists in your Google Sheets workbook."
+            return f"❌ {error_msg}\n\nTransactions sheet is required for transaction validation. Please ensure the Transactions sheet exists in your Google Sheets workbook."
         
         # Create new snapshot
         logger.info("Creating portfolio snapshot...")
         current_snapshot = analysis.create_portfolio_snapshot(normalized_data)
         # Include transactions in snapshot for analysis
         current_snapshot["transactions"] = transactions
+        current_snapshot["buy_transactions"] = buy_transactions
         
         # VALIDATE: Check sells have matching transactions (if previous snapshot exists)
         if previous_snapshot:
@@ -1072,8 +1080,22 @@ def _run_weekly_analysis() -> str:
                 # Validation failed - do NOT save snapshot
                 logger.error("Sell validation failed")
                 return str(e)
+            
+            # VALIDATE: Check buys have matching transactions
+            logger.info("Validating buy transactions...")
+            try:
+                validate_buys_have_transactions(
+                    current_snapshot=current_snapshot,
+                    previous_snapshot=previous_snapshot,
+                    buy_transactions=buy_transactions
+                )
+                logger.info("✓ Buy validation passed")
+            except BuyValidationError as e:
+                # Validation failed - do NOT save snapshot
+                logger.error("Buy validation failed")
+                return str(e)
         else:
-            logger.info("First snapshot, skipping sell validation")
+            logger.info("First snapshot, skipping transaction validation")
         
         # Validation passed - save the snapshot
         storage.save_snapshot(current_snapshot)

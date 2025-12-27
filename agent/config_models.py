@@ -57,7 +57,11 @@ class GoogleSheetsConfig(BaseModel):
     )
     transactions_range: str = Field(
         default="A2:E",
-        description="Transactions data range (optional, default: 'A2:E')"
+        description="Sell transactions data range (optional, default: 'A2:E')"
+    )
+    buy_transactions_range: str = Field(
+        default="J2:M",
+        description="Buy transactions data range (optional, default: 'J2:M')"
     )
     currency_cells: CurrencyCells = Field(
         default_factory=CurrencyCells,

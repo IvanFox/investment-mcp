@@ -295,6 +295,142 @@ Always use actual trade dates, not future dates.
 **Problem**: Future transaction ignored
 - **Solution**: Use actual trade date, not future settlement date
 
+## Buy Transaction Tracking & Validation
+
+### Overview
+The system enforces strict validation to ensure all buy transactions are recorded before creating portfolio snapshots. This guarantees accurate cost basis calculations and prevents data integrity issues.
+
+### Transactions Sheet Structure
+Located in your Google Sheets workbook as a separate "Transactions" tab (columns J-M for Buy section).
+
+| Column | Field | Format | Example |
+|--------|-------|--------|---------|
+| J | Date | DD/MM/YYYY | 26/01/2025 |
+| K | Asset Name | Text (exact match) | AstraZeneca |
+| L | Quantity | Number (full shares) | 60 |
+| M | Purchase Price | Currency/unit | £110.80 |
+
+**Critical Notes:**
+- **Date**: Use contractual/trade date (not settlement date)
+- **Asset Name**: Must match portfolio sheet EXACTLY (case-sensitive: "AstraZeneca" ≠ "astrazeneca")
+- **Quantity**: Full shares (e.g., 60, 100, 183.5)
+- **Purchase Price**: Per-unit price with currency symbol (£, $, €)
+
+### Validation Rules
+When taking a new portfolio snapshot, the system validates:
+1. **Detects buys**: Compares with previous snapshot to find positions where quantity increased by ≥1 full share
+2. **Detects new positions**: Identifies assets not present in previous snapshot
+3. **Checks transactions**: Looks for matching transaction records in Transactions sheet (Buy section, columns J-M)
+4. **Validates quantities**: Ensures transaction quantities match detected buys (within 1 share tolerance)
+5. **Fails if missing**: Snapshot creation fails with detailed error listing all missing transactions
+
+### Workflow
+1. **Buy shares** in your brokerage account
+2. **Record transaction** in Transactions sheet Buy section (columns J-M, use trade date)
+3. **Update portfolio** sheet (add or increase position quantity)
+4. **Run `run_portfolio_analysis()`**
+   - System validates all buys have matching transactions
+   - If validation fails → Error with missing transactions list
+   - If validation passes → Snapshot saved, analysis continues
+5. **Fix errors** if needed → Add missing transactions and retry
+
+### Example Validation Error
+```
+❌ Portfolio snapshot creation FAILED
+
+Missing buy transaction records detected.
+
+Missing Transactions:
+──────────────────────────────────────────────────────────────────────
+1. AstraZeneca (UK Stocks)
+   Detected buy: 100 shares
+   Transactions found: 60 shares (PARTIAL)
+   Missing: 40 shares
+   Date range: 2025-01-20T18:30:00Z to 2025-01-27T18:30:00Z
+   → Please add missing buy transaction(s) to the Transactions sheet
+
+2. Snowflake (US Stocks) - NEW POSITION
+   Detected buy: 30 shares (new position)
+   Transactions found: 0 shares
+   Date range: N/A (new position, must record initial purchase)
+   → Please add this buy transaction to the Transactions sheet
+──────────────────────────────────────────────────────────────────────
+
+To fix:
+1. Open your Google Sheets Transactions tab
+2. Add the missing buy transaction(s) in columns J-M (Buy section):
+   - Column J: Date (DD/MM/YYYY format)
+   - Column K: Asset Name (must match portfolio exactly)
+   - Column L: Quantity (number of shares purchased)
+   - Column M: Purchase Price per unit (with currency symbol)
+3. Run portfolio analysis again
+```
+
+### Name Matching
+Asset names must match EXACTLY between Portfolio and Transactions sheets:
+- ✅ Portfolio: "AstraZeneca" + Transaction: "AstraZeneca" = Match
+- ❌ Portfolio: "AstraZeneca" + Transaction: "astrazeneca" = No Match (case mismatch)
+- ❌ Portfolio: "Siemens" + Transaction: "Siemens AG" = No Match
+
+Ensure consistent naming across sheets to avoid validation errors.
+
+### Multiple Buys
+The system handles multiple purchases of the same asset:
+- **Example**: You buy 50 shares, then 30 more shares
+- **Detection**: Quantity increased by 80 shares total
+- **Validation**: Requires 80 shares total in Transactions sheet
+- **Calculation**: Weighted average purchase price from all transactions
+
+Multiple transactions for same asset are automatically summed:
+- Transaction 1: AstraZeneca, 50 shares @ £105.00
+- Transaction 2: AstraZeneca, 30 shares @ £110.00
+- Total: 80 shares, weighted average price calculated
+
+### New Positions
+ALL new positions (assets not in previous snapshot) require buy transactions:
+- **No exemptions**: Even first-time positions must have transaction records
+- **Rationale**: Ensures complete audit trail from day 1
+- **Example**: Adding a new stock to portfolio requires recording the initial purchase transaction
+
+### Future-Dated Transactions
+Transactions dated after the current snapshot are ignored:
+- Current snapshot: 2025-01-27
+- Transaction dated: 2025-02-05
+- Result: Transaction skipped, validation may fail
+
+Always use actual trade dates, not future dates.
+
+### Technical Details
+- **Detection threshold**: 1.0 full share (identical to sell validation)
+- **Quantity tolerance**: ±1.0 share (allows minor rounding differences)
+- **Time window**: `previous_snapshot_timestamp < transaction_date <= current_snapshot_timestamp`
+- **Excluded categories**: Pension, Cash (not validated)
+- **Date format**: DD/MM/YYYY (European format)
+- **Currencies**: GBP (£), USD ($), EUR (€) automatically converted to EUR
+- **New positions**: All new assets require transaction records (no exclusion list)
+
+### Troubleshooting
+
+**Problem**: Validation fails but I recorded the transaction
+- **Check**: Asset name matches exactly (case-sensitive)
+- **Check**: Transaction date is within snapshot period
+- **Check**: Quantity matches detected buy (±1 share tolerance)
+- **Check**: Using Buy section (columns J-M), not Sell section (columns A-E)
+
+**Problem**: "Unknown currency" warning
+- **Solution**: Ensure purchase price starts with £, $, or € symbol
+
+**Problem**: Partial buy detected as missing transaction
+- **Solution**: Check if multiple transactions sum to detected quantity
+- **Solution**: Verify transaction dates are within the snapshot period
+
+**Problem**: New position validation fails
+- **Solution**: Add initial purchase transaction to Buy section
+- **Solution**: Ensure transaction date is before or during current snapshot period
+
+**Problem**: Future transaction ignored
+- **Solution**: Use actual trade date, not future settlement date
+
 ### 3. Available MCP Tools
 
 #### Portfolio Analysis & Tracking
