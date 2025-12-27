@@ -856,6 +856,92 @@ No assets found in portfolio snapshot.
 
 
 @mcp.tool()
+def generate_portfolio_dashboard(time_period: str = "all") -> str:
+    """
+    Generate interactive HTML dashboard with portfolio visualizations.
+    
+    Creates a comprehensive dashboard showing portfolio performance, allocation,
+    individual asset trends, benchmark comparisons, and risk metrics over time.
+    
+    Args:
+        time_period: One of "7d", "30d", "90d", "1y", "all" (default: "all")
+    
+    Returns:
+        str: Path to generated HTML file with instructions to open
+    """
+    try:
+        from . import visualization
+        
+        logger.info(f"Generating portfolio dashboard for period: {time_period}")
+        
+        result = visualization.generate_portfolio_dashboard(time_period)
+        
+        if not result.get("success"):
+            return f"""# 📊 Portfolio Dashboard Generation Failed
+            
+## ❌ Error
+{result.get('error', 'Unknown error occurred')}
+
+*Dashboard generation by Investment MCP Agent*"""
+        
+        file_path = result.get("file_path")
+        file_url = result.get("file_url")
+        snapshot_count = result.get("snapshot_count", 0)
+        date_range = result.get("date_range", {})
+        
+        output_lines = [
+            "# ✅ Portfolio Dashboard Generated Successfully!",
+            "",
+            "## 📊 Dashboard Location",
+            f"**File Path:** `{file_path}`",
+            f"**URL:** {file_url}",
+            "",
+            "### To Open:",
+            "- Click the URL above (in supported clients)",
+            f"- Or run: `open {file_path}`",
+            "",
+            "## 📈 Dashboard Includes:",
+            "- **Portfolio Value Trend** (vs S&P 500 & All-World Index)",
+            "- **Category Allocation Over Time** (stacked areas)",
+            "- **Individual Asset Performance** (top 10 by default, all selectable)",
+            "- **Top Holdings Evolution** (position changes)",
+            "- **Gain/Loss Analysis** (current positions)",
+            "- **Transaction Timeline** (buy/sell activity)",
+            "- **Currency Exposure Breakdown**",
+            "- **Risk Metrics Dashboard** (Sharpe, Drawdown, Returns, Contribution)",
+            "",
+            "## 📅 Data Range:",
+            f"- **Period:** {time_period}",
+            f"- **Start Date:** {date_range.get('start', 'N/A')}",
+            f"- **End Date:** {date_range.get('end', 'N/A')}",
+            f"- **Snapshots:** {snapshot_count}",
+            "",
+            "## 🎛️ Interactive Features:",
+            "- **Time Period Selector:** Change date range with dropdown",
+            "- **Asset Selector:** Multi-select which assets to display",
+            "- **Zoom & Pan:** Interactive chart controls",
+            "- **Hover Details:** Detailed tooltips on all data points",
+            "- **Toggle Series:** Click legend items to show/hide",
+            "",
+            "---",
+            f"*Generated at: {result.get('generated_at', 'Unknown')}*",
+            "*Dashboard by Investment MCP Agent*"
+        ]
+        
+        return "\n".join(output_lines)
+        
+    except Exception as e:
+        error_msg = f"Failed to generate dashboard: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return f"""# 📊 Portfolio Dashboard Generation Failed
+
+## ❌ Error
+{error_msg}
+
+*Dashboard generation by Investment MCP Agent*"""
+
+
+@mcp.tool()
 def get_storage_status() -> str:
     """
     Get the current storage backend status.
@@ -934,6 +1020,7 @@ def get_storage_status() -> str:
 def _run_weekly_analysis() -> str:
     """
     Core function that performs the weekly portfolio analysis workflow.
+    NOW INCLUDES: Automatic dashboard generation.
     
     Returns:
         str: Result message
@@ -957,6 +1044,26 @@ def _run_weekly_analysis() -> str:
         storage.save_snapshot(current_snapshot)
         logger.info("Snapshot saved successfully")
         
+        # Generate dashboard after snapshot is saved
+        dashboard_link = ""
+        try:
+            from . import visualization
+            logger.info("Generating portfolio dashboard...")
+            dashboard_result = visualization.generate_portfolio_dashboard(
+                time_period="all",
+                force_regenerate=True
+            )
+            if dashboard_result.get("success"):
+                dashboard_path = dashboard_result.get("file_path")
+                dashboard_url = dashboard_result.get("file_url")
+                logger.info(f"Dashboard generated: {dashboard_path}")
+                dashboard_link = f"\n\n---\n\n📊 **Interactive Dashboard:** {dashboard_url}\n\nOpen in browser to explore interactive charts and metrics.\n"
+            else:
+                logger.warning(f"Dashboard generation failed: {dashboard_result.get('error')}")
+        except Exception as e:
+            logger.error(f"Failed to generate dashboard: {e}", exc_info=False)
+            # Don't fail the entire analysis if dashboard generation fails
+        
         # If we have a previous snapshot, perform comparison
         if previous_snapshot:
             logger.info("Performing week-over-week comparison...")
@@ -965,6 +1072,9 @@ def _run_weekly_analysis() -> str:
             # Generate markdown report
             current_total_value = current_snapshot.get('total_value_eur', 0.0)
             markdown_report = reporting.format_report_markdown(report_data, current_total_value, current_snapshot)
+            
+            # Add dashboard link to report
+            markdown_report += dashboard_link
             
             logger.info("Weekly analysis completed successfully")
             return markdown_report
@@ -978,9 +1088,15 @@ def _run_weekly_analysis() -> str:
 **Timestamp:** {current_snapshot.get('timestamp', 'Unknown')}
 
 This is the first snapshot of your portfolio. Weekly comparison reports will be available starting next week.
-
----
-*Report generated automatically by Investment MCP Agent*"""
+"""
+            
+            # Add dashboard note
+            if dashboard_link:
+                first_run_message += dashboard_link
+            else:
+                first_run_message += "\n\n📊 **Dashboard:** Not enough data yet (need 2+ snapshots)\n"
+            
+            first_run_message += "\n---\n*Report generated automatically by Investment MCP Agent*"
             
             logger.info("First portfolio snapshot created successfully")
             return first_run_message

@@ -5,6 +5,7 @@
 - **Run server**: `uv run python server.py`
 - **Run all config tests**: `uv run python test_config.py`
 - **Run all GCP storage tests**: `uv run python test_gcp_storage.py`
+- **Run dashboard tests**: `uv run python test_dashboard.py`
 - **Run single test file**: `uv run python test_<name>.py`
 - **Check setup**: `uv run python check_setup.py`
 - **Package management**: Use `uv` for all dependency management (NOT pip)
@@ -120,16 +121,18 @@ except ValidationError as e:
 - **Env vars**: Support environment variable overrides for testing/CI
 
 ## Project Structure
-- `agent/` - Core modules (config.py, storage.py, sheets_connector.py, analysis.py, reporting.py, events_tracker.py, risk_analysis.py, insider_trading.py, short_volume.py)
+- `agent/` - Core modules (config.py, storage.py, sheets_connector.py, analysis.py, reporting.py, events_tracker.py, risk_analysis.py, insider_trading.py, short_volume.py, visualization.py)
 - `agent/backends/` - Storage backend implementations (gcp_storage.py, local_storage.py, hybrid_storage.py)
 - `agent/providers/` - Data provider implementations (yahoo_earnings_provider.py)
 - `agent/config_models.py` - Pydantic v2 configuration schema models
 - `agent/earnings_models.py` - Generic earnings data models
 - `agent/earnings_provider.py` - Abstract earnings provider interface
+- `agent/visualization.py` - Interactive HTML dashboard generation with Plotly
 - `server.py` - FastMCP server entry point
 - `config.yaml` - Main configuration file (REQUIRED)
 - `config.yaml.example` - Template with documentation
 - `pyproject.toml` - Project metadata and dependencies
+- `dashboards/` - Generated HTML dashboards (auto-created, gitignored)
 - `cache/` - Cached historical price data (auto-created)
 - `test_*.py` - Test files (root directory)
 - Credentials stored securely in macOS Keychain, never in files
@@ -234,6 +237,29 @@ ticker_mappings:
   
   **Note:** Short interest data (% of float, days to cover) not available in current Fintel API tier
 
+#### Portfolio Visualization
+- `generate_portfolio_dashboard(time_period="all")` - Generate interactive HTML dashboard with Plotly charts:
+  - **Time periods**: "7d", "30d", "90d", "1y", "all" (default: "all")
+  - **Auto-generated**: After each `run_portfolio_analysis()` call
+  - **Output**: `dashboards/portfolio_dashboard.html` (overwritten each time)
+  - **Charts included**:
+    - Portfolio Value vs Benchmarks (SPY, VT) - Line chart comparing portfolio growth against S&P 500 and All-World Index
+    - Category Allocation Over Time - Stacked area chart showing evolution of asset categories
+    - Individual Asset Performance - Multi-line chart with top 10 assets shown by default, all selectable via legend
+    - Top Holdings Evolution - Area chart tracking your largest positions over time
+    - Gain/Loss Analysis - Horizontal bar chart showing profit/loss for current positions
+    - Transaction Timeline - Scatter plot with markers showing buy/sell activity
+    - Currency Exposure Breakdown - Stacked area chart of USD/EUR/GBP exposure
+    - Risk Metrics Dashboard - 2x2 grid showing cumulative returns, max drawdown, rolling volatility, and value distribution
+  - **Interactive features**:
+    - Time period selector dropdown (client-side filtering)
+    - Multi-select assets via legend clicks
+    - Zoom, pan, hover tooltips on all charts
+    - Toggle series visibility on/off
+  - **Benchmarks**: S&P 500 (SPY) and All-World Index (VT) normalized to portfolio start value, fetched from Yahoo Finance
+  - **Requirements**: At least 2 snapshots in portfolio history
+  - **Note**: Dashboard generation may take 10-30 seconds due to benchmark data fetching
+
 ### Notes
 - **Earnings Tracking:**
   - Earnings reports are filtered to show only those within 60 days (2 months)
@@ -259,6 +285,15 @@ ticker_mappings:
   - Trend analysis compares recent 7-day avg vs previous 7-day avg (±10% threshold)
   - Risk scoring: High (>40% ratio or score ≥5), Medium (30-40% or score 3-4), Low (<30% or score <3)
   - All short volume outputs must include Fintel.io attribution
+  
+- **Portfolio Visualization:**
+  - Dashboard requires at least 2 snapshots in portfolio history
+  - Benchmark data (SPY, VT) fetched from Yahoo Finance using yfinance library
+  - Time period filtering happens client-side via dropdown selector
+  - Dashboard file size typically 100-200KB depending on data volume
+  - All timestamps normalized to UTC to ensure proper alignment with benchmark data
+  - Requires internet connection for initial generation (benchmark fetching)
+  - Dashboard is fully standalone HTML with embedded Plotly.js (no external dependencies once generated)
   
 - **General:**
   - Missing ticker mappings will trigger an error with clear instructions to update `config.yaml`

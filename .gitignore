@@ -58,4 +58,9 @@ Thumbs.db
 
 # Logs
 *.log
-logs/cache/
+logs/
+cache/
+
+# Dashboard outputs (auto-generated)
+dashboards/*.html
+dashboards/*.json
