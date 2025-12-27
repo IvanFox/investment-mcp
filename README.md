@@ -203,7 +203,33 @@ python check_setup.py
 
 ## Usage
 
-### Running the MCP Server (Recommended)
+### Raycast Integration ⚡ NEW
+
+Execute portfolio commands directly from Raycast with JSON output.
+
+**Quick Setup:**
+```bash
+# 1. Ensure dependencies installed
+uv sync
+
+# 2. Add to Raycast
+# Raycast Settings → Extensions → Script Commands
+# → Add Directory → /path/to/investment-mcp/raycast-scripts/
+```
+
+**Available Commands:**
+- **Portfolio Status** - Current holdings (live from spreadsheet)
+- **Quick Analysis** - Live vs snapshot comparison with winners/losers
+- **Winners & Losers** - Top movers (historical, snapshot vs snapshot)
+- **Upcoming Events** - Earnings calendar
+- **Insider Trades (Portfolio)** - All portfolio stocks
+- **Insider Trades (Ticker)** - Single stock lookup
+
+See [`raycast-scripts/README.md`](raycast-scripts/README.md) for detailed usage and examples.
+
+---
+
+### Running the MCP Server
 
 ```bash
 uv run python server.py

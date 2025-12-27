@@ -196,10 +196,11 @@ def filter_trades_by_date(
             
         if trade_date >= threshold_date:
             trade_copy = trade.copy()
-            trade_copy['parsed_date'] = trade_date
+            trade_copy['parsed_date'] = trade_date.isoformat()
             trade_copy['days_ago'] = (now - trade_date).days
             filtered_trades.append(trade_copy)
     
+    # Sort by the datetime object before conversion, or by the ISO string (both work)
     return sorted(filtered_trades, key=lambda t: t['parsed_date'], reverse=True)
 
 
