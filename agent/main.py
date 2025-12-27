@@ -20,6 +20,7 @@ from . import reporting
 from . import risk_analysis
 from . import insider_trading
 from . import short_volume
+from .sell_validation import validate_sells_have_transactions, SellValidationError
 
 # Configure logging
 logging.basicConfig(
@@ -1036,11 +1037,45 @@ def _run_weekly_analysis() -> str:
         raw_data = sheets_connector.fetch_portfolio_data()
         normalized_data = sheets_connector.parse_and_normalize_data(raw_data)
         
+        # Fetch and parse transactions
+        logger.info("Fetching transactions from Transactions sheet...")
+        try:
+            transactions_raw = sheets_connector.fetch_transactions_data()
+            # Extract currency rates from portfolio data
+            rates = raw_data.get("rates", [])
+            gbp_to_eur = float(rates[0][0]) if len(rates) > 0 and rates[0] else 1.1589
+            usd_to_eur = float(rates[1][0]) if len(rates) > 1 and rates[1] else 0.8490
+            transactions = sheets_connector.parse_transactions(transactions_raw, gbp_to_eur, usd_to_eur)
+            logger.info(f"Loaded {len(transactions)} transaction(s) from Transactions sheet")
+        except Exception as e:
+            error_msg = f"Failed to load transactions: {e}"
+            logger.error(error_msg)
+            return f"❌ {error_msg}\n\nTransactions sheet is required for sell validation. Please ensure the Transactions sheet exists in your Google Sheets workbook."
+        
         # Create new snapshot
         logger.info("Creating portfolio snapshot...")
         current_snapshot = analysis.create_portfolio_snapshot(normalized_data)
+        # Include transactions in snapshot for analysis
+        current_snapshot["transactions"] = transactions
         
-        # Save the snapshot immediately
+        # VALIDATE: Check sells have matching transactions (if previous snapshot exists)
+        if previous_snapshot:
+            logger.info("Validating sell transactions...")
+            try:
+                validate_sells_have_transactions(
+                    current_snapshot=current_snapshot,
+                    previous_snapshot=previous_snapshot,
+                    transactions=transactions
+                )
+                logger.info("✓ Sell validation passed")
+            except SellValidationError as e:
+                # Validation failed - do NOT save snapshot
+                logger.error("Sell validation failed")
+                return str(e)
+        else:
+            logger.info("First snapshot, skipping sell validation")
+        
+        # Validation passed - save the snapshot
         storage.save_snapshot(current_snapshot)
         logger.info("Snapshot saved successfully")
         
@@ -1071,7 +1106,12 @@ def _run_weekly_analysis() -> str:
             
             # Generate markdown report
             current_total_value = current_snapshot.get('total_value_eur', 0.0)
-            markdown_report = reporting.format_report_markdown(report_data, current_total_value, current_snapshot)
+            markdown_report = reporting.format_report_markdown(
+                report_data, 
+                current_total_value, 
+                current_snapshot,
+                previous_snapshot
+            )
             
             # Add dashboard link to report
             markdown_report += dashboard_link

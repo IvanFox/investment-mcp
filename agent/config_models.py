@@ -51,6 +51,14 @@ class GoogleSheetsConfig(BaseModel):
         default="2025", 
         description="Active sheet tab name (optional, default: '2025')"
     )
+    transactions_sheet_name: str = Field(
+        default="Transactions",
+        description="Transactions sheet tab name (optional, default: 'Transactions')"
+    )
+    transactions_range: str = Field(
+        default="A2:E",
+        description="Transactions data range (optional, default: 'A2:E')"
+    )
     currency_cells: CurrencyCells = Field(
         default_factory=CurrencyCells,
         description="Currency conversion cell locations (optional, defaults provided)"

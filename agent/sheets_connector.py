@@ -488,3 +488,215 @@ def parse_and_normalize_data(raw_data: Dict[str, Any]) -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Failed to parse and normalize data: {e}")
         raise
+
+
+def fetch_transactions_data() -> List[List[Any]]:
+    """
+    Fetches sell transaction data from Transactions sheet.
+    
+    Returns:
+        list: Raw rows from Transactions sheet (excluding header)
+        
+    Structure from sheet:
+        Row 1: ['Sell']
+        Row 2: ['Date', 'Asset Name', 'Quantity', 'Purchased Price', 'Price']
+        Row 3+: Data rows
+    """
+    try:
+        service = get_sheets_service()
+        cfg = config.get_config()
+        
+        # Get sheet ID
+        spreadsheet_id = cfg.google_sheets.sheet_id
+        if not spreadsheet_id:
+            raise ValueError("Sheet ID not found in configuration")
+        
+        # Get transactions sheet name from config (default: "Transactions")
+        txn_sheet_name = getattr(
+            cfg.google_sheets, 
+            'transactions_sheet_name', 
+            'Transactions'
+        )
+        
+        # Get transactions range from config (default: "A2:E")
+        txn_range = getattr(
+            cfg.google_sheets,
+            'transactions_range',
+            'A2:E'
+        )
+        
+        # Construct full range name
+        range_name = f"{txn_sheet_name}!{txn_range}"
+        
+        # Fetch data
+        result = (
+            service.spreadsheets()
+            .values()
+            .get(spreadsheetId=spreadsheet_id, range=range_name)
+            .execute()
+        )
+        
+        values = result.get('values', [])
+        
+        # Skip header row (first row contains column names like "Date", "Asset Name", etc.)
+        if values and len(values) > 0:
+            # Check if first row looks like headers
+            if any(header in str(values[0]) for header in ['Date', 'Asset Name', 'Quantity']):
+                values = values[1:]  # Skip header
+        
+        logger.info(f"Fetched {len(values)} transaction rows from {txn_sheet_name} sheet")
+        return values
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch transactions data: {e}")
+        raise
+
+
+def parse_transactions(
+    raw_data: List[List[Any]], 
+    gbp_to_eur: float,
+    usd_to_eur: float
+) -> List[Dict[str, Any]]:
+    """
+    Parse raw transaction data into structured transaction objects.
+    
+    Handles:
+    - Date parsing (DD/MM/YYYY)
+    - Currency detection (£, $, €)
+    - EUR conversion
+    - Empty/malformed row skipping
+    - Future transaction filtering (based on current date)
+    
+    Args:
+        raw_data: Raw rows [Date, Asset Name, Quantity, Purchase Price, Sell Price]
+        gbp_to_eur: GBP to EUR exchange rate
+        usd_to_eur: USD to EUR exchange rate
+    
+    Returns:
+        List of transaction dicts with keys:
+        - date (datetime): Transaction date (timezone-aware UTC)
+        - asset_name (str): Asset name (exact case preserved)
+        - quantity (float): Number of shares sold
+        - sell_price_per_unit (float): Price per unit in original currency
+        - currency (str): USD/GBP/EUR
+        - sell_price_per_unit_eur (float): Price per unit converted to EUR
+        - total_value_eur (float): Total transaction value in EUR
+    """
+    from datetime import datetime, timezone
+    
+    transactions = []
+    now = datetime.now(timezone.utc)
+    
+    for row_num, row in enumerate(raw_data, start=3):  # Start at row 3 (data rows)
+        try:
+            # Skip empty rows
+            if not row or len(row) < 5:
+                continue
+            
+            # Skip rows with empty date or asset name
+            if not row[0] or not row[1]:
+                continue
+            
+            # Check if row looks like a year marker (e.g., "2026")
+            date_str = str(row[0]).strip()
+            if date_str.isdigit() and len(date_str) == 4:
+                logger.debug(f"Row {row_num}: Skipping year marker '{date_str}'")
+                continue
+            
+            # Parse date (DD/MM/YYYY format)
+            try:
+                txn_date = datetime.strptime(date_str, '%d/%m/%Y')
+                # Make timezone-aware (assume UTC)
+                txn_date = txn_date.replace(tzinfo=timezone.utc)
+            except ValueError as e:
+                logger.warning(f"Row {row_num}: Invalid date format '{date_str}', skipping - {e}")
+                continue
+            
+            # Skip future transactions
+            if txn_date > now:
+                logger.info(
+                    f"Row {row_num}: Skipping future transaction for {row[1]} "
+                    f"dated {date_str}"
+                )
+                continue
+            
+            # Parse asset name (EXACT - preserve case)
+            asset_name = str(row[1]).strip()
+            
+            # Parse quantity
+            try:
+                quantity = float(row[2]) if row[2] else 0.0
+            except (ValueError, TypeError) as e:
+                logger.warning(f"Row {row_num}: Invalid quantity '{row[2]}', skipping - {e}")
+                continue
+            
+            if quantity <= 0:
+                logger.warning(f"Row {row_num}: Invalid quantity {quantity} for {asset_name}, skipping")
+                continue
+            
+            # Parse sell price (column E, index 4)
+            if len(row) <= 4 or not row[4]:
+                logger.warning(f"Row {row_num}: Missing sell price for {asset_name}, skipping")
+                continue
+            
+            sell_price_str = str(row[4]).strip()
+            
+            # Detect currency
+            currency = None
+            if sell_price_str.startswith('£'):
+                currency = 'GBP'
+            elif sell_price_str.startswith('$'):
+                currency = 'USD'
+            elif sell_price_str.startswith('€'):
+                currency = 'EUR'
+            else:
+                logger.warning(
+                    f"Row {row_num}: Unknown currency in '{sell_price_str}' for {asset_name}, "
+                    f"skipping"
+                )
+                continue
+            
+            # Parse numeric value (reuse existing function)
+            sell_price_original = parse_currency_value(sell_price_str)
+            
+            if sell_price_original <= 0:
+                logger.warning(
+                    f"Row {row_num}: Invalid sell price {sell_price_original} for {asset_name}, "
+                    f"skipping"
+                )
+                continue
+            
+            # Convert to EUR
+            if currency == 'GBP':
+                sell_price_eur = sell_price_original * gbp_to_eur
+            elif currency == 'USD':
+                sell_price_eur = sell_price_original * usd_to_eur
+            else:  # EUR
+                sell_price_eur = sell_price_original
+            
+            # Calculate total value
+            total_value_eur = sell_price_eur * quantity
+            
+            # Create transaction object
+            transaction = {
+                "date": txn_date.isoformat(),
+                "asset_name": asset_name,  # EXACT case preserved
+                "quantity": quantity,
+                "sell_price_per_unit": sell_price_original,
+                "currency": currency,
+                "sell_price_per_unit_eur": round(sell_price_eur, 4),
+                "total_value_eur": round(total_value_eur, 2)
+            }
+            
+            transactions.append(transaction)
+            logger.debug(
+                f"Row {row_num}: Parsed transaction - {asset_name}, "
+                f"{quantity:.0f} shares @ {currency} {sell_price_original:.2f}"
+            )
+            
+        except Exception as e:
+            logger.warning(f"Row {row_num}: Error parsing transaction: {e}, skipping")
+            continue
+    
+    logger.info(f"Successfully parsed {len(transactions)} transactions")
+    return transactions

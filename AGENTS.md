@@ -121,12 +121,14 @@ except ValidationError as e:
 - **Env vars**: Support environment variable overrides for testing/CI
 
 ## Project Structure
-- `agent/` - Core modules (config.py, storage.py, sheets_connector.py, analysis.py, reporting.py, events_tracker.py, risk_analysis.py, insider_trading.py, short_volume.py, visualization.py)
+- `agent/` - Core modules (config.py, storage.py, sheets_connector.py, analysis.py, reporting.py, events_tracker.py, risk_analysis.py, insider_trading.py, short_volume.py, visualization.py, sell_validation.py, transaction_models.py)
 - `agent/backends/` - Storage backend implementations (gcp_storage.py, local_storage.py, hybrid_storage.py)
 - `agent/providers/` - Data provider implementations (yahoo_earnings_provider.py)
 - `agent/config_models.py` - Pydantic v2 configuration schema models
 - `agent/earnings_models.py` - Generic earnings data models
+- `agent/transaction_models.py` - Sell transaction data models
 - `agent/earnings_provider.py` - Abstract earnings provider interface
+- `agent/sell_validation.py` - Sell transaction validation logic
 - `agent/visualization.py` - Interactive HTML dashboard generation with Plotly
 - `server.py` - FastMCP server entry point
 - `config.yaml` - Main configuration file (REQUIRED)
@@ -172,6 +174,126 @@ ticker_mappings:
   ASML Holding: ASML
   Wise: WISE.L
 ```
+
+## Sell Transaction Tracking & Validation
+
+### Overview
+The system enforces strict validation to ensure all sell transactions are recorded before creating portfolio snapshots. This guarantees accurate realized gain/loss calculations and prevents data integrity issues.
+
+### Transactions Sheet Structure
+Located in your Google Sheets workbook as a separate "Transactions" tab.
+
+| Column | Field | Format | Example |
+|--------|-------|--------|---------|
+| A | Date | DD/MM/YYYY | 03/02/2025 |
+| B | Asset Name | Text (exact match) | Wise |
+| C | Quantity | Number (full shares) | 183 |
+| D | Purchase Price | Currency/unit | £0.00 |
+| E | Sell Price | Currency/unit | £11.00 |
+
+**Critical Notes:**
+- **Date**: Use contractual/trade date (not settlement date)
+- **Asset Name**: Must match portfolio sheet EXACTLY (case-sensitive: "Wise" ≠ "wise")
+- **Quantity**: Full shares (e.g., 100, 183.5)
+- **Sell Price**: Per-unit price with currency symbol (£, $, €)
+
+### Validation Rules
+When taking a new portfolio snapshot, the system validates:
+1. **Detects sells**: Compares with previous snapshot to find positions where quantity decreased by ≥1 full share
+2. **Checks transactions**: Looks for matching transaction records in Transactions sheet
+3. **Validates quantities**: Ensures transaction quantities match detected sells (within 1 share tolerance)
+4. **Fails if missing**: Snapshot creation fails with detailed error listing all missing transactions
+
+### Workflow
+1. **Sell shares** in your brokerage account
+2. **Record transaction** in Transactions sheet (use trade date)
+3. **Update portfolio** sheet (remove or reduce position quantity)
+4. **Run `run_portfolio_analysis()`**
+   - System validates all sells have matching transactions
+   - If validation fails → Error with missing transactions list
+   - If validation passes → Snapshot saved, analysis continues
+5. **Fix errors** if needed → Add missing transactions and retry
+
+### Example Validation Error
+```
+❌ Portfolio snapshot creation FAILED
+
+Missing sell transaction records detected.
+
+Missing Transactions:
+──────────────────────────────────────────────────────────────────────
+1. Microsoft (US Stocks)
+   Detected sell: 10 shares
+   Transactions found: 0 shares
+   Date range: 2025-12-20T18:30:00Z to 2025-12-27T18:30:00Z
+   → Please add this transaction to the Transactions sheet
+
+2. Intel Corp (US Stocks)
+   Detected sell: 55 shares
+   Transactions found: 50 shares (PARTIAL)
+   Missing: 5 shares
+   Date range: 2025-12-20T18:30:00Z to 2025-12-27T18:30:00Z
+   → Please verify quantity in Transactions sheet
+──────────────────────────────────────────────────────────────────────
+
+To fix:
+1. Open your Google Sheets Transactions tab
+2. Add the missing sell transaction(s)
+3. Run portfolio analysis again
+```
+
+### Name Matching
+Asset names must match EXACTLY between Portfolio and Transactions sheets:
+- ✅ Portfolio: "Wise" + Transaction: "Wise" = Match
+- ❌ Portfolio: "Wise" + Transaction: "wise" = No Match (case mismatch)
+- ❌ Portfolio: "Microsoft" + Transaction: "Microsoft Corp" = No Match
+
+Ensure consistent naming across sheets to avoid validation errors.
+
+### Partial Sells
+The system handles partial position sales:
+- **Example**: You own 5,000 Wise shares, sell 1,000
+- **Detection**: Quantity decreased from 5,000 → 4,000
+- **Validation**: Requires 1,000 shares in Transactions sheet
+- **Calculation**: Pro-rata allocation of purchase price for realized gain/loss
+
+Multiple transactions for same asset are automatically summed:
+- Transaction 1: Wise, 500 shares
+- Transaction 2: Wise, 500 shares
+- Total: 1,000 shares (matches detection)
+
+### Future-Dated Transactions
+Transactions dated after the current snapshot are ignored:
+- Current snapshot: 2025-12-27
+- Transaction dated: 2025-12-30
+- Result: Transaction skipped, validation may fail
+
+Always use actual trade dates, not future dates.
+
+### Technical Details
+- **Detection threshold**: 1.0 full share
+- **Quantity tolerance**: ±1.0 share (allows minor rounding differences)
+- **Time window**: `previous_snapshot_timestamp < transaction_date <= current_snapshot_timestamp`
+- **Excluded categories**: Pension, Cash (not validated)
+- **Date format**: DD/MM/YYYY (European format)
+- **Currencies**: GBP (£), USD ($), EUR (€) automatically converted to EUR
+
+### Troubleshooting
+
+**Problem**: Validation fails but I recorded the transaction
+- **Check**: Asset name matches exactly (case-sensitive)
+- **Check**: Transaction date is within snapshot period
+- **Check**: Quantity matches detected sell (±1 share tolerance)
+
+**Problem**: "Unknown currency" warning
+- **Solution**: Ensure sell price starts with £, $, or € symbol
+
+**Problem**: Partial sell detected as missing transaction
+- **Solution**: Check if multiple transactions sum to detected quantity
+- **Solution**: Verify transaction dates are within the snapshot period
+
+**Problem**: Future transaction ignored
+- **Solution**: Use actual trade date, not future settlement date
 
 ### 3. Available MCP Tools
 
