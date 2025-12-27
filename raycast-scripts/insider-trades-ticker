@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Required: Raycast Script Command Metadata
+# @raycast.schemaVersion 1
+# @raycast.title Insider Trades (Ticker)
+# @raycast.mode fullOutput
+# @raycast.packageName Investment Portfolio
+# @raycast.icon 🔎
+# @raycast.description Insider trading for specific ticker
+# @raycast.argument1 { "type": "text", "placeholder": "Ticker (e.g., AAPL)", "percentEncoded": false }
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT"
+exec uv run python3 "$SCRIPT_DIR/lib/insider-trades-ticker_impl.py" "$@"

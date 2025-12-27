@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Required: Raycast Script Command Metadata
+# @raycast.schemaVersion 1
+# @raycast.title Insider Trades (Portfolio)
+# @raycast.mode fullOutput
+# @raycast.packageName Investment Portfolio
+# @raycast.icon 🔍
+# @raycast.description Insider trading for all portfolio stocks
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT"
+exec uv run python3 "$SCRIPT_DIR/lib/insider-trades-portfolio_impl.py" "$@"

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Required: Raycast Script Command Metadata
+# @raycast.schemaVersion 1
+# @raycast.title Upcoming Events
+# @raycast.mode fullOutput
+# @raycast.packageName Investment Portfolio
+# @raycast.icon 📅
+# @raycast.description Earnings calendar for portfolio stocks
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT"
+exec uv run python3 "$SCRIPT_DIR/lib/upcoming-events_impl.py" "$@"
