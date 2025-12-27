@@ -55,6 +55,50 @@ def find_matching_transactions_for_sell(
     return matching
 
 
+def find_matching_transactions_for_buy(
+    transactions: List[Dict[str, Any]],
+    asset_name: str,
+    previous_date: str,
+    current_date: str
+) -> List[Dict[str, Any]]:
+    """
+    Find buy transactions matching asset name within date range.
+    
+    Args:
+        transactions: List of all parsed buy transactions
+        asset_name: Asset name to match (case-sensitive exact match)
+        previous_date: Start of period (ISO format, exclusive)
+        current_date: End of period (ISO format, inclusive)
+    
+    Returns:
+        List of matching buy transaction dicts
+    """
+    # Parse date strings
+    prev_dt = datetime.fromisoformat(previous_date.replace('Z', '+00:00'))
+    curr_dt = datetime.fromisoformat(current_date.replace('Z', '+00:00'))
+    
+    matching = []
+    for txn in transactions:
+        # Exact name match (case-sensitive)
+        if txn.get("asset_name") != asset_name:
+            continue
+        
+        # Date range: previous < txn_date <= current
+        txn_date_str = txn.get("date")
+        if not txn_date_str:
+            continue
+        
+        try:
+            txn_date = datetime.fromisoformat(txn_date_str.replace('Z', '+00:00'))
+        except (ValueError, AttributeError):
+            continue
+        
+        if prev_dt < txn_date <= curr_dt:
+            matching.append(txn)
+    
+    return matching
+
+
 def create_portfolio_snapshot(normalized_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Creates a complete snapshot of the portfolio at a single point in time.
@@ -253,6 +297,30 @@ def compare_snapshots(
                         change_info["explicit_sell_value_eur"] = round(txn_total_value, 2)
                         change_info["num_transactions"] = len(matching_txns)
                 
+                # For purchases, add explicit transaction info if available
+                elif qty_change >= 1.0:  # Purchase (at least 1 full share)
+                    matching_buy_txns = find_matching_transactions_for_buy(
+                        transactions=current_snapshot.get("buy_transactions", []),
+                        asset_name=name,
+                        previous_date=previous_snapshot["timestamp"],
+                        current_date=current_snapshot["timestamp"]
+                    )
+                    
+                    if matching_buy_txns:
+                        # Calculate total purchase value from transactions
+                        txn_total_value = sum(txn.get("total_value_eur", 0.0) for txn in matching_buy_txns)
+                        txn_quantity = sum(txn.get("quantity", 0.0) for txn in matching_buy_txns)
+                        avg_buy_price = txn_total_value / txn_quantity if txn_quantity > 0 else 0
+                        
+                        change_info["explicit_purchase_value_eur"] = round(txn_total_value, 2)
+                        change_info["avg_purchase_price_per_unit_eur"] = round(avg_buy_price, 4)
+                        change_info["price_source"] = "explicit"
+                        change_info["num_buy_transactions"] = len(matching_buy_txns)
+                    else:
+                        # Fallback: use estimated from snapshot
+                        change_info["price_source"] = "estimated"
+                        logger.warning(f"No buy transactions found for purchase: {name} (using estimated price)")
+                
                 quantity_changes.append(change_info)
 
         # Sort quantity changes: purchases first (by quantity desc), then sales (by abs quantity desc)
@@ -264,13 +332,44 @@ def compare_snapshots(
         new_positions = []
         for name in new_names:
             asset = current_assets[name]
-            new_positions.append(
-                {
-                    "name": name,
-                    "quantity": asset.get("quantity", 0.0),
-                    "current_value_eur": asset.get("current_value_eur", 0.0),
-                }
+            current_qty = asset.get("quantity", 0.0)
+            current_value = asset.get("current_value_eur", 0.0)
+            
+            # Find matching buy transactions for new position
+            matching_buy_txns = find_matching_transactions_for_buy(
+                transactions=current_snapshot.get("buy_transactions", []),
+                asset_name=name,
+                previous_date=previous_snapshot["timestamp"],
+                current_date=current_snapshot["timestamp"]
             )
+            
+            position_info = {
+                "name": name,
+                "quantity": current_qty,
+                "current_value_eur": current_value,
+            }
+            
+            if matching_buy_txns:
+                # Use explicit buy prices from transactions
+                txn_total_value = sum(txn.get("total_value_eur", 0.0) for txn in matching_buy_txns)
+                txn_quantity = sum(txn.get("quantity", 0.0) for txn in matching_buy_txns)
+                avg_buy_price = txn_total_value / txn_quantity if txn_quantity > 0 else 0
+                
+                position_info["purchase_value_eur"] = round(txn_total_value, 2)
+                position_info["avg_purchase_price_per_unit_eur"] = round(avg_buy_price, 4)
+                position_info["price_source"] = "explicit"
+                position_info["num_transactions"] = len(matching_buy_txns)
+            else:
+                # Fallback: use purchase price from snapshot
+                purchase_price = asset.get("purchase_price_total_eur", 0.0)
+                avg_buy_price = purchase_price / current_qty if current_qty > 0 else 0
+                
+                position_info["purchase_value_eur"] = round(purchase_price, 2)
+                position_info["avg_purchase_price_per_unit_eur"] = round(avg_buy_price, 4)
+                position_info["price_source"] = "estimated"
+                logger.warning(f"No buy transactions found for new position: {name} (using estimated price)")
+            
+            new_positions.append(position_info)
 
         # Analyze sold positions with explicit transaction prices
         sold_positions = []

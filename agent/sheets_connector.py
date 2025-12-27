@@ -700,3 +700,215 @@ def parse_transactions(
     
     logger.info(f"Successfully parsed {len(transactions)} transactions")
     return transactions
+
+
+def fetch_buy_transactions_data() -> List[List[Any]]:
+    """
+    Fetches buy transaction data from Transactions sheet (columns J-M).
+    
+    Returns:
+        list: Raw rows from Transactions sheet buy section (excluding header)
+        
+    Structure from sheet:
+        Row 1: ['Buy']
+        Row 2: ['Date', 'Asset Name', 'Quantity', 'Purchased Price']
+        Row 3+: Data rows
+    """
+    try:
+        service = get_sheets_service()
+        cfg = config.get_config()
+        
+        # Get sheet ID
+        spreadsheet_id = cfg.google_sheets.sheet_id
+        if not spreadsheet_id:
+            raise ValueError("Sheet ID not found in configuration")
+        
+        # Get transactions sheet name from config (default: "Transactions")
+        txn_sheet_name = getattr(
+            cfg.google_sheets, 
+            'transactions_sheet_name', 
+            'Transactions'
+        )
+        
+        # Get buy transactions range from config (default: "J2:M")
+        buy_txn_range = getattr(
+            cfg.google_sheets,
+            'buy_transactions_range',
+            'J2:M'
+        )
+        
+        # Construct full range name
+        range_name = f"{txn_sheet_name}!{buy_txn_range}"
+        
+        # Fetch data
+        result = (
+            service.spreadsheets()
+            .values()
+            .get(spreadsheetId=spreadsheet_id, range=range_name)
+            .execute()
+        )
+        
+        values = result.get('values', [])
+        
+        # Skip header row (first row contains column names like "Date", "Asset Name", etc.)
+        if values and len(values) > 0:
+            # Check if first row looks like headers
+            if any(header in str(values[0]) for header in ['Date', 'Asset Name', 'Quantity']):
+                values = values[1:]  # Skip header
+        
+        logger.info(f"Fetched {len(values)} buy transaction rows from {txn_sheet_name} sheet")
+        return values
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch buy transactions data: {e}")
+        raise
+
+
+def parse_buy_transactions(
+    raw_data: List[List[Any]], 
+    gbp_to_eur: float,
+    usd_to_eur: float
+) -> List[Dict[str, Any]]:
+    """
+    Parse raw buy transaction data into structured transaction objects.
+    
+    Handles:
+    - Date parsing (DD/MM/YYYY)
+    - Currency detection (£, $, €)
+    - EUR conversion
+    - Empty/malformed row skipping
+    - Future transaction filtering (based on current date)
+    
+    Args:
+        raw_data: Raw rows [Date, Asset Name, Quantity, Purchase Price]
+        gbp_to_eur: GBP to EUR exchange rate
+        usd_to_eur: USD to EUR exchange rate
+    
+    Returns:
+        List of transaction dicts with keys:
+        - date (datetime): Transaction date (timezone-aware UTC)
+        - asset_name (str): Asset name (exact case preserved)
+        - quantity (float): Number of shares purchased
+        - purchase_price_per_unit (float): Price per unit in original currency
+        - currency (str): USD/GBP/EUR
+        - purchase_price_per_unit_eur (float): Price per unit converted to EUR
+        - total_value_eur (float): Total transaction value in EUR
+    """
+    from datetime import datetime, timezone
+    
+    transactions = []
+    now = datetime.now(timezone.utc)
+    
+    for row_num, row in enumerate(raw_data, start=3):  # Start at row 3 (data rows)
+        try:
+            # Skip empty rows
+            if not row or len(row) < 4:
+                continue
+            
+            # Skip rows with empty date or asset name
+            if not row[0] or not row[1]:
+                continue
+            
+            # Check if row looks like a year marker (e.g., "2026")
+            date_str = str(row[0]).strip()
+            if date_str.isdigit() and len(date_str) == 4:
+                logger.debug(f"Row {row_num}: Skipping year marker '{date_str}'")
+                continue
+            
+            # Parse date (DD/MM/YYYY format)
+            try:
+                txn_date = datetime.strptime(date_str, '%d/%m/%Y')
+                # Make timezone-aware (assume UTC)
+                txn_date = txn_date.replace(tzinfo=timezone.utc)
+            except ValueError as e:
+                logger.warning(f"Row {row_num}: Invalid date format '{date_str}', skipping - {e}")
+                continue
+            
+            # Skip future transactions
+            if txn_date > now:
+                logger.info(
+                    f"Row {row_num}: Skipping future buy transaction for {row[1]} "
+                    f"dated {date_str}"
+                )
+                continue
+            
+            # Parse asset name (EXACT - preserve case)
+            asset_name = str(row[1]).strip()
+            
+            # Parse quantity
+            try:
+                quantity = float(row[2]) if row[2] else 0.0
+            except (ValueError, TypeError) as e:
+                logger.warning(f"Row {row_num}: Invalid quantity '{row[2]}', skipping - {e}")
+                continue
+            
+            if quantity <= 0:
+                logger.warning(f"Row {row_num}: Invalid quantity {quantity} for {asset_name}, skipping")
+                continue
+            
+            # Parse purchase price (column M, index 3)
+            if len(row) <= 3 or not row[3]:
+                logger.warning(f"Row {row_num}: Missing purchase price for {asset_name}, skipping")
+                continue
+            
+            purchase_price_str = str(row[3]).strip()
+            
+            # Detect currency
+            currency = None
+            if purchase_price_str.startswith('£'):
+                currency = 'GBP'
+            elif purchase_price_str.startswith('$'):
+                currency = 'USD'
+            elif purchase_price_str.startswith('€'):
+                currency = 'EUR'
+            else:
+                logger.warning(
+                    f"Row {row_num}: Unknown currency in '{purchase_price_str}' for {asset_name}, "
+                    f"skipping"
+                )
+                continue
+            
+            # Parse numeric value (reuse existing function)
+            purchase_price_original = parse_currency_value(purchase_price_str)
+            
+            if purchase_price_original <= 0:
+                logger.warning(
+                    f"Row {row_num}: Invalid purchase price {purchase_price_original} for {asset_name}, "
+                    f"skipping"
+                )
+                continue
+            
+            # Convert to EUR
+            if currency == 'GBP':
+                purchase_price_eur = purchase_price_original * gbp_to_eur
+            elif currency == 'USD':
+                purchase_price_eur = purchase_price_original * usd_to_eur
+            else:  # EUR
+                purchase_price_eur = purchase_price_original
+            
+            # Calculate total value
+            total_value_eur = purchase_price_eur * quantity
+            
+            # Create transaction object
+            transaction = {
+                "date": txn_date.isoformat(),
+                "asset_name": asset_name,  # EXACT case preserved
+                "quantity": quantity,
+                "purchase_price_per_unit": purchase_price_original,
+                "currency": currency,
+                "purchase_price_per_unit_eur": round(purchase_price_eur, 4),
+                "total_value_eur": round(total_value_eur, 2)
+            }
+            
+            transactions.append(transaction)
+            logger.debug(
+                f"Row {row_num}: Parsed buy transaction - {asset_name}, "
+                f"{quantity:.0f} shares @ {currency} {purchase_price_original:.2f}"
+            )
+            
+        except Exception as e:
+            logger.warning(f"Row {row_num}: Error parsing buy transaction: {e}, skipping")
+            continue
+    
+    logger.info(f"Successfully parsed {len(transactions)} buy transactions")
+    return transactions
