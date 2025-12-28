@@ -8,7 +8,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
-  /** Project Root Path - Absolute path to investment-mcp project directory */
+  /** Project Root Path - Absolute path to investment-mcp project directory (e.g., ~/Projects/investment-mcp) */
   "projectRootPath": string
 }
 

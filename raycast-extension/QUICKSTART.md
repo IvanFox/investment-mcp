@@ -16,6 +16,7 @@ npm run dev
 ```
 
 You should see:
+
 ```
 ✓ Built extension successfully
 ✓ Watching for changes...
@@ -31,39 +32,49 @@ You should see:
 
 1. Open any command (Portfolio Status or Upcoming Events)
 2. Press `Cmd+,` to open preferences
-3. Set **Project Root Path** to:
+3. Set **Project Root Path** to your project location (use absolute path):
    ```
-   /Users/ivan.lissitsnoi/Projects/investment-mcp
+   /Users/yourusername/Projects/investment-mcp
    ```
 4. Press `Enter` to save
 
 ## Step 5: Test the Commands
 
 ### Portfolio Status
+
 1. Type "Portfolio Status" in Raycast
 2. Press `Enter`
-3. Wait 2-3 seconds for data to load
-4. You should see:
+3. **First run**: Wait 2-3 minutes (Python is being downloaded automatically)
+   - If you see "Request timed out", wait 30 seconds and try again
+   - This only happens once!
+4. **Subsequent runs**: Wait 2-3 seconds for data to load
+5. You should see:
    - List of positions grouped by category
    - Values and gain/loss percentages
    - Detail panel on the right
 
 **Actions to try:**
+
 - Search for a position
 - Click a position to see details
 - Press `Cmd+C` to copy asset name
 - Press `Cmd+R` to refresh
 
 ### Upcoming Events
+
 1. Type "Upcoming Events" in Raycast
 2. Press `Enter`
-3. Wait 3-5 seconds for data to load
-4. You should see:
+3. **First run**: Wait 2-3 minutes (Python is being downloaded automatically)
+   - If you see "Request timed out", wait 30 seconds and try again
+   - This only happens once!
+4. **Subsequent runs**: Wait 3-5 seconds for data to load
+5. You should see:
    - Events grouped by "This Week", "Next Week", "Later"
    - Company names, tickers, and dates
    - Countdown to each event
 
 **Actions to try:**
+
 - Search for a company or ticker
 - Click an event to see details
 - Press `Enter` on an event to open Yahoo Finance
@@ -74,23 +85,53 @@ You should see:
 ### "Python environment not found"
 
 **Fix:**
+
 ```bash
 # Install uv if not already installed
-curl -LsSf https://astral.sh/uv/install.sh | sh
+brew install uv
 
-# Restart terminal
-# Try the command again
+# Restart Raycast completely
+# Cmd+Q to quit, then reopen
+
+# Verify installation
+which uv
+# Should output: /opt/homebrew/bin/uv
+```
+
+### "Request timed out" (first run only)
+
+**This is normal on first run!** Python 3.12 is being downloaded automatically.
+
+**Fix:**
+
+1. Wait 30 seconds
+2. Try the command again
+3. Repeat if necessary (total download time: 2-3 minutes)
+4. Once complete, all future runs will be fast (~2-3 seconds)
+
+**Want to pre-download?** Run this before using the extension:
+
+```bash
+cd /path/to/investment-mcp
+uv sync  # Downloads Python and all dependencies
 ```
 
 ### "Configuration file missing"
 
 **Fix:**
-1. Verify the project root path in preferences
+
+1. Verify the project root path in preferences (must be absolute path)
 2. Check that `config.yaml` exists:
    ```bash
-   ls /Users/ivan.lissitsnoi/Projects/investment-mcp/config.yaml
+   ls /path/to/investment-mcp/config.yaml
    ```
 3. If missing, copy from example:
+   ```bash
+   cd /path/to/investment-mcp
+   cp config.yaml.example config.yaml
+   # Edit config.yaml with your settings
+   ```
+4. If missing, copy from example:
    ```bash
    cp config.yaml.example config.yaml
    # Edit config.yaml with your settings
@@ -99,9 +140,10 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ### "Failed to fetch data"
 
 **Fix:**
+
 1. Run the setup check:
    ```bash
-   cd /Users/ivan.lissitsnoi/Projects/investment-mcp
+   cd /path/to/investment-mcp
    uv run python check_setup.py
    ```
 2. Fix any issues reported
@@ -110,6 +152,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ### Extension doesn't appear in Raycast
 
 **Fix:**
+
 1. Make sure `npm run dev` is running
 2. Restart Raycast: `Cmd+Q`, then reopen
 3. Check the terminal for error messages
@@ -124,12 +167,14 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ## Keyboard Shortcuts
 
 ### Portfolio Status
+
 - `Cmd+C` - Copy asset name
 - `Cmd+Shift+C` - Copy current value
 - `Cmd+R` - Refresh data
 - `Cmd+,` - Open preferences
 
 ### Upcoming Events
+
 - `Cmd+C` - Copy ticker
 - `Cmd+Shift+C` - Copy company name
 - `Cmd+Shift+E` - Open earnings calendar
@@ -156,6 +201,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ## Need Help?
 
 See the full documentation:
+
 - [Extension README](README.md)
 - [Main Project README](../README.md)
 - [Raycast Scripts README](../raycast-scripts/README.md)
