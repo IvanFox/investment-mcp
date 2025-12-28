@@ -14,7 +14,7 @@ let cachedUvPath: string | null = null;
 
 /**
  * Find the uv executable by checking common installation locations
- * 
+ *
  * @returns Absolute path to uv executable
  * @throws Error if uv is not found in any common location
  */
@@ -50,7 +50,7 @@ function findUvExecutable(): string {
 
 /**
  * Execute a Python script from the raycast-scripts/lib directory
- * 
+ *
  * @param scriptName - Name of the script (without _impl.py suffix)
  * @returns Parsed JSON response from the Python script
  * @throws Error if script execution fails or returns invalid JSON
@@ -58,17 +58,17 @@ function findUvExecutable(): string {
 export async function executePythonScript<T>(scriptName: string): Promise<T> {
   const { projectRootPath } = getPreferenceValues<Preferences>();
   const scriptPath = `${projectRootPath}/raycast-scripts/lib/${scriptName}_impl.py`;
-  
+
   // Find uv executable
   const uvPath = findUvExecutable();
-  
+
   try {
     const { stdout, stderr } = await execFileAsync(
       uvPath,
       ["run", "python", scriptPath],
       {
         cwd: projectRootPath,
-        timeout: 30000, // 30 second timeout
+        timeout: 180000, // 3 minute timeout (increased for first-run downloads)
         maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large responses
         env: {
           ...process.env,
@@ -76,31 +76,47 @@ export async function executePythonScript<T>(scriptName: string): Promise<T> {
           // Include /usr/bin for macOS system commands like 'security'
           PATH: `/usr/bin:/opt/homebrew/bin:/usr/local/bin:${homedir()}/.local/bin:${homedir()}/.cargo/bin:${process.env.PATH}`,
         },
-      }
+      },
     );
-    
+
     // Log stderr if present (warnings, etc.)
+    // Note: First-run downloads will show progress in stderr
     if (stderr && stderr.trim().length > 0) {
-      console.error("Python stderr:", stderr);
+      // Check if stderr contains download/setup messages (expected on first run)
+      const isSetupMessage =
+        stderr.includes("Downloading") ||
+        stderr.includes("Creating virtual environment") ||
+        stderr.includes("Using CPython") ||
+        stderr.includes("Installing") ||
+        stderr.includes("Built") ||
+        stderr.includes("Installed");
+
+      if (isSetupMessage) {
+        console.log("Python environment setup:", stderr);
+      } else {
+        console.error("Python stderr:", stderr);
+      }
     }
-    
+
     // Parse JSON response
     const result = JSON.parse(stdout);
-    
+
     // Check if the Python script returned an error
     if (!result.success) {
       throw new Error(result.error || "Unknown error from Python script");
     }
-    
+
     return result as T;
-    
   } catch (error) {
     // Enhanced error messages for common issues
     if (error instanceof Error) {
-      if (error.message.includes("ENOENT") || error.message.includes("spawn uv")) {
+      if (
+        error.message.includes("ENOENT") ||
+        error.message.includes("spawn uv")
+      ) {
         // Clear cached path on failure so we retry next time
         cachedUvPath = null;
-        
+
         throw new Error(
           `Python environment not found. Tried looking for 'uv' in common locations:
 - /opt/homebrew/bin/uv
@@ -112,39 +128,44 @@ Please install uv using one of these methods:
 1. Homebrew: brew install uv
 2. Official installer: curl -LsSf https://astral.sh/uv/install.sh | sh
 
-After installing, restart Raycast or your computer.`
+After installing, restart Raycast or your computer.`,
         );
       }
-      
+
       if (error.message.includes("timeout")) {
         throw new Error(
-          "Request timed out. The operation took longer than 30 seconds."
+          `Request timed out after 3 minutes.
+
+This might happen on first run if Python is being downloaded.
+Please try again - subsequent runs will be much faster (2-3 seconds).`,
         );
       }
-      
+
       if (error.message.includes("Unexpected token")) {
         throw new Error(
-          "Invalid JSON response from Python script. Check the script output for errors."
+          "Invalid JSON response from Python script. Check the script output for errors.",
         );
       }
-      
+
       if (error.message.includes("config.yaml")) {
         throw new Error(
-          "Configuration file missing or invalid. Please ensure config.yaml exists in the project root."
+          "Configuration file missing or invalid. Please ensure config.yaml exists in the project root.",
         );
       }
-      
+
       // Re-throw with original message if not a known error type
       throw error;
     }
-    
-    throw new Error("An unknown error occurred while executing the Python script");
+
+    throw new Error(
+      "An unknown error occurred while executing the Python script",
+    );
   }
 }
 
 /**
  * Get the currently cached or detected uv path (for debugging)
- * 
+ *
  * @returns The uv executable path or null if not yet detected
  */
 export function getUvPath(): string | null {
