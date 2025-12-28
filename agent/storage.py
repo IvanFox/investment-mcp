@@ -81,7 +81,7 @@ def _load_gcp_credentials() -> Dict[str, Any]:
         # Retrieve from Keychain (same account as Google Sheets)
         result = subprocess.run(
             [
-                "security",
+                "/usr/bin/security",
                 "find-generic-password",
                 "-a", "mcp-portfolio-agent",
                 "-s", "google-sheets-credentials",

@@ -107,7 +107,7 @@ def load_credentials_from_keychain():
     try:
         result = subprocess.run(
             [
-                "security",
+                "/usr/bin/security",
                 "find-generic-password",
                 "-a",
                 "mcp-portfolio-agent",

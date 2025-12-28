@@ -227,6 +227,37 @@ uv sync
 
 See [`raycast-scripts/README.md`](raycast-scripts/README.md) for detailed usage and examples.
 
+### Raycast Extension (Native) 🆕
+
+A native TypeScript-based Raycast extension with enhanced UI and better user experience.
+
+**Features:**
+- **Portfolio Status**: Live portfolio data with categorized views, searchable positions, and detailed panels
+- **Upcoming Events**: Earnings calendar with time-based grouping and visual countdown
+- **Error Handling**: User-friendly error messages with actionable guidance
+- **Rich UI**: Color-coded gains/losses, formatted currencies, interactive detail views
+- **Quick Actions**: Copy values, open links, refresh data
+
+**Installation:**
+```bash
+# 1. Install dependencies
+cd raycast-extension
+npm install
+
+# 2. Start development mode
+npm run dev
+
+# 3. Configure in Raycast
+# Press Cmd+, while viewing a command
+# Set "Project Root Path" to your investment-mcp directory
+```
+
+**Commands:**
+- **Portfolio Status** (💼) - View all positions with live data, sorted by value
+- **Upcoming Events** (📅) - Earnings calendar grouped by time period
+
+See [`raycast-extension/README.md`](raycast-extension/README.md) for detailed documentation.
+
 ---
 
 ### Running the MCP Server
