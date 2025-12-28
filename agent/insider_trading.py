@@ -32,7 +32,7 @@ def load_fintel_api_key() -> str:
     try:
         result = subprocess.run(
             [
-                "security",
+                "/usr/bin/security",
                 "find-generic-password",
                 "-a",
                 "mcp-portfolio-agent",
