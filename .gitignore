@@ -21,6 +21,9 @@ wheels/
 *.egg
 MANIFEST
 
+# Exception: Allow raycast-scripts/lib/ directory
+!raycast-scripts/lib/
+
 # Virtual environments
 .env
 .venv
@@ -64,3 +67,10 @@ cache/
 # Dashboard outputs (auto-generated)
 dashboards/*.html
 dashboards/*.json
+
+# Node.js / NPM
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

@@ -1,0 +1,312 @@
+"""
+Client for accessing agent functions from Raycast scripts.
+
+Provides a simple interface to call agent functions and format responses.
+"""
+
+import sys
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+# Add project root to Python path to import agent modules
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+# Import agent modules
+from agent import (
+    config,
+    storage,
+    analysis,
+    sheets_connector,
+    events_tracker,
+    insider_trading,
+)
+
+
+class RaycastClient:
+    """Client for accessing portfolio agent functions."""
+
+    def __init__(self):
+        """Initialize the client."""
+        # Ensure config is loaded
+        config.get_config()
+
+    def get_portfolio_status(self) -> Dict[str, Any]:
+        """
+        Get current portfolio status with all positions from latest snapshot.
+
+        Returns:
+            Dictionary with portfolio status data matching TypeScript interface
+        """
+        latest_snapshot = storage.get_latest_snapshot()
+
+        if not latest_snapshot:
+            return {
+                "error": "No snapshots available",
+                "message": "Run run_portfolio_analysis() to create the first snapshot.",
+            }
+
+        # Organize positions by category
+        organized = analysis.organize_positions_by_category(latest_snapshot)
+
+        # Transform to match TypeScript interface:
+        # - Flatten nested categories.categories to categories
+        # - Rename total_value -> value
+        # - Rename gain_loss_percent -> gain_loss_pct in positions
+        # - Add count field
+        # - Add last_fetch and source fields
+        categories_data = {}
+
+        # Extract the nested categories structure
+        nested_categories = organized.get("categories", {})
+
+        for category_name, category_info in nested_categories.items():
+            # Transform positions to match TypeScript interface
+            positions = []
+            for pos in category_info.get("positions", []):
+                transformed_pos = {
+                    "name": pos.get("name"),
+                    "quantity": pos.get("quantity"),
+                    "current_value_eur": pos.get("current_value_eur"),
+                    "purchase_price_total_eur": pos.get("purchase_price_total_eur"),
+                    "gain_loss_eur": pos.get("gain_loss_eur"),
+                    "gain_loss_pct": pos.get("gain_loss_percent", 0.0),  # Rename field
+                }
+                positions.append(transformed_pos)
+
+            categories_data[category_name] = {
+                "value": category_info.get("total_value", 0.0),
+                "percentage": category_info.get("percentage", 0.0),
+                "count": len(category_info.get("positions", [])),
+                "positions": positions,
+            }
+
+        return {
+            "total_value_eur": latest_snapshot.get("total_value_eur", 0.0),
+            "asset_count": len(latest_snapshot.get("assets", [])),
+            "last_fetch": latest_snapshot.get("timestamp"),
+            "source": "Google Sheets",
+            "categories": categories_data,
+        }
+
+        # Organize positions by category
+        organized = analysis.organize_positions_by_category(latest_snapshot)
+
+        # Transform to match TypeScript interface:
+        # - Flatten nested categories.categories to categories
+        # - Rename total_value -> value
+        # - Add count field
+        # - Add last_fetch and source fields
+        categories_data = {}
+
+        # Extract the nested categories structure
+        nested_categories = organized.get("categories", {})
+
+        for category_name, category_info in nested_categories.items():
+            categories_data[category_name] = {
+                "value": category_info.get("total_value", 0.0),
+                "percentage": category_info.get("percentage", 0.0),
+                "count": len(category_info.get("positions", [])),
+                "positions": category_info.get("positions", []),
+            }
+
+        return {
+            "total_value_eur": latest_snapshot.get("total_value_eur", 0.0),
+            "asset_count": len(latest_snapshot.get("assets", [])),
+            "last_fetch": latest_snapshot.get("timestamp"),
+            "source": "Google Sheets",
+            "categories": categories_data,
+        }
+
+        # Organize positions by category
+        organized = analysis.organize_positions_by_category(latest_snapshot)
+
+        return {
+            "total_value_eur": latest_snapshot.get("total_value_eur", 0.0),
+            "timestamp": latest_snapshot.get("timestamp"),
+            "asset_count": len(latest_snapshot.get("assets", [])),
+            "categories": organized,
+        }
+
+    def get_quick_analysis(self) -> Dict[str, Any]:
+        """
+        Quick analysis comparing current spreadsheet state vs last snapshot.
+
+        Returns:
+            Dictionary with quick analysis data
+        """
+        # Fetch current data from spreadsheet
+        raw_data = sheets_connector.fetch_portfolio_data()
+        normalized_data = sheets_connector.parse_and_normalize_data(raw_data)
+        current_snapshot = analysis.create_portfolio_snapshot(normalized_data)
+
+        # Get last snapshot
+        last_snapshot = storage.get_latest_snapshot()
+
+        if not last_snapshot:
+            return {
+                "current_status": {
+                    "total_value_eur": current_snapshot.get("total_value_eur", 0.0),
+                    "timestamp": current_snapshot.get("timestamp"),
+                    "asset_count": len(current_snapshot.get("assets", [])),
+                },
+                "message": "No previous snapshot for comparison. Run run_portfolio_analysis() to create the first snapshot.",
+            }
+
+        # Compare current vs last
+        comparison = analysis.compare_snapshots(last_snapshot, current_snapshot)
+
+        # Get top movers (winners and losers)
+        all_assets = comparison.get("assets", {})
+        asset_changes = []
+
+        for asset_name, asset_data in all_assets.items():
+            if asset_data.get("change_pct") is not None:
+                asset_changes.append(
+                    {
+                        "name": asset_name,
+                        "change_eur": asset_data.get("value_change_eur", 0),
+                        "change_pct": asset_data.get("change_pct", 0),
+                        "current_value_eur": asset_data.get("current_value_eur", 0),
+                    }
+                )
+
+        # Sort by change percentage
+        asset_changes.sort(key=lambda x: x["change_pct"], reverse=True)
+        winners = asset_changes[:5]
+        losers = list(reversed(asset_changes[-5:]))
+
+        return {
+            "current_status": {
+                "total_value_eur": current_snapshot.get("total_value_eur", 0.0),
+                "timestamp": current_snapshot.get("timestamp"),
+                "asset_count": len(current_snapshot.get("assets", [])),
+            },
+            "snapshot_comparison": {
+                "snapshot_date": last_snapshot.get("timestamp"),
+                "value_change": {
+                    "eur": comparison["portfolio"].get("total_value_change_eur", 0),
+                    "percentage": comparison["portfolio"].get("total_change_pct", 0),
+                    "direction": "up"
+                    if comparison["portfolio"].get("total_value_change_eur", 0) >= 0
+                    else "down",
+                },
+            },
+            "winners": winners,
+            "losers": losers,
+        }
+
+    def get_winners_losers(self) -> Dict[str, Any]:
+        """
+        Get top winners and losers from last two snapshots.
+
+        Returns:
+            Dictionary with winners/losers data
+        """
+        # Get last 2 snapshots
+        all_snapshots = storage.get_all_snapshots()
+
+        if len(all_snapshots) < 2:
+            return {
+                "error": "Insufficient snapshots",
+                "message": "Need at least 2 snapshots for comparison. Run run_portfolio_analysis() to create snapshots.",
+                "snapshots_available": len(all_snapshots),
+            }
+
+        # Get the two most recent snapshots (last = most recent, second-to-last = previous)
+        latest_snapshot = all_snapshots[-1]
+        previous_snapshot = all_snapshots[-2]
+
+        # Compare snapshots (previous as old, latest as new)
+        comparison = analysis.compare_snapshots(previous_snapshot, latest_snapshot)
+
+        # Extract asset changes
+        all_assets = comparison.get("assets", {})
+        asset_changes = []
+
+        for asset_name, asset_data in all_assets.items():
+            if asset_data.get("change_pct") is not None:
+                asset_changes.append(
+                    {
+                        "name": asset_name,
+                        "change_eur": asset_data.get("value_change_eur", 0),
+                        "change_pct": asset_data.get("change_pct", 0),
+                        "current_value_eur": asset_data.get("current_value_eur", 0),
+                    }
+                )
+
+        # Sort by change percentage
+        asset_changes.sort(key=lambda x: x["change_pct"], reverse=True)
+        winners = asset_changes[:5]
+        losers = list(reversed(asset_changes[-5:]))
+
+        # Calculate days between snapshots
+        from datetime import datetime
+
+        try:
+            prev_time = datetime.fromisoformat(
+                previous_snapshot["timestamp"].replace("Z", "+00:00")
+            )
+            latest_time = datetime.fromisoformat(
+                latest_snapshot["timestamp"].replace("Z", "+00:00")
+            )
+            days_diff = (latest_time - prev_time).days
+        except:
+            days_diff = 0
+
+        return {
+            "comparison_period": {
+                "from": previous_snapshot["timestamp"],
+                "to": latest_snapshot["timestamp"],
+                "days": days_diff,
+            },
+            "portfolio_change": {
+                "value_eur": comparison["portfolio"].get("total_value_change_eur", 0),
+                "percentage": comparison["portfolio"].get("total_change_pct", 0),
+                "direction": "up"
+                if comparison["portfolio"].get("total_value_change_eur", 0) >= 0
+                else "down",
+            },
+            "winners": winners,
+            "losers": losers,
+        }
+
+    def get_upcoming_events(self) -> Dict[str, Any]:
+        """
+        Get upcoming earnings events for portfolio stocks.
+
+        Returns:
+            Dictionary with upcoming events data
+        """
+        # Fetch current portfolio data
+        raw_data = sheets_connector.fetch_portfolio_data()
+        normalized_data = sheets_connector.parse_and_normalize_data(raw_data)
+
+        # Get upcoming events
+        return events_tracker.get_portfolio_upcoming_events(normalized_data)
+
+    def get_portfolio_insider_trades(self) -> Dict[str, Any]:
+        """
+        Get insider trading data for all portfolio stocks.
+
+        Returns:
+            Dictionary with insider trading data
+        """
+        # Fetch current portfolio data
+        raw_data = sheets_connector.fetch_portfolio_data()
+        normalized_data = sheets_connector.parse_and_normalize_data(raw_data)
+
+        # Get insider trades
+        return insider_trading.get_portfolio_insider_trades(normalized_data)
+
+    def get_ticker_insider_trades(self, ticker: str) -> Dict[str, Any]:
+        """
+        Get insider trading data for a specific ticker.
+
+        Args:
+            ticker: Stock ticker symbol (e.g., "AAPL")
+
+        Returns:
+            Dictionary with insider trading data
+        """
+        return insider_trading.get_insider_trades_for_ticker(ticker)
