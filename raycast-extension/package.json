@@ -33,7 +33,7 @@
       "required": true,
       "title": "Project Root Path",
       "description": "Absolute path to investment-mcp project directory",
-      "default": "/Users/ivan.lissitsnoi/Projects/investment-mcp",
+      "default": "/Users/ivan.lissitsnoi/personal-projects/investment-mcp",
       "placeholder": "/path/to/investment-mcp"
     }
   ],
