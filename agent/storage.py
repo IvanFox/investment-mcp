@@ -242,3 +242,55 @@ def get_storage_status() -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Failed to get storage status: {e}")
         return {"error": str(e)}
+
+
+def save_transactions(
+    sell_transactions: List[Dict[str, Any]],
+    buy_transactions: List[Dict[str, Any]],
+    currency_rates: Dict[str, float]
+) -> bool:
+    """
+    Save transactions to storage if changed.
+    
+    Public API wrapper - delegates to transaction_storage module.
+    
+    Args:
+        sell_transactions: List of sell transaction dicts
+        buy_transactions: List of buy transaction dicts
+        currency_rates: Currency conversion rates used
+    
+    Returns:
+        bool: True if transactions were saved (changed), False if unchanged
+    """
+    from . import transaction_storage as txn_storage
+    
+    try:
+        return txn_storage.save_transactions(
+            sell_transactions=sell_transactions,
+            buy_transactions=buy_transactions,
+            currency_rates=currency_rates
+        )
+    except Exception as e:
+        logger.error(f"Failed to save transactions: {e}", exc_info=True)
+        raise
+
+
+def get_transactions() -> Dict[str, Any]:
+    """
+    Get current transactions from storage.
+    
+    Returns:
+        dict: Transaction data with sell_transactions, buy_transactions, metadata
+              Returns empty structure if no transactions exist
+    """
+    from . import transaction_storage as txn_storage
+    
+    try:
+        return txn_storage.get_transactions()
+    except Exception as e:
+        logger.error(f"Failed to get transactions: {e}", exc_info=True)
+        return {
+            "sell_transactions": [],
+            "buy_transactions": [],
+            "metadata": {}
+        }

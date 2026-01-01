@@ -84,6 +84,7 @@ def test_complete_sell_with_matching_transaction():
         create_transaction("2025-12-25T10:00:00Z", "Apple", 100, sell_price_eur=120.0)
     ]
     
+    current["transactions"] = transactions
     
     # Should not raise
     validate_sells_have_transactions(current, previous, transactions)
@@ -126,6 +127,7 @@ def test_partial_sell_with_matching_transaction():
         create_transaction("2025-12-25T10:00:00Z", "Apple", 50, sell_price_eur=120.0)
     ]
     
+    current["transactions"] = transactions
     
     # Should not raise
     validate_sells_have_transactions(current, previous, transactions)
@@ -173,6 +175,7 @@ def test_multiple_sells_all_have_transactions():
         create_transaction("2025-12-24T10:00:00Z", "Google", 25)
     ]
     
+    current["transactions"] = transactions
     
     # Should not raise
     validate_sells_have_transactions(current, previous, transactions)
@@ -199,6 +202,7 @@ def test_multiple_sells_some_missing():
         # Missing Microsoft and Google
     ]
     
+    current["transactions"] = transactions
     
     try:
         validate_sells_have_transactions(current, previous, transactions)
@@ -227,6 +231,7 @@ def test_exact_name_matching():
         create_transaction("2025-12-25T10:00:00Z", "wise", 100)  # lowercase
     ]
     
+    current["transactions"] = transactions
     
     try:
         validate_sells_have_transactions(current, previous, transactions)
@@ -252,6 +257,7 @@ def test_quantity_tolerance():
         create_transaction("2025-12-25T10:00:00Z", "Apple", 99.5)
     ]
     
+    current["transactions"] = transactions
     
     # Should pass (within tolerance)
     validate_sells_have_transactions(current, previous, transactions)
@@ -274,6 +280,7 @@ def test_quantity_outside_tolerance():
         create_transaction("2025-12-25T10:00:00Z", "Apple", 98.5)
     ]
     
+    current["transactions"] = transactions
     
     try:
         validate_sells_have_transactions(current, previous, transactions)
@@ -300,6 +307,7 @@ def test_multiple_transactions_same_asset():
         create_transaction("2025-12-25T10:00:00Z", "Wise", 500)
     ]
     
+    current["transactions"] = transactions
     
     # Should not raise (sum matches)
     validate_sells_have_transactions(current, previous, transactions)
@@ -361,6 +369,7 @@ def test_date_range_filtering():
         create_transaction("2025-12-28T10:00:00Z", "Apple", 50)
     ]
     
+    current["transactions"] = transactions
     
     # Should pass (100 shares matched within range)
     validate_sells_have_transactions(current, previous, transactions)

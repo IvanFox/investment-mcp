@@ -16,6 +16,7 @@ from ..storage_backend import StorageBackend
 logger = logging.getLogger(__name__)
 
 BLOB_NAME = "portfolio_history.json"
+TRANSACTIONS_BLOB_NAME = "transactions.json"
 
 
 class GCPStorageBackend(StorageBackend):
@@ -144,6 +145,83 @@ class GCPStorageBackend(StorageBackend):
         except Exception as e:
             logger.warning(f"GCPStorageBackend: GCS unavailable: {e}")
             return False
+    
+    def save_transactions(self, transaction_data: Dict[str, Any]) -> bool:
+        """
+        Save transactions to GCS transactions.json blob.
+        
+        Args:
+            transaction_data: Full transactions object
+            
+        Returns:
+            bool: True if save successful, False otherwise
+        """
+        try:
+            blob = self.bucket.blob(TRANSACTIONS_BLOB_NAME)
+            json_content = json.dumps(transaction_data, indent=2, ensure_ascii=False)
+            
+            blob.upload_from_string(
+                json_content,
+                content_type="application/json"
+            )
+            
+            sell_count = transaction_data.get("metadata", {}).get("sell_count", 0)
+            buy_count = transaction_data.get("metadata", {}).get("buy_count", 0)
+            logger.info(
+                f"GCPStorageBackend: Successfully saved transactions to "
+                f"gs://{self.bucket_name}/{TRANSACTIONS_BLOB_NAME}. "
+                f"Sells: {sell_count}, Buys: {buy_count}"
+            )
+            return True
+            
+        except gcp_exceptions.GoogleAPIError as e:
+            logger.error(f"GCPStorageBackend: GCP API error saving transactions: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"GCPStorageBackend: Failed to save transactions: {e}")
+            return False
+    
+    def get_transactions(self) -> Optional[Dict[str, Any]]:
+        """
+        Load transactions from GCS transactions.json blob.
+        
+        Returns:
+            dict: Transaction data or None if blob doesn't exist
+        """
+        try:
+            blob = self.bucket.blob(TRANSACTIONS_BLOB_NAME)
+            
+            if not blob.exists():
+                logger.debug(
+                    f"GCPStorageBackend: Transactions blob not found in "
+                    f"gs://{self.bucket_name}/{TRANSACTIONS_BLOB_NAME}"
+                )
+                return None
+            
+            content = blob.download_as_text()
+            data = json.loads(content)
+            
+            sell_count = data.get("metadata", {}).get("sell_count", 0)
+            buy_count = data.get("metadata", {}).get("buy_count", 0)
+            logger.info(
+                f"GCPStorageBackend: Loaded transactions from "
+                f"gs://{self.bucket_name}/{TRANSACTIONS_BLOB_NAME}. "
+                f"Sells: {sell_count}, Buys: {buy_count}"
+            )
+            return data
+            
+        except gcp_exceptions.NotFound:
+            logger.debug("GCPStorageBackend: Transactions blob not found")
+            return None
+        except json.JSONDecodeError as e:
+            logger.error(f"GCPStorageBackend: Invalid JSON in transactions blob: {e}")
+            return None
+        except gcp_exceptions.GoogleAPIError as e:
+            logger.error(f"GCPStorageBackend: GCP API error loading transactions: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"GCPStorageBackend: Failed to load transactions: {e}")
+            return None
     
     def delete_all_snapshots(self) -> bool:
         """

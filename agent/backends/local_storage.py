@@ -18,6 +18,10 @@ HISTORY_FILE = "portfolio_history.json"
 BACKUP_FILE = "portfolio_history.json.bak"
 TEMP_FILE = "portfolio_history.json.tmp"
 
+TRANSACTIONS_FILE = "transactions.json"
+TRANSACTIONS_BACKUP_FILE = "transactions.json.bak"
+TRANSACTIONS_TEMP_FILE = "transactions.json.tmp"
+
 
 class LocalFileBackend(StorageBackend):
     """Local JSON file storage backend with safety features."""
@@ -33,6 +37,10 @@ class LocalFileBackend(StorageBackend):
         self.history_path = os.path.join(data_dir, HISTORY_FILE)
         self.backup_path = os.path.join(data_dir, BACKUP_FILE)
         self.temp_path = os.path.join(data_dir, TEMP_FILE)
+        
+        self.transactions_path = os.path.join(data_dir, TRANSACTIONS_FILE)
+        self.transactions_backup_path = os.path.join(data_dir, TRANSACTIONS_BACKUP_FILE)
+        self.transactions_temp_path = os.path.join(data_dir, TRANSACTIONS_TEMP_FILE)
         
         # Create data directory if it doesn't exist
         os.makedirs(data_dir, exist_ok=True)
@@ -227,6 +235,116 @@ class LocalFileBackend(StorageBackend):
         except Exception as e:
             logger.error(f"LocalFileBackend: Unexpected error reading snapshots: {e}")
             return []
+    
+    def save_transactions(self, transaction_data: Dict[str, Any]) -> bool:
+        """
+        Save transactions to local file with atomic write and backup.
+        
+        Uses same safety pattern as save_snapshot:
+        - Creates .bak backup before overwriting
+        - Uses atomic write (temp file + rename)
+        - Comprehensive error logging
+        
+        Args:
+            transaction_data: Full transactions object (not a list)
+            
+        Returns:
+            bool: True if save successful, False otherwise
+        """
+        try:
+            # Step 1: Create backup of existing file (if it exists)
+            if os.path.exists(self.transactions_path):
+                logger.debug(f"Creating backup: {self.transactions_path} -> {self.transactions_backup_path}")
+                try:
+                    shutil.copy2(self.transactions_path, self.transactions_backup_path)
+                    logger.debug("Backup created successfully")
+                except IOError as e:
+                    logger.error(f"Failed to create backup file {self.transactions_backup_path}: {e}")
+                    return False
+            
+            # Step 2: Validate that data can be serialized to JSON
+            try:
+                json_content = json.dumps(transaction_data, indent=2, ensure_ascii=False)
+            except (TypeError, ValueError) as e:
+                logger.error(f"Failed to serialize transactions to JSON: {e}")
+                return False
+            
+            # Step 3: Atomic write using temp file + rename
+            logger.debug(f"Writing to temporary file: {self.transactions_temp_path}")
+            try:
+                # Write to temp file
+                with open(self.transactions_temp_path, "w") as f:
+                    f.write(json_content)
+                    f.flush()  # Ensure data is written to disk
+                    os.fsync(f.fileno())  # Force OS to write to disk
+                
+                logger.debug(
+                    f"Temp file written successfully. Renaming {self.transactions_temp_path} -> {self.transactions_path}"
+                )
+                
+                # Atomic rename (POSIX guarantees atomicity)
+                os.replace(self.transactions_temp_path, self.transactions_path)
+                
+                sell_count = transaction_data.get("metadata", {}).get("sell_count", 0)
+                buy_count = transaction_data.get("metadata", {}).get("buy_count", 0)
+                logger.info(
+                    f"LocalFileBackend: Successfully saved transactions to {self.transactions_path}. "
+                    f"Sells: {sell_count}, Buys: {buy_count}"
+                )
+                return True
+                
+            except IOError as e:
+                logger.error(f"Failed to write transactions file: {e}")
+                # Clean up temp file if it exists
+                if os.path.exists(self.transactions_temp_path):
+                    try:
+                        os.remove(self.transactions_temp_path)
+                        logger.debug(f"Cleaned up temporary file {self.transactions_temp_path}")
+                    except:
+                        pass
+                return False
+        
+        except Exception as e:
+            logger.error(f"LocalFileBackend: Failed to save transactions: {e}", exc_info=True)
+            return False
+    
+    def get_transactions(self) -> Optional[Dict[str, Any]]:
+        """
+        Load transactions from local file.
+        
+        Returns:
+            dict: Transaction data or None if file doesn't exist
+        """
+        try:
+            if not os.path.exists(self.transactions_path):
+                logger.debug(f"Transactions file {self.transactions_path} does not exist")
+                return None
+            
+            with open(self.transactions_path, "r") as f:
+                content = f.read().strip()
+                if not content:
+                    logger.warning("Transactions file is empty")
+                    return None
+                
+                data = json.loads(content)
+                
+                sell_count = data.get("metadata", {}).get("sell_count", 0)
+                buy_count = data.get("metadata", {}).get("buy_count", 0)
+                logger.debug(
+                    f"LocalFileBackend: Loaded transactions from {self.transactions_path}. "
+                    f"Sells: {sell_count}, Buys: {buy_count}"
+                )
+                return data
+        
+        except json.JSONDecodeError as e:
+            logger.error(f"LocalFileBackend: Transactions file contains invalid JSON: {e}")
+            return None
+        except IOError as e:
+            logger.error(f"LocalFileBackend: Failed to read transactions file: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"LocalFileBackend: Unexpected error reading transactions: {e}")
+            return None
     
     def is_available(self) -> bool:
         """

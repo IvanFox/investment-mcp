@@ -56,3 +56,26 @@ class StorageBackend(ABC):
             bool: True if backend is reachable
         """
         pass
+    
+    @abstractmethod
+    def save_transactions(self, transaction_data: Dict[str, Any]) -> bool:
+        """
+        Save transactions to storage.
+        
+        Args:
+            transaction_data: Full transactions object (not a list)
+            
+        Returns:
+            bool: True if save successful, False otherwise
+        """
+        pass
+    
+    @abstractmethod
+    def get_transactions(self) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve transactions from storage.
+        
+        Returns:
+            dict: Transaction data or None if unavailable
+        """
+        pass

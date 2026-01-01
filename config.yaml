@@ -12,6 +12,10 @@
 google_sheets:
   sheet_id: 1eQUWnThLlo7Rxolra8fc4-G59Wtq6bvkk8-ZZa6YiJk
   # Using default sheet_name, currency_cells, and ranges - omitted for cleaner config
+  ranges:
+    us_stocks: A4:L15  # Adjusted to include row 4 (Intel Corp)
+    pension: A52:E54   # Adjusted to include row 54 (III level)
+    cash: A58:B61      # Adjusted to include row 61 (GBP cash)
 
 # ============================================================================
 # Storage Configuration
