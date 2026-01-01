@@ -135,9 +135,20 @@ except ValidationError as e:
 - `config.yaml.example` - Template with documentation
 - `pyproject.toml` - Project metadata and dependencies
 - `dashboards/` - Generated HTML dashboards (auto-created, gitignored)
-- `cache/` - Cached historical price data (auto-created)
+- `cache/` - Cached historical price data (auto-created, gitignored)
+- `backup/` - Backup files for portfolio history and transactions (auto-created, gitignored)
 - `test_*.py` - Test files (root directory)
 - Credentials stored securely in macOS Keychain, never in files
+
+### Backup Files
+All backup files are automatically stored in the `backup/` directory:
+- **Local Storage**: 
+  - Regular backups: `backup/portfolio_history.json.bak` and `backup/transactions.json.bak` (created during atomic saves)
+  - Timestamped backups: `backup/portfolio_history.json.bak.YYYYMMDD-HHMMSS` (created during snapshot deletion)
+- **GCP Storage**: 
+  - Timestamped backup blobs: `backup/portfolio_history.json.bak.YYYYMMDD-HHMMSS` (created during snapshot deletion)
+- The `backup/` directory is automatically created on first run and is gitignored
+- Backups protect against data loss during atomic writes and snapshot deletions
 
 ## API Setup
 

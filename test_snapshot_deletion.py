@@ -76,10 +76,12 @@ def test_delete_snapshot_by_valid_index():
         assert "2025-01-03T10:00:00Z" not in timestamps, "Deleted snapshot should be gone"
         print(f"  ✓ Correct snapshot deleted (2025-01-03)")
         
-        # Verify backup was created
-        backup_files = [f for f in os.listdir(temp_dir) if f.startswith("portfolio_history.json.bak")]
+        # Verify backup was created in backup/ folder
+        backup_dir = os.path.join(temp_dir, "backup")
+        assert os.path.exists(backup_dir), "Backup directory should exist"
+        backup_files = [f for f in os.listdir(backup_dir) if f.startswith("portfolio_history.json.bak")]
         assert len(backup_files) > 0, "Backup file should exist"
-        print(f"  ✓ Backup created: {backup_files[0]}")
+        print(f"  ✓ Backup created: backup/{backup_files[0]}")
         
         print("✓ Test passed: delete_snapshot_by_valid_index")
         
@@ -311,11 +313,13 @@ def test_backup_contains_original_snapshot():
         success = backend.delete_snapshot(1)
         assert success, "Deletion should succeed"
         
-        # Find backup file
-        backup_files = [f for f in os.listdir(temp_dir) if f.startswith("portfolio_history.json.bak")]
+        # Find backup file in backup/ folder
+        backup_dir = os.path.join(temp_dir, "backup")
+        assert os.path.exists(backup_dir), "Backup directory should exist"
+        backup_files = [f for f in os.listdir(backup_dir) if f.startswith("portfolio_history.json.bak")]
         assert len(backup_files) > 0, "Backup should exist"
         
-        backup_path = os.path.join(temp_dir, backup_files[0])
+        backup_path = os.path.join(backup_dir, backup_files[0])
         
         # Load backup
         with open(backup_path, "r") as f:
@@ -325,7 +329,7 @@ def test_backup_contains_original_snapshot():
         assert len(backup_history) == 3, "Backup should have original 3 snapshots"
         assert backup_history[1] == snapshot_to_delete, "Backup should contain deleted snapshot"
         
-        print(f"  ✓ Backup verified: {backup_files[0]}")
+        print(f"  ✓ Backup verified: backup/{backup_files[0]}")
         print("✓ Test passed: backup_contains_original_snapshot")
         
     finally:
@@ -357,8 +361,10 @@ def test_multiple_deletions_create_multiple_backups():
         success2 = backend.delete_snapshot(0)
         assert success2, "Second deletion should succeed"
         
-        # Check backup files
-        backup_files = [f for f in os.listdir(temp_dir) if f.startswith("portfolio_history.json.bak")]
+        # Check backup files in backup/ folder
+        backup_dir = os.path.join(temp_dir, "backup")
+        assert os.path.exists(backup_dir), "Backup directory should exist"
+        backup_files = [f for f in os.listdir(backup_dir) if f.startswith("portfolio_history.json.bak")]
         
         # Should have 2 backup files (one per deletion)
         assert len(backup_files) >= 1, f"Should have at least 1 backup, found {len(backup_files)}"
