@@ -141,6 +141,85 @@ class HybridStorageBackend(StorageBackend):
         """
         return self.primary.is_available() or self.fallback.is_available()
     
+    def save_transactions(self, transaction_data: Dict[str, Any]) -> bool:
+        """
+        Save transactions to both primary and fallback storage.
+        
+        Strategy:
+        1. Try primary (GCP)
+        2. Always save to fallback (local)
+        3. Track pending syncs if primary fails
+        
+        Args:
+            transaction_data: Full transactions object
+            
+        Returns:
+            bool: True if at least one backend succeeded
+        """
+        primary_success = False
+        fallback_success = False
+        
+        # Try primary storage
+        if self.primary.is_available():
+            try:
+                primary_success = self.primary.save_transactions(transaction_data)
+                if primary_success:
+                    logger.debug("HybridStorageBackend: Transactions saved to primary storage (GCP)")
+                else:
+                    logger.warning("HybridStorageBackend: Primary storage failed to save transactions")
+            except Exception as e:
+                logger.warning(f"HybridStorageBackend: Primary backend failed to save transactions: {e}")
+        else:
+            logger.debug("HybridStorageBackend: Primary storage unavailable for transactions")
+        
+        # Always save to fallback
+        try:
+            fallback_success = self.fallback.save_transactions(transaction_data)
+            if fallback_success:
+                logger.debug("HybridStorageBackend: Transactions saved to fallback storage (local)")
+            else:
+                logger.error("HybridStorageBackend: Fallback storage failed to save transactions")
+        except Exception as e:
+            logger.error(f"HybridStorageBackend: Fallback backend failed to save transactions: {e}")
+        
+        # Track sync status
+        if fallback_success and not primary_success:
+            # Note: We don't queue transaction retries like snapshots
+            # Transactions will be re-saved on next change detection
+            logger.info("HybridStorageBackend: Transactions saved to fallback only")
+        
+        return primary_success or fallback_success
+    
+    def get_transactions(self) -> Optional[Dict[str, Any]]:
+        """
+        Get transactions, preferring primary.
+        
+        Returns:
+            dict: Transaction data from primary, or fallback if primary unavailable
+        """
+        # Try primary first
+        if self.primary.is_available():
+            try:
+                data = self.primary.get_transactions()
+                if data:
+                    logger.debug("HybridStorageBackend: Loaded transactions from primary storage")
+                    return data
+                logger.debug("HybridStorageBackend: No transactions in primary, trying fallback")
+            except Exception as e:
+                logger.warning(f"HybridStorageBackend: Primary backend failed to load transactions: {e}")
+        else:
+            logger.debug("HybridStorageBackend: Primary unavailable, using fallback for transactions")
+        
+        # Fall back to local
+        try:
+            data = self.fallback.get_transactions()
+            if data:
+                logger.debug("HybridStorageBackend: Loaded transactions from fallback storage")
+            return data
+        except Exception as e:
+            logger.error(f"HybridStorageBackend: Fallback backend failed to load transactions: {e}")
+            return None
+    
     def _retry_pending_syncs(self):
         """Retry any pending syncs to primary storage."""
         if not self.pending_sync:
@@ -167,6 +246,60 @@ class HybridStorageBackend(StorageBackend):
             logger.info("HybridStorageBackend: All pending syncs completed successfully")
         else:
             logger.warning(f"HybridStorageBackend: {len(self.pending_sync)} pending syncs still queued")
+    
+    def delete_snapshot(self, index: int) -> bool:
+        """
+        Delete snapshot from both primary and fallback storage.
+        
+        Strategy (as per requirement):
+        1. Attempt deletion from primary (GCP) first
+        2. Then attempt deletion from fallback (local)
+        3. Return True if either succeeds
+        
+        Args:
+            index: Zero-based index of snapshot to delete
+            
+        Returns:
+            bool: True if at least one backend succeeded
+        """
+        primary_success = False
+        fallback_success = False
+        
+        # Step 1: Try primary (GCP) first
+        if self.primary.is_available():
+            try:
+                primary_success = self.primary.delete_snapshot(index)
+                if primary_success:
+                    logger.info("HybridStorageBackend: Snapshot deleted from primary (GCP)")
+                else:
+                    logger.warning("HybridStorageBackend: Primary deletion failed")
+            except Exception as e:
+                logger.warning(f"HybridStorageBackend: Primary backend error during deletion: {e}")
+        else:
+            logger.warning("HybridStorageBackend: Primary unavailable, skipping")
+        
+        # Step 2: Try fallback (local)
+        try:
+            fallback_success = self.fallback.delete_snapshot(index)
+            if fallback_success:
+                logger.info("HybridStorageBackend: Snapshot deleted from fallback (local)")
+            else:
+                logger.warning("HybridStorageBackend: Fallback deletion failed")
+        except Exception as e:
+            logger.error(f"HybridStorageBackend: Fallback backend error during deletion: {e}")
+        
+        # Success if at least one backend succeeded
+        overall_success = primary_success or fallback_success
+        
+        if overall_success:
+            logger.info(
+                f"HybridStorageBackend: Deletion complete "
+                f"(primary: {primary_success}, fallback: {fallback_success})"
+            )
+        else:
+            logger.error("HybridStorageBackend: Both primary and fallback deletions failed!")
+        
+        return overall_success
     
     def get_sync_status(self) -> Dict[str, Any]:
         """

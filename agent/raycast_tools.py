@@ -184,10 +184,20 @@ def get_quick_analysis_json(winners_losers_limit: int = 5) -> Dict[str, Any]:
                 }
             }
         
-        # 3. Compare live data vs latest snapshot
-        comparison = analysis.compare_snapshots(current_live_snapshot, latest_snapshot)
+        # 3. Load transactions for comparison
+        transactions_data = storage.get_transactions()
+        sell_transactions = transactions_data.get("sell_transactions", [])
+        buy_transactions = transactions_data.get("buy_transactions", [])
         
-        # 4. Build winners list with enriched data
+        # 4. Compare live data vs latest snapshot
+        comparison = analysis.compare_snapshots(
+            current_live_snapshot,
+            latest_snapshot,
+            sell_transactions,
+            buy_transactions
+        )
+        
+        # 5. Build winners list with enriched data
         winners = []
         for mover in comparison.get("top_movers", [])[:winners_losers_limit]:
             # Find asset in current live data
@@ -321,8 +331,18 @@ def get_winners_losers_json(limit: int = 5) -> Dict[str, Any]:
         current = all_snapshots[-1]
         previous = all_snapshots[-2]
         
+        # Load transactions for comparison
+        transactions_data = storage.get_transactions()
+        sell_transactions = transactions_data.get("sell_transactions", [])
+        buy_transactions = transactions_data.get("buy_transactions", [])
+        
         # Perform comparison
-        report = analysis.compare_snapshots(current, previous)
+        report = analysis.compare_snapshots(
+            current,
+            previous,
+            sell_transactions,
+            buy_transactions
+        )
         
         # Extract and enrich winners data
         winners = []

@@ -16,6 +16,7 @@ from ..storage_backend import StorageBackend
 logger = logging.getLogger(__name__)
 
 BLOB_NAME = "portfolio_history.json"
+TRANSACTIONS_BLOB_NAME = "transactions.json"
 
 
 class GCPStorageBackend(StorageBackend):
@@ -143,6 +144,171 @@ class GCPStorageBackend(StorageBackend):
             return True
         except Exception as e:
             logger.warning(f"GCPStorageBackend: GCS unavailable: {e}")
+            return False
+    
+    def save_transactions(self, transaction_data: Dict[str, Any]) -> bool:
+        """
+        Save transactions to GCS transactions.json blob.
+        
+        Args:
+            transaction_data: Full transactions object
+            
+        Returns:
+            bool: True if save successful, False otherwise
+        """
+        try:
+            blob = self.bucket.blob(TRANSACTIONS_BLOB_NAME)
+            json_content = json.dumps(transaction_data, indent=2, ensure_ascii=False)
+            
+            blob.upload_from_string(
+                json_content,
+                content_type="application/json"
+            )
+            
+            sell_count = transaction_data.get("metadata", {}).get("sell_count", 0)
+            buy_count = transaction_data.get("metadata", {}).get("buy_count", 0)
+            logger.info(
+                f"GCPStorageBackend: Successfully saved transactions to "
+                f"gs://{self.bucket_name}/{TRANSACTIONS_BLOB_NAME}. "
+                f"Sells: {sell_count}, Buys: {buy_count}"
+            )
+            return True
+            
+        except gcp_exceptions.GoogleAPIError as e:
+            logger.error(f"GCPStorageBackend: GCP API error saving transactions: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"GCPStorageBackend: Failed to save transactions: {e}")
+            return False
+    
+    def get_transactions(self) -> Optional[Dict[str, Any]]:
+        """
+        Load transactions from GCS transactions.json blob.
+        
+        Returns:
+            dict: Transaction data or None if blob doesn't exist
+        """
+        try:
+            blob = self.bucket.blob(TRANSACTIONS_BLOB_NAME)
+            
+            if not blob.exists():
+                logger.debug(
+                    f"GCPStorageBackend: Transactions blob not found in "
+                    f"gs://{self.bucket_name}/{TRANSACTIONS_BLOB_NAME}"
+                )
+                return None
+            
+            content = blob.download_as_text()
+            data = json.loads(content)
+            
+            sell_count = data.get("metadata", {}).get("sell_count", 0)
+            buy_count = data.get("metadata", {}).get("buy_count", 0)
+            logger.info(
+                f"GCPStorageBackend: Loaded transactions from "
+                f"gs://{self.bucket_name}/{TRANSACTIONS_BLOB_NAME}. "
+                f"Sells: {sell_count}, Buys: {buy_count}"
+            )
+            return data
+            
+        except gcp_exceptions.NotFound:
+            logger.debug("GCPStorageBackend: Transactions blob not found")
+            return None
+        except json.JSONDecodeError as e:
+            logger.error(f"GCPStorageBackend: Invalid JSON in transactions blob: {e}")
+            return None
+        except gcp_exceptions.GoogleAPIError as e:
+            logger.error(f"GCPStorageBackend: GCP API error loading transactions: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"GCPStorageBackend: Failed to load transactions: {e}")
+            return None
+    
+    def delete_snapshot(self, index: int) -> bool:
+        """
+        Delete snapshot by index from GCS.
+        
+        Creates backup blob before deletion.
+        Downloads, modifies, and re-uploads entire history.
+        
+        Args:
+            index: Zero-based index of snapshot to delete
+            
+        Returns:
+            bool: True if deletion succeeded, False otherwise
+        """
+        try:
+            # Step 1: Download current history
+            history = self._download_history()
+            
+            if not history:
+                logger.error("GCPStorageBackend: No history to delete from")
+                return False
+            
+            # Step 2: Validate index
+            if index < 0 or index >= len(history):
+                logger.error(
+                    f"GCPStorageBackend: Index {index} out of range "
+                    f"(valid: 0-{len(history)-1})"
+                )
+                return False
+            
+            # Step 3: Create timestamped backup blob
+            from datetime import datetime as dt
+            timestamp = dt.now().strftime("%Y%m%d-%H%M%S")
+            backup_blob_name = f"{self.blob_name}.bak.{timestamp}"
+            
+            try:
+                # Copy current blob to backup
+                blob = self.bucket.blob(self.blob_name)
+                backup_blob = self.bucket.blob(backup_blob_name)
+                
+                # Use copy operation
+                backup_blob.upload_from_string(
+                    blob.download_as_text(),
+                    content_type="application/json"
+                )
+                logger.info(
+                    f"GCPStorageBackend: Created backup at "
+                    f"gs://{self.bucket_name}/{backup_blob_name}"
+                )
+            except gcp_exceptions.GoogleAPIError as e:
+                logger.error(f"GCPStorageBackend: Failed to create backup: {e}")
+                return False
+            
+            # Step 4: Remove snapshot at index
+            deleted_snapshot = history.pop(index)
+            deleted_timestamp = deleted_snapshot.get("timestamp", "unknown")
+            deleted_value = deleted_snapshot.get("total_value_eur", 0.0)
+            
+            logger.info(
+                f"GCPStorageBackend: Deleting snapshot at index {index}: "
+                f"{deleted_timestamp} (€{deleted_value:,.2f})"
+            )
+            
+            # Step 5: Upload updated history
+            try:
+                json_content = json.dumps(history, indent=2, ensure_ascii=False)
+                
+                blob.upload_from_string(
+                    json_content,
+                    content_type="application/json"
+                )
+                
+                logger.info(
+                    f"GCPStorageBackend: Successfully deleted snapshot. "
+                    f"Remaining snapshots: {len(history)}"
+                )
+                return True
+                
+            except gcp_exceptions.GoogleAPIError as e:
+                logger.error(f"GCPStorageBackend: Failed to upload updated history: {e}")
+                return False
+        
+        except gcp_exceptions.GoogleAPIError as e:
+            logger.error(f"GCPStorageBackend: GCP API error during deletion: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"GCPStorageBackend: Unexpected error deleting snapshot: {e}", exc_info=True)
             return False
     
     def delete_all_snapshots(self) -> bool:

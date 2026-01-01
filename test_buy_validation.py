@@ -130,18 +130,17 @@ def test_validate_buys_exact_match():
         "timestamp": "2025-01-08T00:00:00Z",
         "assets": [
             {"name": "Test Stock", "quantity": 150, "category": "Stocks"}
-        ],
-        "buy_transactions": [
-            {
-                "asset_name": "Test Stock",
-                "quantity": 50,
-                "date": "2025-01-05T00:00:00Z",
-                "total_value_eur": 5000
-            }
         ]
     }
     
-    buy_transactions = current_snapshot["buy_transactions"]
+    buy_transactions = [
+        {
+            "asset_name": "Test Stock",
+            "quantity": 50,
+            "date": "2025-01-05T00:00:00Z",
+            "total_value_eur": 5000
+        }
+    ]
     
     # Should not raise exception
     validate_buys_have_transactions(
@@ -223,18 +222,17 @@ def test_validate_buys_partial_match():
         "timestamp": "2025-01-08T00:00:00Z",
         "assets": [
             {"name": "Test Stock", "quantity": 150, "category": "Stocks"}
-        ],
-        "buy_transactions": [
-            {
-                "asset_name": "Test Stock",
-                "quantity": 30,  # Only 30 of 50
-                "date": "2025-01-05T00:00:00Z",
-                "total_value_eur": 3000
-            }
         ]
     }
     
-    buy_transactions = current_snapshot["buy_transactions"]
+    buy_transactions = [
+        {
+            "asset_name": "Test Stock",
+            "quantity": 30,  # Only 30 of 50
+            "date": "2025-01-05T00:00:00Z",
+            "total_value_eur": 3000
+        }
+    ]
     
     try:
         validate_buys_have_transactions(
@@ -263,24 +261,23 @@ def test_validate_buys_multiple_transactions():
         "timestamp": "2025-01-08T00:00:00Z",
         "assets": [
             {"name": "Test Stock", "quantity": 180, "category": "Stocks"}
-        ],
-        "buy_transactions": [
-            {
-                "asset_name": "Test Stock",
-                "quantity": 50,
-                "date": "2025-01-03T00:00:00Z",
-                "total_value_eur": 5000
-            },
-            {
-                "asset_name": "Test Stock",
-                "quantity": 30,
-                "date": "2025-01-05T00:00:00Z",
-                "total_value_eur": 3000
-            }
         ]
     }
     
-    buy_transactions = current_snapshot["buy_transactions"]
+    buy_transactions = [
+        {
+            "asset_name": "Test Stock",
+            "quantity": 50,
+            "date": "2025-01-03T00:00:00Z",
+            "total_value_eur": 5000
+        },
+        {
+            "asset_name": "Test Stock",
+            "quantity": 30,
+            "date": "2025-01-05T00:00:00Z",
+            "total_value_eur": 3000
+        }
+    ]
     
     # Should not raise exception (50 + 30 = 80)
     validate_buys_have_transactions(
