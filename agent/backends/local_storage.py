@@ -346,6 +346,107 @@ class LocalFileBackend(StorageBackend):
             logger.error(f"LocalFileBackend: Unexpected error reading transactions: {e}")
             return None
     
+    def delete_snapshot(self, index: int) -> bool:
+        """
+        Delete snapshot by index from local file.
+        
+        Creates timestamped backup before deletion.
+        Uses atomic write pattern for safety.
+        
+        Args:
+            index: Zero-based index of snapshot to delete
+            
+        Returns:
+            bool: True if deletion succeeded, False otherwise
+        """
+        try:
+            # Step 1: Load current history
+            if not os.path.exists(self.history_path):
+                logger.error(f"LocalFileBackend: History file does not exist: {self.history_path}")
+                return False
+            
+            with open(self.history_path, "r") as f:
+                content = f.read().strip()
+                if not content:
+                    logger.error("LocalFileBackend: History file is empty")
+                    return False
+                
+                history = json.loads(content)
+            
+            if not isinstance(history, list):
+                logger.error("LocalFileBackend: History file format invalid (not a list)")
+                return False
+            
+            # Step 2: Validate index
+            if index < 0 or index >= len(history):
+                logger.error(
+                    f"LocalFileBackend: Index {index} out of range "
+                    f"(valid: 0-{len(history)-1})"
+                )
+                return False
+            
+            # Step 3: Create timestamped backup
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            backup_path = f"{self.history_path}.bak.{timestamp}"
+            
+            try:
+                shutil.copy2(self.history_path, backup_path)
+                logger.info(f"LocalFileBackend: Created backup at {backup_path}")
+            except IOError as e:
+                logger.error(f"LocalFileBackend: Failed to create backup: {e}")
+                return False
+            
+            # Step 4: Remove snapshot at index
+            deleted_snapshot = history.pop(index)
+            deleted_timestamp = deleted_snapshot.get("timestamp", "unknown")
+            deleted_value = deleted_snapshot.get("total_value_eur", 0.0)
+            
+            logger.info(
+                f"LocalFileBackend: Deleting snapshot at index {index}: "
+                f"{deleted_timestamp} (€{deleted_value:,.2f})"
+            )
+            
+            # Step 5: Write updated history atomically
+            try:
+                json_content = json.dumps(history, indent=2, ensure_ascii=False)
+            except (TypeError, ValueError) as e:
+                logger.error(f"LocalFileBackend: Failed to serialize history: {e}")
+                return False
+            
+            # Write to temp file
+            try:
+                with open(self.temp_path, "w") as f:
+                    f.write(json_content)
+                    f.flush()
+                    os.fsync(f.fileno())
+                
+                # Atomic rename
+                os.replace(self.temp_path, self.history_path)
+                
+                logger.info(
+                    f"LocalFileBackend: Successfully deleted snapshot. "
+                    f"Remaining snapshots: {len(history)}"
+                )
+                return True
+                
+            except IOError as e:
+                logger.error(f"LocalFileBackend: Failed to write updated history: {e}")
+                # Clean up temp file if it exists
+                if os.path.exists(self.temp_path):
+                    try:
+                        os.remove(self.temp_path)
+                    except:
+                        pass
+                return False
+        
+        except json.JSONDecodeError as e:
+            logger.error(f"LocalFileBackend: Invalid JSON in history file: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"LocalFileBackend: Unexpected error deleting snapshot: {e}", exc_info=True)
+            return False
+    
     def is_available(self) -> bool:
         """
         Check if local storage is available.

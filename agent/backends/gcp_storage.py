@@ -223,6 +223,94 @@ class GCPStorageBackend(StorageBackend):
             logger.error(f"GCPStorageBackend: Failed to load transactions: {e}")
             return None
     
+    def delete_snapshot(self, index: int) -> bool:
+        """
+        Delete snapshot by index from GCS.
+        
+        Creates backup blob before deletion.
+        Downloads, modifies, and re-uploads entire history.
+        
+        Args:
+            index: Zero-based index of snapshot to delete
+            
+        Returns:
+            bool: True if deletion succeeded, False otherwise
+        """
+        try:
+            # Step 1: Download current history
+            history = self._download_history()
+            
+            if not history:
+                logger.error("GCPStorageBackend: No history to delete from")
+                return False
+            
+            # Step 2: Validate index
+            if index < 0 or index >= len(history):
+                logger.error(
+                    f"GCPStorageBackend: Index {index} out of range "
+                    f"(valid: 0-{len(history)-1})"
+                )
+                return False
+            
+            # Step 3: Create timestamped backup blob
+            from datetime import datetime as dt
+            timestamp = dt.now().strftime("%Y%m%d-%H%M%S")
+            backup_blob_name = f"{self.blob_name}.bak.{timestamp}"
+            
+            try:
+                # Copy current blob to backup
+                blob = self.bucket.blob(self.blob_name)
+                backup_blob = self.bucket.blob(backup_blob_name)
+                
+                # Use copy operation
+                backup_blob.upload_from_string(
+                    blob.download_as_text(),
+                    content_type="application/json"
+                )
+                logger.info(
+                    f"GCPStorageBackend: Created backup at "
+                    f"gs://{self.bucket_name}/{backup_blob_name}"
+                )
+            except gcp_exceptions.GoogleAPIError as e:
+                logger.error(f"GCPStorageBackend: Failed to create backup: {e}")
+                return False
+            
+            # Step 4: Remove snapshot at index
+            deleted_snapshot = history.pop(index)
+            deleted_timestamp = deleted_snapshot.get("timestamp", "unknown")
+            deleted_value = deleted_snapshot.get("total_value_eur", 0.0)
+            
+            logger.info(
+                f"GCPStorageBackend: Deleting snapshot at index {index}: "
+                f"{deleted_timestamp} (€{deleted_value:,.2f})"
+            )
+            
+            # Step 5: Upload updated history
+            try:
+                json_content = json.dumps(history, indent=2, ensure_ascii=False)
+                
+                blob.upload_from_string(
+                    json_content,
+                    content_type="application/json"
+                )
+                
+                logger.info(
+                    f"GCPStorageBackend: Successfully deleted snapshot. "
+                    f"Remaining snapshots: {len(history)}"
+                )
+                return True
+                
+            except gcp_exceptions.GoogleAPIError as e:
+                logger.error(f"GCPStorageBackend: Failed to upload updated history: {e}")
+                return False
+        
+        except gcp_exceptions.GoogleAPIError as e:
+            logger.error(f"GCPStorageBackend: GCP API error during deletion: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"GCPStorageBackend: Unexpected error deleting snapshot: {e}", exc_info=True)
+            return False
+    
     def delete_all_snapshots(self) -> bool:
         """
         Delete all snapshots from GCS by removing the portfolio_history.json file.

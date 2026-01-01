@@ -247,6 +247,60 @@ class HybridStorageBackend(StorageBackend):
         else:
             logger.warning(f"HybridStorageBackend: {len(self.pending_sync)} pending syncs still queued")
     
+    def delete_snapshot(self, index: int) -> bool:
+        """
+        Delete snapshot from both primary and fallback storage.
+        
+        Strategy (as per requirement):
+        1. Attempt deletion from primary (GCP) first
+        2. Then attempt deletion from fallback (local)
+        3. Return True if either succeeds
+        
+        Args:
+            index: Zero-based index of snapshot to delete
+            
+        Returns:
+            bool: True if at least one backend succeeded
+        """
+        primary_success = False
+        fallback_success = False
+        
+        # Step 1: Try primary (GCP) first
+        if self.primary.is_available():
+            try:
+                primary_success = self.primary.delete_snapshot(index)
+                if primary_success:
+                    logger.info("HybridStorageBackend: Snapshot deleted from primary (GCP)")
+                else:
+                    logger.warning("HybridStorageBackend: Primary deletion failed")
+            except Exception as e:
+                logger.warning(f"HybridStorageBackend: Primary backend error during deletion: {e}")
+        else:
+            logger.warning("HybridStorageBackend: Primary unavailable, skipping")
+        
+        # Step 2: Try fallback (local)
+        try:
+            fallback_success = self.fallback.delete_snapshot(index)
+            if fallback_success:
+                logger.info("HybridStorageBackend: Snapshot deleted from fallback (local)")
+            else:
+                logger.warning("HybridStorageBackend: Fallback deletion failed")
+        except Exception as e:
+            logger.error(f"HybridStorageBackend: Fallback backend error during deletion: {e}")
+        
+        # Success if at least one backend succeeded
+        overall_success = primary_success or fallback_success
+        
+        if overall_success:
+            logger.info(
+                f"HybridStorageBackend: Deletion complete "
+                f"(primary: {primary_success}, fallback: {fallback_success})"
+            )
+        else:
+            logger.error("HybridStorageBackend: Both primary and fallback deletions failed!")
+        
+        return overall_success
+    
     def get_sync_status(self) -> Dict[str, Any]:
         """
         Get sync status information.

@@ -79,3 +79,16 @@ class StorageBackend(ABC):
             dict: Transaction data or None if unavailable
         """
         pass
+    
+    @abstractmethod
+    def delete_snapshot(self, index: int) -> bool:
+        """
+        Delete snapshot by index (0-based).
+        
+        Args:
+            index: Zero-based index of snapshot to delete
+            
+        Returns:
+            bool: True if deletion succeeded, False otherwise
+        """
+        pass

@@ -294,3 +294,125 @@ def get_transactions() -> Dict[str, Any]:
             "buy_transactions": [],
             "metadata": {}
         }
+
+
+def list_snapshots() -> List[Dict[str, Any]]:
+    """
+    List all snapshots with index and timestamp.
+    
+    Returns:
+        list: List of snapshot summaries with:
+            - index: 1-based index for user display
+            - timestamp: ISO timestamp string
+            - total_value_eur: Portfolio total value
+            - asset_count: Number of assets
+    """
+    try:
+        backend = _get_storage_backend()
+        all_snapshots = backend.get_all_snapshots()
+        
+        if not all_snapshots:
+            logger.info("No snapshots found")
+            return []
+        
+        # Build summary list with 1-based indices
+        summaries = []
+        for i, snapshot in enumerate(all_snapshots):
+            summaries.append({
+                "index": i + 1,  # 1-based for user display
+                "timestamp": snapshot.get("timestamp", "Unknown"),
+                "total_value_eur": snapshot.get("total_value_eur", 0.0),
+                "asset_count": len(snapshot.get("assets", []))
+            })
+        
+        logger.info(f"Listed {len(summaries)} snapshots")
+        return summaries
+        
+    except Exception as e:
+        logger.error(f"Failed to list snapshots: {e}", exc_info=True)
+        return []
+
+
+def delete_snapshot(index: int, confirm: bool = False) -> Dict[str, Any]:
+    """
+    Delete a specific snapshot from portfolio history.
+    
+    Args:
+        index: 1-based index of snapshot to delete (as shown in list_snapshots)
+        confirm: Must be True to execute deletion (safety check)
+    
+    Returns:
+        dict: {
+            "success": bool,
+            "deleted_snapshot": dict (if found),
+            "error": str (if failed),
+            "remaining_count": int
+        }
+    """
+    try:
+        # Safety check
+        if not confirm:
+            return {
+                "success": False,
+                "error": "Deletion cancelled. Set confirm=True to proceed.",
+                "warning": "This operation is permanent and will delete the snapshot from both GCP and local storage."
+            }
+        
+        # Validate index (must be positive)
+        if index < 1:
+            return {
+                "success": False,
+                "error": f"Invalid index: {index}. Index must be >= 1."
+            }
+        
+        # Get current snapshots to validate and get info
+        backend = _get_storage_backend()
+        all_snapshots = backend.get_all_snapshots()
+        
+        if not all_snapshots:
+            return {
+                "success": False,
+                "error": "No snapshots found in history."
+            }
+        
+        # Convert 1-based to 0-based
+        zero_based_index = index - 1
+        
+        if zero_based_index >= len(all_snapshots):
+            return {
+                "success": False,
+                "error": f"Index {index} out of range. Valid range: 1-{len(all_snapshots)}"
+            }
+        
+        # Get snapshot info before deletion
+        deleted_snapshot = all_snapshots[zero_based_index]
+        
+        # Perform deletion
+        logger.info(f"Deleting snapshot at index {index} (0-based: {zero_based_index})")
+        success = backend.delete_snapshot(zero_based_index)
+        
+        if success:
+            remaining = len(all_snapshots) - 1
+            logger.info(f"Snapshot deleted successfully. Remaining: {remaining}")
+            return {
+                "success": True,
+                "deleted_snapshot": {
+                    "index": index,
+                    "timestamp": deleted_snapshot.get("timestamp", "Unknown"),
+                    "total_value_eur": deleted_snapshot.get("total_value_eur", 0.0),
+                    "asset_count": len(deleted_snapshot.get("assets", []))
+                },
+                "remaining_count": remaining
+            }
+        else:
+            return {
+                "success": False,
+                "error": "Deletion failed. Check logs for details."
+            }
+        
+    except Exception as e:
+        logger.error(f"Failed to delete snapshot: {e}", exc_info=True)
+        return {
+            "success": False,
+            "error": str(e)
+        }
