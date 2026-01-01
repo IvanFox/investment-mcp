@@ -252,10 +252,10 @@ class GCPStorageBackend(StorageBackend):
                 )
                 return False
             
-            # Step 3: Create timestamped backup blob
+            # Step 3: Create timestamped backup blob in backup/ folder
             from datetime import datetime as dt
             timestamp = dt.now().strftime("%Y%m%d-%H%M%S")
-            backup_blob_name = f"{self.blob_name}.bak.{timestamp}"
+            backup_blob_name = f"backup/{self.blob_name}.bak.{timestamp}"
             
             try:
                 # Copy current blob to backup

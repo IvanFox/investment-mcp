@@ -35,9 +35,11 @@ venv.bak/
 
 # Portfolio data
 portfolio_history.json
-portfolio_history.json.bak
 portfolio_history.json.tmp
 test_portfolio.py
+
+# Backup files (stored in backup/ folder)
+backup/
 
 # Credentials (keep these secret!)
 # credentials.json

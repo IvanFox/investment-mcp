@@ -34,18 +34,21 @@ class LocalFileBackend(StorageBackend):
             data_dir: Directory to store files (default: current directory)
         """
         self.data_dir = data_dir
+        self.backup_dir = os.path.join(data_dir, "backup")
+        
         self.history_path = os.path.join(data_dir, HISTORY_FILE)
-        self.backup_path = os.path.join(data_dir, BACKUP_FILE)
+        self.backup_path = os.path.join(self.backup_dir, BACKUP_FILE)
         self.temp_path = os.path.join(data_dir, TEMP_FILE)
         
         self.transactions_path = os.path.join(data_dir, TRANSACTIONS_FILE)
-        self.transactions_backup_path = os.path.join(data_dir, TRANSACTIONS_BACKUP_FILE)
+        self.transactions_backup_path = os.path.join(self.backup_dir, TRANSACTIONS_BACKUP_FILE)
         self.transactions_temp_path = os.path.join(data_dir, TRANSACTIONS_TEMP_FILE)
         
-        # Create data directory if it doesn't exist
+        # Create data directory and backup directory if they don't exist
         os.makedirs(data_dir, exist_ok=True)
+        os.makedirs(self.backup_dir, exist_ok=True)
         
-        logger.debug(f"LocalFileBackend initialized: {self.history_path}")
+        logger.debug(f"LocalFileBackend initialized: {self.history_path}, backup_dir: {self.backup_dir}")
     
     def save_snapshot(self, snapshot_data: Dict[str, Any]) -> bool:
         """
@@ -385,10 +388,11 @@ class LocalFileBackend(StorageBackend):
                 )
                 return False
             
-            # Step 3: Create timestamped backup
+            # Step 3: Create timestamped backup in backup/ folder
             from datetime import datetime
             timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-            backup_path = f"{self.history_path}.bak.{timestamp}"
+            backup_filename = f"{HISTORY_FILE}.bak.{timestamp}"
+            backup_path = os.path.join(self.backup_dir, backup_filename)
             
             try:
                 shutil.copy2(self.history_path, backup_path)
