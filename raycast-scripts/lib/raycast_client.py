@@ -153,28 +153,48 @@ class RaycastClient:
                 "message": "No previous snapshot for comparison. Run run_portfolio_analysis() to create the first snapshot.",
             }
 
+        # Load transactions for comparison
+        transactions_data = storage.get_transactions()
+        sell_transactions = transactions_data.get("sell_transactions", [])
+        buy_transactions = transactions_data.get("buy_transactions", [])
+        
         # Compare current vs last
-        comparison = analysis.compare_snapshots(last_snapshot, current_snapshot)
+        comparison = analysis.compare_snapshots(
+            last_snapshot,
+            current_snapshot,
+            sell_transactions,
+            buy_transactions
+        )
 
-        # Get top movers (winners and losers)
-        all_assets = comparison.get("assets", {})
-        asset_changes = []
-
-        for asset_name, asset_data in all_assets.items():
-            if asset_data.get("change_pct") is not None:
-                asset_changes.append(
-                    {
-                        "name": asset_name,
-                        "change_eur": asset_data.get("value_change_eur", 0),
-                        "change_pct": asset_data.get("change_pct", 0),
-                        "current_value_eur": asset_data.get("current_value_eur", 0),
-                    }
-                )
-
-        # Sort by change percentage
-        asset_changes.sort(key=lambda x: x["change_pct"], reverse=True)
-        winners = asset_changes[:5]
-        losers = list(reversed(asset_changes[-5:]))
+        # Get top movers (winners) and bottom movers (losers)
+        # Build enriched winners/losers with current values from snapshot
+        winners = []
+        for mover in comparison.get("top_movers", [])[:5]:
+            asset = next(
+                (a for a in current_snapshot.get("assets", []) if a["name"] == mover["name"]),
+                None
+            )
+            if asset:
+                winners.append({
+                    "name": mover["name"],
+                    "change_eur": mover["change_eur"],
+                    "change_pct": round((mover["change_eur"] / asset.get("current_value_eur", 1) * 100), 2),
+                    "current_value_eur": asset.get("current_value_eur", 0),
+                })
+        
+        losers = []
+        for mover in comparison.get("bottom_movers", [])[:5]:
+            asset = next(
+                (a for a in current_snapshot.get("assets", []) if a["name"] == mover["name"]),
+                None
+            )
+            if asset:
+                losers.append({
+                    "name": mover["name"],
+                    "change_eur": mover["change_eur"],
+                    "change_pct": round((mover["change_eur"] / asset.get("current_value_eur", 1) * 100), 2),
+                    "current_value_eur": asset.get("current_value_eur", 0),
+                })
 
         return {
             "current_status": {
@@ -185,10 +205,10 @@ class RaycastClient:
             "snapshot_comparison": {
                 "snapshot_date": last_snapshot.get("timestamp"),
                 "value_change": {
-                    "eur": comparison["portfolio"].get("total_value_change_eur", 0),
-                    "percentage": comparison["portfolio"].get("total_change_pct", 0),
+                    "eur": comparison.get("total_value_change_eur", 0),
+                    "percentage": comparison.get("total_value_change_percent", 0),
                     "direction": "up"
-                    if comparison["portfolio"].get("total_value_change_eur", 0) >= 0
+                    if comparison.get("total_value_change_eur", 0) >= 0
                     else "down",
                 },
             },
@@ -217,28 +237,59 @@ class RaycastClient:
         latest_snapshot = all_snapshots[-1]
         previous_snapshot = all_snapshots[-2]
 
+        # Load transactions for comparison
+        transactions_data = storage.get_transactions()
+        sell_transactions = transactions_data.get("sell_transactions", [])
+        buy_transactions = transactions_data.get("buy_transactions", [])
+        
         # Compare snapshots (previous as old, latest as new)
-        comparison = analysis.compare_snapshots(previous_snapshot, latest_snapshot)
+        comparison = analysis.compare_snapshots(
+            previous_snapshot,
+            latest_snapshot,
+            sell_transactions,
+            buy_transactions
+        )
 
-        # Extract asset changes
-        all_assets = comparison.get("assets", {})
-        asset_changes = []
-
-        for asset_name, asset_data in all_assets.items():
-            if asset_data.get("change_pct") is not None:
-                asset_changes.append(
-                    {
-                        "name": asset_name,
-                        "change_eur": asset_data.get("value_change_eur", 0),
-                        "change_pct": asset_data.get("change_pct", 0),
-                        "current_value_eur": asset_data.get("current_value_eur", 0),
-                    }
-                )
-
-        # Sort by change percentage
-        asset_changes.sort(key=lambda x: x["change_pct"], reverse=True)
-        winners = asset_changes[:5]
-        losers = list(reversed(asset_changes[-5:]))
+        # Build enriched winners/losers with current values from latest snapshot
+        winners = []
+        for mover in comparison.get("top_movers", [])[:5]:
+            asset = next(
+                (a for a in latest_snapshot.get("assets", []) if a["name"] == mover["name"]),
+                None
+            )
+            prev_asset = next(
+                (a for a in previous_snapshot.get("assets", []) if a["name"] == mover["name"]),
+                None
+            )
+            if asset and prev_asset:
+                current_val = asset.get("current_value_eur", 0)
+                prev_val = prev_asset.get("current_value_eur", 1)
+                winners.append({
+                    "name": mover["name"],
+                    "change_eur": mover["change_eur"],
+                    "change_pct": round((mover["change_eur"] / prev_val * 100) if prev_val > 0 else 0, 2),
+                    "current_value_eur": current_val,
+                })
+        
+        losers = []
+        for mover in comparison.get("bottom_movers", [])[:5]:
+            asset = next(
+                (a for a in latest_snapshot.get("assets", []) if a["name"] == mover["name"]),
+                None
+            )
+            prev_asset = next(
+                (a for a in previous_snapshot.get("assets", []) if a["name"] == mover["name"]),
+                None
+            )
+            if asset and prev_asset:
+                current_val = asset.get("current_value_eur", 0)
+                prev_val = prev_asset.get("current_value_eur", 1)
+                losers.append({
+                    "name": mover["name"],
+                    "change_eur": mover["change_eur"],
+                    "change_pct": round((mover["change_eur"] / prev_val * 100) if prev_val > 0 else 0, 2),
+                    "current_value_eur": current_val,
+                })
 
         # Calculate days between snapshots
         from datetime import datetime
@@ -261,10 +312,10 @@ class RaycastClient:
                 "days": days_diff,
             },
             "portfolio_change": {
-                "value_eur": comparison["portfolio"].get("total_value_change_eur", 0),
-                "percentage": comparison["portfolio"].get("total_change_pct", 0),
+                "value_eur": comparison.get("total_value_change_eur", 0),
+                "percentage": comparison.get("total_value_change_percent", 0),
                 "direction": "up"
-                if comparison["portfolio"].get("total_value_change_eur", 0) >= 0
+                if comparison.get("total_value_change_eur", 0) >= 0
                 else "down",
             },
             "winners": winners,
