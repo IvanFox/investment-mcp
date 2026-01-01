@@ -149,7 +149,10 @@ def create_portfolio_snapshot(normalized_data: List[Dict[str, Any]]) -> Dict[str
 
 
 def compare_snapshots(
-    current_snapshot: Dict[str, Any], previous_snapshot: Dict[str, Any]
+    current_snapshot: Dict[str, Any],
+    previous_snapshot: Dict[str, Any],
+    sell_transactions: List[Dict[str, Any]],
+    buy_transactions: List[Dict[str, Any]]
 ) -> Dict[str, Any]:
     """
     Performs week-over-week comparison and generates a structured report object.
@@ -157,6 +160,8 @@ def compare_snapshots(
     Args:
         current_snapshot: Current snapshot dictionary
         previous_snapshot: Previous snapshot dictionary
+        sell_transactions: List of parsed sell transactions
+        buy_transactions: List of parsed buy transactions
 
     Returns:
         dict: Analysis report with schema:
@@ -273,7 +278,7 @@ def compare_snapshots(
                 # For partial sells, add explicit transaction info if available
                 if qty_change < -1.0:  # Partial sell (at least 1 full share)
                     matching_txns = find_matching_transactions_for_sell(
-                        transactions=current_snapshot.get("transactions", []),
+                        transactions=sell_transactions,
                         asset_name=name,
                         previous_date=previous_snapshot["timestamp"],
                         current_date=current_snapshot["timestamp"]
@@ -300,7 +305,7 @@ def compare_snapshots(
                 # For purchases, add explicit transaction info if available
                 elif qty_change >= 1.0:  # Purchase (at least 1 full share)
                     matching_buy_txns = find_matching_transactions_for_buy(
-                        transactions=current_snapshot.get("buy_transactions", []),
+                        transactions=buy_transactions,
                         asset_name=name,
                         previous_date=previous_snapshot["timestamp"],
                         current_date=current_snapshot["timestamp"]
@@ -316,10 +321,6 @@ def compare_snapshots(
                         change_info["avg_purchase_price_per_unit_eur"] = round(avg_buy_price, 4)
                         change_info["price_source"] = "explicit"
                         change_info["num_buy_transactions"] = len(matching_buy_txns)
-                    else:
-                        # Fallback: use estimated from snapshot
-                        change_info["price_source"] = "estimated"
-                        logger.warning(f"No buy transactions found for purchase: {name} (using estimated price)")
                 
                 quantity_changes.append(change_info)
 
@@ -337,7 +338,7 @@ def compare_snapshots(
             
             # Find matching buy transactions for new position
             matching_buy_txns = find_matching_transactions_for_buy(
-                transactions=current_snapshot.get("buy_transactions", []),
+                transactions=buy_transactions,
                 asset_name=name,
                 previous_date=previous_snapshot["timestamp"],
                 current_date=current_snapshot["timestamp"]
@@ -359,15 +360,6 @@ def compare_snapshots(
                 position_info["avg_purchase_price_per_unit_eur"] = round(avg_buy_price, 4)
                 position_info["price_source"] = "explicit"
                 position_info["num_transactions"] = len(matching_buy_txns)
-            else:
-                # Fallback: use purchase price from snapshot
-                purchase_price = asset.get("purchase_price_total_eur", 0.0)
-                avg_buy_price = purchase_price / current_qty if current_qty > 0 else 0
-                
-                position_info["purchase_value_eur"] = round(purchase_price, 2)
-                position_info["avg_purchase_price_per_unit_eur"] = round(avg_buy_price, 4)
-                position_info["price_source"] = "estimated"
-                logger.warning(f"No buy transactions found for new position: {name} (using estimated price)")
             
             new_positions.append(position_info)
 
@@ -380,23 +372,16 @@ def compare_snapshots(
             
             # Find matching transactions (validated earlier, should exist)
             matching_txns = find_matching_transactions_for_sell(
-                transactions=current_snapshot.get("transactions", []),
+                transactions=sell_transactions,
                 asset_name=name,
                 previous_date=previous_snapshot["timestamp"],
                 current_date=current_snapshot["timestamp"]
             )
             
-            if matching_txns:
-                # Use explicit sell prices from transactions
-                total_sell_value = sum(txn.get("total_value_eur", 0.0) for txn in matching_txns)
-                avg_sell_price = total_sell_value / quantity_sold if quantity_sold > 0 else 0
-                price_source = "explicit"
-            else:
-                # Fallback to last snapshot value (should rarely happen due to validation)
-                total_sell_value = asset.get("current_value_eur", 0.0)
-                avg_sell_price = total_sell_value / quantity_sold if quantity_sold > 0 else 0
-                price_source = "estimated"
-                logger.warning(f"No transactions found for sold position: {name} (using estimated price)")
+            # Use explicit sell prices from transactions
+            total_sell_value = sum(txn.get("total_value_eur", 0.0) for txn in matching_txns)
+            avg_sell_price = total_sell_value / quantity_sold if quantity_sold > 0 else 0
+            price_source = "explicit"
             
             realized_gain_loss = total_sell_value - purchase_price
             

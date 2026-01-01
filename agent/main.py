@@ -1303,7 +1303,12 @@ def _run_weekly_analysis() -> str:
         # If we have a previous snapshot, perform comparison
         if previous_snapshot:
             logger.info("Performing week-over-week comparison...")
-            report_data = analysis.compare_snapshots(current_snapshot, previous_snapshot)
+            report_data = analysis.compare_snapshots(
+                current_snapshot,
+                previous_snapshot,
+                sell_transactions,
+                buy_transactions
+            )
             
             # Generate markdown report
             current_total_value = current_snapshot.get('total_value_eur', 0.0)

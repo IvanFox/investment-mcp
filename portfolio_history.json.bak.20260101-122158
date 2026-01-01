@@ -1,0 +1,2371 @@
+[
+  {
+    "timestamp": "2025-11-16T17:32:25.391713+00:00",
+    "total_value_eur": 400028.89,
+    "assets": [
+      {
+        "name": "Intel Corp",
+        "quantity": 15.0,
+        "purchase_price_total_eur": 645.04,
+        "current_value_eur": 458.23,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Google",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 5730.26,
+        "current_value_eur": 13101.92,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Johnson & Johnson",
+        "quantity": 20.0,
+        "purchase_price_total_eur": 2767.64,
+        "current_value_eur": 3370.19,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Snowflake",
+        "quantity": 30.0,
+        "purchase_price_total_eur": 4811.98,
+        "current_value_eur": 6631.5,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Dynatrace",
+        "quantity": 70.0,
+        "purchase_price_total_eur": 2977.06,
+        "current_value_eur": 2819.93,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Confluent",
+        "quantity": 310.0,
+        "purchase_price_total_eur": 4479.14,
+        "current_value_eur": 6212.14,
+        "category": "US Stocks"
+      },
+      {
+        "name": "NextEra Energy",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 4936.69,
+        "current_value_eur": 7214.1,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Schlumberger",
+        "quantity": 35.0,
+        "purchase_price_total_eur": 1273.3,
+        "current_value_eur": 1111.96,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Nebius",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14237.27,
+        "current_value_eur": 10777.29,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Wise",
+        "quantity": 9503.0,
+        "purchase_price_total_eur": 0.0,
+        "current_value_eur": 99273.22,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Artea bank",
+        "quantity": 4100.0,
+        "purchase_price_total_eur": 2542.0,
+        "current_value_eur": 3485.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 1200.0,
+        "purchase_price_total_eur": 4368.0,
+        "current_value_eur": 3912.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Ignitis",
+        "quantity": 300.0,
+        "purchase_price_total_eur": 5811.0,
+        "current_value_eur": 6210.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "ASML",
+        "quantity": 25.0,
+        "purchase_price_total_eur": 15275.0,
+        "current_value_eur": 21852.5,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Siemens",
+        "quantity": 26.0,
+        "purchase_price_total_eur": 5034.38,
+        "current_value_eur": 5989.1,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "AstraZeneca",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 11926.91,
+        "current_value_eur": 15290.62,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Banco Santander",
+        "quantity": 1500.0,
+        "purchase_price_total_eur": 6930.0,
+        "current_value_eur": 13935.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Sanofi",
+        "quantity": 60.0,
+        "purchase_price_total_eur": 5532.0,
+        "current_value_eur": 5375.4,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "VOW3.DE",
+        "quantity": 33.0,
+        "purchase_price_total_eur": 4290.0,
+        "current_value_eur": 3229.38,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2400.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "InBank",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2200.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "Liven",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2040.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "VWCE",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14670.0,
+        "current_value_eur": 21543.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "MEUD",
+        "quantity": 50.0,
+        "purchase_price_total_eur": 12166.85,
+        "current_value_eur": 13808.53,
+        "category": "ETFs"
+      },
+      {
+        "name": "II level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 48500.0,
+        "current_value_eur": 48500.0,
+        "category": "Pension"
+      },
+      {
+        "name": "III level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 49500.0,
+        "current_value_eur": 49500.0,
+        "category": "Pension"
+      },
+      {
+        "name": "Cash (EUR)",
+        "quantity": 11000.0,
+        "purchase_price_total_eur": 11000.0,
+        "current_value_eur": 11000.0,
+        "category": "Cash"
+      },
+      {
+        "name": "Cash (GBP)",
+        "quantity": 16600.0,
+        "purchase_price_total_eur": 18787.879999999997,
+        "current_value_eur": 18787.879999999997,
+        "category": "Cash"
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-11-24T06:36:59.581979+00:00",
+    "total_value_eur": 392098.08,
+    "assets": [
+      {
+        "name": "Intel Corp",
+        "quantity": 15.0,
+        "purchase_price_total_eur": 650.78,
+        "current_value_eur": 449.04,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Google",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 5781.29,
+        "current_value_eur": 14300.5,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Johnson & Johnson",
+        "quantity": 20.0,
+        "purchase_price_total_eur": 2792.29,
+        "current_value_eur": 3538.52,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Snowflake",
+        "quantity": 30.0,
+        "purchase_price_total_eur": 4854.83,
+        "current_value_eur": 6092.1,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Dynatrace",
+        "quantity": 70.0,
+        "purchase_price_total_eur": 3003.57,
+        "current_value_eur": 2646.43,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Confluent",
+        "quantity": 310.0,
+        "purchase_price_total_eur": 4519.03,
+        "current_value_eur": 5576.16,
+        "category": "US Stocks"
+      },
+      {
+        "name": "NextEra Energy",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 4980.65,
+        "current_value_eur": 7243.64,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Schlumberger",
+        "quantity": 35.0,
+        "purchase_price_total_eur": 1284.64,
+        "current_value_eur": 1099.08,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Nebius",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14364.06,
+        "current_value_eur": 10836.82,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Wise",
+        "quantity": 9503.0,
+        "purchase_price_total_eur": 0.0,
+        "current_value_eur": 94563.76,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Artea bank",
+        "quantity": 4100.0,
+        "purchase_price_total_eur": 2542.0,
+        "current_value_eur": 3690.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 1200.0,
+        "purchase_price_total_eur": 4368.0,
+        "current_value_eur": 3912.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Ignitis",
+        "quantity": 300.0,
+        "purchase_price_total_eur": 5811.0,
+        "current_value_eur": 6240.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Vinci",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 6429.5,
+        "current_value_eur": 6556.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "ASML",
+        "quantity": 25.0,
+        "purchase_price_total_eur": 15275.0,
+        "current_value_eur": 20850.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Siemens",
+        "quantity": 26.0,
+        "purchase_price_total_eur": 5034.38,
+        "current_value_eur": 5697.9,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "AstraZeneca",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 11984.34,
+        "current_value_eur": 15618.99,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Banco Santander",
+        "quantity": 1500.0,
+        "purchase_price_total_eur": 6930.0,
+        "current_value_eur": 13215.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Sanofi",
+        "quantity": 60.0,
+        "purchase_price_total_eur": 5532.0,
+        "current_value_eur": 5179.2,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "VOW3.DE",
+        "quantity": 33.0,
+        "purchase_price_total_eur": 4290.0,
+        "current_value_eur": 3144.9,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2400.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "InBank",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2200.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "Liven",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2040.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "VWCE",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14670.0,
+        "current_value_eur": 21072.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "MEUD",
+        "quantity": 50.0,
+        "purchase_price_total_eur": 12225.44,
+        "current_value_eur": 13507.69,
+        "category": "ETFs"
+      },
+      {
+        "name": "II level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 47900.0,
+        "current_value_eur": 47900.0,
+        "category": "Pension"
+      },
+      {
+        "name": "III level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 48650.0,
+        "current_value_eur": 48650.0,
+        "category": "Pension"
+      },
+      {
+        "name": "Cash (EUR)",
+        "quantity": 5000.0,
+        "purchase_price_total_eur": 5000.0,
+        "current_value_eur": 5000.0,
+        "category": "Cash"
+      },
+      {
+        "name": "Cash (GBP)",
+        "quantity": 16600.0,
+        "purchase_price_total_eur": 18878.350000000002,
+        "current_value_eur": 18878.350000000002,
+        "category": "Cash"
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-11-28T20:04:15.356177+00:00",
+    "total_value_eur": 402948.9,
+    "assets": [
+      {
+        "name": "Intel Corp",
+        "quantity": 15.0,
+        "purchase_price_total_eur": 646.35,
+        "current_value_eur": 524.32,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Google",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 5741.91,
+        "current_value_eur": 15173.37,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Johnson & Johnson",
+        "quantity": 20.0,
+        "purchase_price_total_eur": 2773.27,
+        "current_value_eur": 3566.47,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Snowflake",
+        "quantity": 30.0,
+        "purchase_price_total_eur": 4821.77,
+        "current_value_eur": 6495.56,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Dynatrace",
+        "quantity": 70.0,
+        "purchase_price_total_eur": 2983.12,
+        "current_value_eur": 2688.13,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Confluent",
+        "quantity": 310.0,
+        "purchase_price_total_eur": 4488.25,
+        "current_value_eur": 5944.27,
+        "category": "US Stocks"
+      },
+      {
+        "name": "NextEra Energy",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 4946.73,
+        "current_value_eur": 7436.47,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Schlumberger",
+        "quantity": 35.0,
+        "purchase_price_total_eur": 1275.89,
+        "current_value_eur": 1093.11,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Nebius",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14266.24,
+        "current_value_eur": 12263.84,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Wise",
+        "quantity": 9503.0,
+        "purchase_price_total_eur": 0.0,
+        "current_value_eur": 95694.93,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Artea bank",
+        "quantity": 4100.0,
+        "purchase_price_total_eur": 2542.0,
+        "current_value_eur": 3813.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 1200.0,
+        "purchase_price_total_eur": 4368.0,
+        "current_value_eur": 4008.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Ignitis",
+        "quantity": 300.0,
+        "purchase_price_total_eur": 5811.0,
+        "current_value_eur": 6210.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Vinci",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 6429.5,
+        "current_value_eur": 6723.75,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "ASML",
+        "quantity": 25.0,
+        "purchase_price_total_eur": 15275.0,
+        "current_value_eur": 22585.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Siemens",
+        "quantity": 26.0,
+        "purchase_price_total_eur": 5034.38,
+        "current_value_eur": 5935.8,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "AstraZeneca",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 12031.45,
+        "current_value_eur": 15956.68,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Banco Santander",
+        "quantity": 1500.0,
+        "purchase_price_total_eur": 6930.0,
+        "current_value_eur": 13860.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Sanofi",
+        "quantity": 60.0,
+        "purchase_price_total_eur": 5532.0,
+        "current_value_eur": 5145.6,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "VOW3.DE",
+        "quantity": 33.0,
+        "purchase_price_total_eur": 4290.0,
+        "current_value_eur": 3237.3,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2400.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "InBank",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2200.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "Liven",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2040.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "VWCE",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14670.0,
+        "current_value_eur": 21726.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "MEUD",
+        "quantity": 50.0,
+        "purchase_price_total_eur": 12273.49,
+        "current_value_eur": 13874.75,
+        "category": "ETFs"
+      },
+      {
+        "name": "II level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 48600.0,
+        "current_value_eur": 48600.0,
+        "category": "Pension"
+      },
+      {
+        "name": "III level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 49800.0,
+        "current_value_eur": 49800.0,
+        "category": "Pension"
+      },
+      {
+        "name": "Cash (EUR)",
+        "quantity": 5000.0,
+        "purchase_price_total_eur": 5000.0,
+        "current_value_eur": 5000.0,
+        "category": "Cash"
+      },
+      {
+        "name": "Cash (GBP)",
+        "quantity": 16600.0,
+        "purchase_price_total_eur": 18952.552,
+        "current_value_eur": 18952.552,
+        "category": "Cash"
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-12-08T07:13:33.898086+00:00",
+    "total_value_eur": 402937.27,
+    "assets": [
+      {
+        "name": "Intel Corp",
+        "quantity": 15.0,
+        "purchase_price_total_eur": 642.88,
+        "current_value_eur": 532.44,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Google",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 5711.13,
+        "current_value_eur": 15184.9,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Johnson & Johnson",
+        "quantity": 20.0,
+        "purchase_price_total_eur": 2758.41,
+        "current_value_eur": 3461.81,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Snowflake",
+        "quantity": 30.0,
+        "purchase_price_total_eur": 4795.92,
+        "current_value_eur": 5883.43,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Dynatrace",
+        "quantity": 70.0,
+        "purchase_price_total_eur": 2967.13,
+        "current_value_eur": 2667.12,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Confluent",
+        "quantity": 310.0,
+        "purchase_price_total_eur": 4464.19,
+        "current_value_eur": 6148.9,
+        "category": "US Stocks"
+      },
+      {
+        "name": "NextEra Energy",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 4920.21,
+        "current_value_eur": 7125.74,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Schlumberger",
+        "quantity": 35.0,
+        "purchase_price_total_eur": 1269.05,
+        "current_value_eur": 1153.85,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Nebius",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14189.76,
+        "current_value_eur": 12605.69,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Wise",
+        "quantity": 9503.0,
+        "purchase_price_total_eur": 0.0,
+        "current_value_eur": 93735.58,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Artea bank",
+        "quantity": 4100.0,
+        "purchase_price_total_eur": 2542.0,
+        "current_value_eur": 3813.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 1200.0,
+        "purchase_price_total_eur": 4368.0,
+        "current_value_eur": 3984.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Ignitis",
+        "quantity": 300.0,
+        "purchase_price_total_eur": 5811.0,
+        "current_value_eur": 6210.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Vinci",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 6429.5,
+        "current_value_eur": 6633.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "ASML",
+        "quantity": 25.0,
+        "purchase_price_total_eur": 15275.0,
+        "current_value_eur": 23790.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Siemens",
+        "quantity": 26.0,
+        "purchase_price_total_eur": 5034.38,
+        "current_value_eur": 6073.6,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "AstraZeneca",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 12044.57,
+        "current_value_eur": 15519.18,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Banco Santander",
+        "quantity": 1500.0,
+        "purchase_price_total_eur": 6930.0,
+        "current_value_eur": 14190.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Sanofi",
+        "quantity": 60.0,
+        "purchase_price_total_eur": 5532.0,
+        "current_value_eur": 5100.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "VOW3.DE",
+        "quantity": 33.0,
+        "purchase_price_total_eur": 4290.0,
+        "current_value_eur": 3514.5,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2400.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "InBank",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2200.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "Liven",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2040.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "VWCE",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14670.0,
+        "current_value_eur": 21792.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "MEUD",
+        "quantity": 50.0,
+        "purchase_price_total_eur": 12286.87,
+        "current_value_eur": 13905.31,
+        "category": "ETFs"
+      },
+      {
+        "name": "II level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 48800.0,
+        "current_value_eur": 48800.0,
+        "category": "Pension"
+      },
+      {
+        "name": "III level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 50500.0,
+        "current_value_eur": 50500.0,
+        "category": "Pension"
+      },
+      {
+        "name": "Cash (EUR)",
+        "quantity": 5000.0,
+        "purchase_price_total_eur": 5000.0,
+        "current_value_eur": 5000.0,
+        "category": "Cash"
+      },
+      {
+        "name": "Cash (GBP)",
+        "quantity": 16600.0,
+        "purchase_price_total_eur": 18973.219,
+        "current_value_eur": 18973.219,
+        "category": "Cash"
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-12-15T07:51:31.514770+00:00",
+    "total_value_eur": 401266.88,
+    "assets": [
+      {
+        "name": "Intel Corp",
+        "quantity": 15.0,
+        "purchase_price_total_eur": 639.26,
+        "current_value_eur": 483.41,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Google",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 5678.95,
+        "current_value_eur": 14556.94,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Snowflake",
+        "quantity": 30.0,
+        "purchase_price_total_eur": 4768.9,
+        "current_value_eur": 5572.58,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Dynatrace",
+        "quantity": 70.0,
+        "purchase_price_total_eur": 2950.41,
+        "current_value_eur": 2746.95,
+        "category": "US Stocks"
+      },
+      {
+        "name": "NextEra Energy",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 4892.49,
+        "current_value_eur": 6959.44,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Schlumberger",
+        "quantity": 35.0,
+        "purchase_price_total_eur": 1261.9,
+        "current_value_eur": 1176.88,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Nebius",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14109.8,
+        "current_value_eur": 11211.39,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Wise",
+        "quantity": 9503.0,
+        "purchase_price_total_eur": 0.0,
+        "current_value_eur": 93826.47,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Artea bank",
+        "quantity": 4100.0,
+        "purchase_price_total_eur": 2542.0,
+        "current_value_eur": 3772.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 1200.0,
+        "purchase_price_total_eur": 4368.0,
+        "current_value_eur": 4068.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Ignitis",
+        "quantity": 300.0,
+        "purchase_price_total_eur": 5811.0,
+        "current_value_eur": 6210.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Vinci",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 6429.5,
+        "current_value_eur": 6561.5,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "ASML",
+        "quantity": 25.0,
+        "purchase_price_total_eur": 15275.0,
+        "current_value_eur": 23132.5,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Siemens",
+        "quantity": 26.0,
+        "purchase_price_total_eur": 5034.38,
+        "current_value_eur": 6195.8,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "AstraZeneca",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 12000.62,
+        "current_value_eur": 15309.96,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Banco Santander",
+        "quantity": 1500.0,
+        "purchase_price_total_eur": 6930.0,
+        "current_value_eur": 14445.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Sanofi",
+        "quantity": 60.0,
+        "purchase_price_total_eur": 5532.0,
+        "current_value_eur": 4999.2,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "VOW3.DE",
+        "quantity": 33.0,
+        "purchase_price_total_eur": 4290.0,
+        "current_value_eur": 3585.45,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2400.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "InBank",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2200.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "Liven",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 1000.0,
+        "current_value_eur": 1020.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "VWCE",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14670.0,
+        "current_value_eur": 21471.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "CIBR",
+        "quantity": 300.0,
+        "purchase_price_total_eur": 12027.0,
+        "current_value_eur": 12015.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "MEUD",
+        "quantity": 50.0,
+        "purchase_price_total_eur": 12242.05,
+        "current_value_eur": 13943.41,
+        "category": "ETFs"
+      },
+      {
+        "name": "II level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 49000.0,
+        "current_value_eur": 49000.0,
+        "category": "Pension"
+      },
+      {
+        "name": "III level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 50500.0,
+        "current_value_eur": 50500.0,
+        "category": "Pension"
+      },
+      {
+        "name": "Cash (EUR)",
+        "quantity": 5000.0,
+        "purchase_price_total_eur": 5000.0,
+        "current_value_eur": 5000.0,
+        "category": "Cash"
+      },
+      {
+        "name": "Cash (GBP)",
+        "quantity": 16600.0,
+        "purchase_price_total_eur": 18903.997,
+        "current_value_eur": 18903.997,
+        "category": "Cash"
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-12-19T20:52:56.358303+00:00",
+    "total_value_eur": 405722.88,
+    "assets": [
+      {
+        "name": "Intel Corp",
+        "quantity": 15.0,
+        "purchase_price_total_eur": 640.1,
+        "current_value_eur": 473.03,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Google",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 5686.35,
+        "current_value_eur": 14380.16,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Snowflake",
+        "quantity": 30.0,
+        "purchase_price_total_eur": 4775.11,
+        "current_value_eur": 5706.83,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Dynatrace",
+        "quantity": 70.0,
+        "purchase_price_total_eur": 2954.25,
+        "current_value_eur": 2635.23,
+        "category": "US Stocks"
+      },
+      {
+        "name": "NextEra Energy",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 4898.86,
+        "current_value_eur": 6806.34,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Schlumberger",
+        "quantity": 35.0,
+        "purchase_price_total_eur": 1263.55,
+        "current_value_eur": 1138.39,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Nebius",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14128.18,
+        "current_value_eur": 11543.47,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Wise",
+        "quantity": 9503.0,
+        "purchase_price_total_eur": 0.0,
+        "current_value_eur": 97684.66,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Artea bank",
+        "quantity": 4100.0,
+        "purchase_price_total_eur": 2542.0,
+        "current_value_eur": 3813.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 1200.0,
+        "purchase_price_total_eur": 4368.0,
+        "current_value_eur": 4176.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Ignitis",
+        "quantity": 300.0,
+        "purchase_price_total_eur": 5811.0,
+        "current_value_eur": 6285.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Vinci",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 6429.5,
+        "current_value_eur": 6589.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "ASML",
+        "quantity": 25.0,
+        "purchase_price_total_eur": 15275.0,
+        "current_value_eur": 22540.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Siemens",
+        "quantity": 26.0,
+        "purchase_price_total_eur": 5034.38,
+        "current_value_eur": 6139.9,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "AstraZeneca",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 12035.98,
+        "current_value_eur": 15615.47,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Banco Santander",
+        "quantity": 1500.0,
+        "purchase_price_total_eur": 6930.0,
+        "current_value_eur": 14955.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Sanofi",
+        "quantity": 60.0,
+        "purchase_price_total_eur": 5532.0,
+        "current_value_eur": 4942.8,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "VOW3.DE",
+        "quantity": 33.0,
+        "purchase_price_total_eur": 4290.0,
+        "current_value_eur": 3440.25,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2400.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "InBank",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2200.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "VWCE",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14670.0,
+        "current_value_eur": 21621.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "CIBR",
+        "quantity": 300.0,
+        "purchase_price_total_eur": 12027.0,
+        "current_value_eur": 12015.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "MEUD",
+        "quantity": 50.0,
+        "purchase_price_total_eur": 12278.11,
+        "current_value_eur": 14162.66,
+        "category": "ETFs"
+      },
+      {
+        "name": "II level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 49000.0,
+        "current_value_eur": 49000.0,
+        "category": "Pension"
+      },
+      {
+        "name": "III level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 50500.0,
+        "current_value_eur": 50500.0,
+        "category": "Pension"
+      },
+      {
+        "name": "Cash (EUR)",
+        "quantity": 6000.0,
+        "purchase_price_total_eur": 6000.0,
+        "current_value_eur": 6000.0,
+        "category": "Cash"
+      },
+      {
+        "name": "Cash (GBP)",
+        "quantity": 16600.0,
+        "purchase_price_total_eur": 18959.69,
+        "current_value_eur": 18959.69,
+        "category": "Cash"
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-12-26T14:21:27.125487+00:00",
+    "total_value_eur": 406061.14,
+    "assets": [
+      {
+        "name": "Intel Corp",
+        "quantity": 15.0,
+        "purchase_price_total_eur": 636.13,
+        "current_value_eur": 460.05,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Google",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 5651.1,
+        "current_value_eur": 14725.8,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Snowflake",
+        "quantity": 30.0,
+        "purchase_price_total_eur": 4745.51,
+        "current_value_eur": 5647.03,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Dynatrace",
+        "quantity": 70.0,
+        "purchase_price_total_eur": 2935.94,
+        "current_value_eur": 2597.52,
+        "category": "US Stocks"
+      },
+      {
+        "name": "NextEra Energy",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 4868.5,
+        "current_value_eur": 6823.53,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Schlumberger",
+        "quantity": 35.0,
+        "purchase_price_total_eur": 1255.72,
+        "current_value_eur": 1127.18,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Nebius",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14040.61,
+        "current_value_eur": 11594.06,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Wise",
+        "quantity": 9503.0,
+        "purchase_price_total_eur": 0.0,
+        "current_value_eur": 97413.19,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Artea bank",
+        "quantity": 4100.0,
+        "purchase_price_total_eur": 2542.0,
+        "current_value_eur": 3813.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 1200.0,
+        "purchase_price_total_eur": 4368.0,
+        "current_value_eur": 4152.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Ignitis",
+        "quantity": 300.0,
+        "purchase_price_total_eur": 5811.0,
+        "current_value_eur": 6315.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Vinci",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 6429.5,
+        "current_value_eur": 6580.75,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "ASML",
+        "quantity": 25.0,
+        "purchase_price_total_eur": 15275.0,
+        "current_value_eur": 22475.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Siemens",
+        "quantity": 26.0,
+        "purchase_price_total_eur": 5034.38,
+        "current_value_eur": 6173.7,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "AstraZeneca",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 12083.08,
+        "current_value_eur": 15756.85,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Sanofi",
+        "quantity": 60.0,
+        "purchase_price_total_eur": 5532.0,
+        "current_value_eur": 4896.6,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "VOW3.DE",
+        "quantity": 33.0,
+        "purchase_price_total_eur": 4290.0,
+        "current_value_eur": 3422.1,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2400.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "InBank",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2200.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "VWCE",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14670.0,
+        "current_value_eur": 21738.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "CIBR",
+        "quantity": 300.0,
+        "purchase_price_total_eur": 12027.0,
+        "current_value_eur": 12015.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "MEUD",
+        "quantity": 50.0,
+        "purchase_price_total_eur": 12326.17,
+        "current_value_eur": 14200.89,
+        "category": "ETFs"
+      },
+      {
+        "name": "II level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 49000.0,
+        "current_value_eur": 49000.0,
+        "category": "Pension"
+      },
+      {
+        "name": "III level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 50500.0,
+        "current_value_eur": 50500.0,
+        "category": "Pension"
+      },
+      {
+        "name": "Cash (EUR)",
+        "quantity": 21000.0,
+        "purchase_price_total_eur": 21000.0,
+        "current_value_eur": 21000.0,
+        "category": "Cash"
+      },
+      {
+        "name": "Cash (GBP)",
+        "quantity": 16600.0,
+        "purchase_price_total_eur": 19033.892,
+        "current_value_eur": 19033.892,
+        "category": "Cash"
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-12-26T16:42:46.883556",
+    "total_value_eur": 400000.0,
+    "assets": [
+      {
+        "name": "Test Asset",
+        "category": "Test",
+        "quantity": 10,
+        "current_value_eur": 1000.0
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-12-31T16:50:34.003571+00:00",
+    "total_value_eur": 407212.84,
+    "assets": [
+      {
+        "name": "Intel Corp",
+        "quantity": 15.0,
+        "purchase_price_total_eur": 639.34,
+        "current_value_eur": 476.18,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Google",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 5679.62,
+        "current_value_eur": 14724.62,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Snowflake",
+        "quantity": 30.0,
+        "purchase_price_total_eur": 4769.46,
+        "current_value_eur": 5642.79,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Dynatrace",
+        "quantity": 70.0,
+        "purchase_price_total_eur": 2950.76,
+        "current_value_eur": 2596.9,
+        "category": "US Stocks"
+      },
+      {
+        "name": "NextEra Energy",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 4893.06,
+        "current_value_eur": 6856.26,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Schlumberger",
+        "quantity": 35.0,
+        "purchase_price_total_eur": 1262.05,
+        "current_value_eur": 1147.18,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Nebius",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14111.46,
+        "current_value_eur": 10826.54,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Wise",
+        "quantity": 9503.0,
+        "purchase_price_total_eur": 0.0,
+        "current_value_eur": 97038.04,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 1200.0,
+        "purchase_price_total_eur": 4368.0,
+        "current_value_eur": 4296.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Vinci",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 6429.5,
+        "current_value_eur": 6602.75,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "ASML",
+        "quantity": 25.0,
+        "purchase_price_total_eur": 15275.0,
+        "current_value_eur": 23035.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Siemens",
+        "quantity": 26.0,
+        "purchase_price_total_eur": 5034.38,
+        "current_value_eur": 6217.9,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "AstraZeneca",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 12077.07,
+        "current_value_eur": 15804.03,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Prysman",
+        "quantity": 180.0,
+        "purchase_price_total_eur": 15444.0,
+        "current_value_eur": 15548.4,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Sanofi",
+        "quantity": 60.0,
+        "purchase_price_total_eur": 5532.0,
+        "current_value_eur": 4963.2,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "VOW3.DE",
+        "quantity": 33.0,
+        "purchase_price_total_eur": 4290.0,
+        "current_value_eur": 3422.1,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2400.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "InBank",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2200.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "VWCE",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14670.0,
+        "current_value_eur": 21789.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "CIBR",
+        "quantity": 300.0,
+        "purchase_price_total_eur": 12027.0,
+        "current_value_eur": 12015.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "MEUD",
+        "quantity": 50.0,
+        "purchase_price_total_eur": 12320.04,
+        "current_value_eur": 14251.13,
+        "category": "ETFs"
+      },
+      {
+        "name": "II level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 49650.0,
+        "current_value_eur": 49650.0,
+        "category": "Pension"
+      },
+      {
+        "name": "III level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 50600.0,
+        "current_value_eur": 50600.0,
+        "category": "Pension"
+      },
+      {
+        "name": "Cash (EUR)",
+        "quantity": 16200.0,
+        "purchase_price_total_eur": 16200.0,
+        "current_value_eur": 16200.0,
+        "category": "Cash"
+      },
+      {
+        "name": "Cash (GBP)",
+        "quantity": 16500.0,
+        "purchase_price_total_eur": 18909.825,
+        "current_value_eur": 18909.825,
+        "category": "Cash"
+      }
+    ],
+    "transactions": [
+      {
+        "date": "2025-02-03T00:00:00+00:00",
+        "asset_name": "Wise",
+        "quantity": 183.0,
+        "sell_price_per_unit": 11.0,
+        "currency": "GBP",
+        "sell_price_per_unit_eur": 12.6066,
+        "total_value_eur": 2307.0
+      },
+      {
+        "date": "2025-02-11T00:00:00+00:00",
+        "asset_name": "Wise",
+        "quantity": 817.0,
+        "sell_price_per_unit": 10.95,
+        "currency": "GBP",
+        "sell_price_per_unit_eur": 12.5492,
+        "total_value_eur": 10252.74
+      },
+      {
+        "date": "2025-02-14T00:00:00+00:00",
+        "asset_name": "Wise",
+        "quantity": 1000.0,
+        "sell_price_per_unit": 10.67,
+        "currency": "GBP",
+        "sell_price_per_unit_eur": 12.2284,
+        "total_value_eur": 12228.35
+      },
+      {
+        "date": "2025-02-14T00:00:00+00:00",
+        "asset_name": "Wise",
+        "quantity": 2000.0,
+        "sell_price_per_unit": 10.5,
+        "currency": "GBP",
+        "sell_price_per_unit_eur": 12.0335,
+        "total_value_eur": 24067.05
+      },
+      {
+        "date": "2025-02-14T00:00:00+00:00",
+        "asset_name": "Wise",
+        "quantity": 1000.0,
+        "sell_price_per_unit": 10.3,
+        "currency": "GBP",
+        "sell_price_per_unit_eur": 11.8043,
+        "total_value_eur": 11804.32
+      },
+      {
+        "date": "2025-02-14T00:00:00+00:00",
+        "asset_name": "Wise",
+        "quantity": 850.0,
+        "sell_price_per_unit": 10.61,
+        "currency": "GBP",
+        "sell_price_per_unit_eur": 12.1596,
+        "total_value_eur": 10335.65
+      },
+      {
+        "date": "2025-02-25T00:00:00+00:00",
+        "asset_name": "Wise",
+        "quantity": 1000.0,
+        "sell_price_per_unit": 10.0,
+        "currency": "GBP",
+        "sell_price_per_unit_eur": 11.4605,
+        "total_value_eur": 11460.5
+      },
+      {
+        "date": "2025-04-03T00:00:00+00:00",
+        "asset_name": "Wise",
+        "quantity": 500.0,
+        "sell_price_per_unit": 10.4,
+        "currency": "GBP",
+        "sell_price_per_unit_eur": 11.9189,
+        "total_value_eur": 5959.46
+      },
+      {
+        "date": "2025-04-03T00:00:00+00:00",
+        "asset_name": "Wise",
+        "quantity": 500.0,
+        "sell_price_per_unit": 10.75,
+        "currency": "GBP",
+        "sell_price_per_unit_eur": 12.32,
+        "total_value_eur": 6160.02
+      },
+      {
+        "date": "2025-06-05T00:00:00+00:00",
+        "asset_name": "Wise",
+        "quantity": 850.0,
+        "sell_price_per_unit": 12.05,
+        "currency": "GBP",
+        "sell_price_per_unit_eur": 13.8099,
+        "total_value_eur": 11738.42
+      },
+      {
+        "date": "2025-06-26T00:00:00+00:00",
+        "asset_name": "Wise",
+        "quantity": 1000.0,
+        "sell_price_per_unit": 10.4,
+        "currency": "GBP",
+        "sell_price_per_unit_eur": 11.9189,
+        "total_value_eur": 11918.92
+      },
+      {
+        "date": "2025-11-07T00:00:00+00:00",
+        "asset_name": "Wise",
+        "quantity": 1000.0,
+        "sell_price_per_unit": 9.5,
+        "currency": "GBP",
+        "sell_price_per_unit_eur": 10.8875,
+        "total_value_eur": 10887.48
+      },
+      {
+        "date": "2025-01-02T00:00:00+00:00",
+        "asset_name": "J.P. Morgan chase",
+        "quantity": 10.0,
+        "sell_price_per_unit": 242.3,
+        "currency": "USD",
+        "sell_price_per_unit_eur": 206.5486,
+        "total_value_eur": 2065.49
+      },
+      {
+        "date": "2025-01-28T00:00:00+00:00",
+        "asset_name": "Acro Vara",
+        "quantity": 216.0,
+        "sell_price_per_unit": 1.4,
+        "currency": "EUR",
+        "sell_price_per_unit_eur": 1.4,
+        "total_value_eur": 302.4
+      },
+      {
+        "date": "2025-02-11T00:00:00+00:00",
+        "asset_name": "Cloudflare",
+        "quantity": 65.0,
+        "sell_price_per_unit": 173.5,
+        "currency": "USD",
+        "sell_price_per_unit_eur": 147.9001,
+        "total_value_eur": 9613.5
+      },
+      {
+        "date": "2025-02-20T00:00:00+00:00",
+        "asset_name": "Tallinnk",
+        "quantity": 4000.0,
+        "sell_price_per_unit": 0.65,
+        "currency": "EUR",
+        "sell_price_per_unit_eur": 0.65,
+        "total_value_eur": 2600.0
+      },
+      {
+        "date": "2025-02-20T00:00:00+00:00",
+        "asset_name": "Enefit Green",
+        "quantity": 2000.0,
+        "sell_price_per_unit": 3.36,
+        "currency": "EUR",
+        "sell_price_per_unit_eur": 3.36,
+        "total_value_eur": 6720.0
+      },
+      {
+        "date": "2025-05-02T00:00:00+00:00",
+        "asset_name": "ASML",
+        "quantity": 9.0,
+        "sell_price_per_unit": 597.8,
+        "currency": "EUR",
+        "sell_price_per_unit_eur": 597.8,
+        "total_value_eur": 5380.2
+      },
+      {
+        "date": "2025-05-02T00:00:00+00:00",
+        "asset_name": "Kaubamaja",
+        "quantity": 260.0,
+        "sell_price_per_unit": 9.5,
+        "currency": "EUR",
+        "sell_price_per_unit_eur": 9.5,
+        "total_value_eur": 2470.0
+      },
+      {
+        "date": "2025-07-11T00:00:00+00:00",
+        "asset_name": "Microsoft",
+        "quantity": 10.0,
+        "sell_price_per_unit": 522.0,
+        "currency": "USD",
+        "sell_price_per_unit_eur": 444.9789,
+        "total_value_eur": 4449.79
+      },
+      {
+        "date": "2025-07-11T00:00:00+00:00",
+        "asset_name": "Okta",
+        "quantity": 20.0,
+        "sell_price_per_unit": 82.15,
+        "currency": "USD",
+        "sell_price_per_unit_eur": 70.0288,
+        "total_value_eur": 1400.58
+      },
+      {
+        "date": "2025-07-11T00:00:00+00:00",
+        "asset_name": "Coca Cola",
+        "quantity": 50.0,
+        "sell_price_per_unit": 71.45,
+        "currency": "USD",
+        "sell_price_per_unit_eur": 60.9076,
+        "total_value_eur": 3045.38
+      },
+      {
+        "date": "2025-10-30T00:00:00+00:00",
+        "asset_name": "Fiserv",
+        "quantity": 100.0,
+        "sell_price_per_unit": 66.4,
+        "currency": "USD",
+        "sell_price_per_unit_eur": 56.6027,
+        "total_value_eur": 5660.27
+      },
+      {
+        "date": "2025-11-30T00:00:00+00:00",
+        "asset_name": "Confluent",
+        "quantity": 310.0,
+        "sell_price_per_unit": 29.8,
+        "currency": "USD",
+        "sell_price_per_unit_eur": 25.403,
+        "total_value_eur": 7874.93
+      },
+      {
+        "date": "2025-11-30T00:00:00+00:00",
+        "asset_name": "Johnson & Johnson",
+        "quantity": 20.0,
+        "sell_price_per_unit": 202.64,
+        "currency": "USD",
+        "sell_price_per_unit_eur": 172.7405,
+        "total_value_eur": 3454.81
+      },
+      {
+        "date": "2025-12-23T00:00:00+00:00",
+        "asset_name": "Banco Santander",
+        "quantity": 1500.0,
+        "sell_price_per_unit": 9.96,
+        "currency": "EUR",
+        "sell_price_per_unit_eur": 9.96,
+        "total_value_eur": 14940.0
+      },
+      {
+        "date": "2025-12-29T00:00:00+00:00",
+        "asset_name": "Artea bank",
+        "quantity": 4100.0,
+        "sell_price_per_unit": 0.93,
+        "currency": "EUR",
+        "sell_price_per_unit_eur": 0.93,
+        "total_value_eur": 3813.0
+      },
+      {
+        "date": "2025-12-29T00:00:00+00:00",
+        "asset_name": "Ignitis",
+        "quantity": 300.0,
+        "sell_price_per_unit": 21.0,
+        "currency": "EUR",
+        "sell_price_per_unit_eur": 21.0,
+        "total_value_eur": 6300.0
+      }
+    ],
+    "buy_transactions": [
+      {
+        "date": "2025-01-26T00:00:00+00:00",
+        "asset_name": "AstraZeneca",
+        "quantity": 60.0,
+        "purchase_price_per_unit": 110.8,
+        "currency": "GBP",
+        "purchase_price_per_unit_eur": 126.9823,
+        "total_value_eur": 7618.94
+      },
+      {
+        "date": "2025-01-26T00:00:00+00:00",
+        "asset_name": "Schlumberger",
+        "quantity": 35.0,
+        "purchase_price_per_unit": 42.3,
+        "currency": "USD",
+        "purchase_price_per_unit_eur": 36.0586,
+        "total_value_eur": 1262.05
+      },
+      {
+        "date": "2025-02-12T00:00:00+00:00",
+        "asset_name": "Snowflake",
+        "quantity": 30.0,
+        "purchase_price_per_unit": 186.5,
+        "currency": "USD",
+        "purchase_price_per_unit_eur": 158.9819,
+        "total_value_eur": 4769.46
+      },
+      {
+        "date": "2025-02-13T00:00:00+00:00",
+        "asset_name": "MEUD",
+        "quantity": 50.0,
+        "purchase_price_per_unit": 215.0,
+        "currency": "GBP",
+        "purchase_price_per_unit_eur": 246.4008,
+        "total_value_eur": 12320.04
+      },
+      {
+        "date": "2025-03-17T00:00:00+00:00",
+        "asset_name": "Dynatrace",
+        "quantity": 70.0,
+        "purchase_price_per_unit": 49.45,
+        "currency": "USD",
+        "purchase_price_per_unit_eur": 42.1537,
+        "total_value_eur": 2950.76
+      },
+      {
+        "date": "2025-03-31T00:00:00+00:00",
+        "asset_name": "Siemens",
+        "quantity": 11.0,
+        "purchase_price_per_unit": 209.5,
+        "currency": "USD",
+        "purchase_price_per_unit_eur": 178.5883,
+        "total_value_eur": 1964.47
+      },
+      {
+        "date": "2025-04-04T00:00:00+00:00",
+        "asset_name": "Siemens",
+        "quantity": 16.0,
+        "purchase_price_per_unit": 182.0,
+        "currency": "USD",
+        "purchase_price_per_unit_eur": 155.1459,
+        "total_value_eur": 2482.33
+      },
+      {
+        "date": "2025-04-07T00:00:00+00:00",
+        "asset_name": "Google",
+        "quantity": 35.0,
+        "purchase_price_per_unit": 142.0,
+        "currency": "USD",
+        "purchase_price_per_unit_eur": 121.0479,
+        "total_value_eur": 4236.68
+      },
+      {
+        "date": "2025-04-09T00:00:00+00:00",
+        "asset_name": "AstraZeneca",
+        "quantity": 40.0,
+        "purchase_price_per_unit": 97.0,
+        "currency": "GBP",
+        "purchase_price_per_unit_eur": 111.1668,
+        "total_value_eur": 4446.67
+      },
+      {
+        "date": "2025-04-25T00:00:00+00:00",
+        "asset_name": "ASML",
+        "quantity": 9.0,
+        "purchase_price_per_unit": 591.0,
+        "currency": "EUR",
+        "purchase_price_per_unit_eur": 591.0,
+        "total_value_eur": 5319.0
+      },
+      {
+        "date": "2025-07-07T00:00:00+00:00",
+        "asset_name": "Artea bank",
+        "quantity": 2000.0,
+        "purchase_price_per_unit": 0.84,
+        "currency": "EUR",
+        "purchase_price_per_unit_eur": 0.84,
+        "total_value_eur": 1680.0
+      },
+      {
+        "date": "2025-07-07T00:00:00+00:00",
+        "asset_name": "LHV",
+        "quantity": 200.0,
+        "purchase_price_per_unit": 3.71,
+        "currency": "EUR",
+        "purchase_price_per_unit_eur": 3.71,
+        "total_value_eur": 742.0
+      },
+      {
+        "date": "2025-07-17T00:00:00+00:00",
+        "asset_name": "Wise",
+        "quantity": 1000.0,
+        "purchase_price_per_unit": 10.2,
+        "currency": "GBP",
+        "purchase_price_per_unit_eur": 11.6897,
+        "total_value_eur": 11689.71
+      },
+      {
+        "date": "2025-07-29T00:00:00+00:00",
+        "asset_name": "ASML",
+        "quantity": 15.0,
+        "purchase_price_per_unit": 626.5,
+        "currency": "EUR",
+        "purchase_price_per_unit_eur": 626.5,
+        "total_value_eur": 9397.5
+      },
+      {
+        "date": "2025-08-30T00:00:00+00:00",
+        "asset_name": "Confluent",
+        "quantity": 310.0,
+        "purchase_price_per_unit": 16.8,
+        "currency": "USD",
+        "purchase_price_per_unit_eur": 14.3212,
+        "total_value_eur": 4439.56
+      },
+      {
+        "date": "2025-12-29T00:00:00+00:00",
+        "asset_name": "Prysman",
+        "quantity": 180.0,
+        "purchase_price_per_unit": 85.8,
+        "currency": "EUR",
+        "purchase_price_per_unit_eur": 85.8,
+        "total_value_eur": 15444.0
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-01-01T10:02:10.858592+00:00",
+    "total_value_eur": 407020.64,
+    "assets": [
+      {
+        "name": "Intel Corp",
+        "quantity": 15.0,
+        "purchase_price_total_eur": 639.24,
+        "current_value_eur": 471.76,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Google",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 5678.75,
+        "current_value_eur": 14710.19,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Snowflake",
+        "quantity": 30.0,
+        "purchase_price_total_eur": 4768.73,
+        "current_value_eur": 5608.95,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Dynatrace",
+        "quantity": 70.0,
+        "purchase_price_total_eur": 2950.31,
+        "current_value_eur": 2585.77,
+        "category": "US Stocks"
+      },
+      {
+        "name": "NextEra Energy",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 4892.32,
+        "current_value_eur": 6842.42,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Schlumberger",
+        "quantity": 35.0,
+        "purchase_price_total_eur": 1261.86,
+        "current_value_eur": 1144.92,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Nebius",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14109.31,
+        "current_value_eur": 10702.16,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Wise",
+        "quantity": 9503.0,
+        "purchase_price_total_eur": 0.0,
+        "current_value_eur": 97046.08,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 1200.0,
+        "purchase_price_total_eur": 4368.0,
+        "current_value_eur": 4296.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Vinci",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 6429.5,
+        "current_value_eur": 6602.75,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "ASML",
+        "quantity": 25.0,
+        "purchase_price_total_eur": 15275.0,
+        "current_value_eur": 23035.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Siemens",
+        "quantity": 26.0,
+        "purchase_price_total_eur": 5034.38,
+        "current_value_eur": 6217.9,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "AstraZeneca",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 12078.08,
+        "current_value_eur": 15805.34,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Prysman",
+        "quantity": 180.0,
+        "purchase_price_total_eur": 15444.0,
+        "current_value_eur": 15548.4,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Sanofi",
+        "quantity": 60.0,
+        "purchase_price_total_eur": 5532.0,
+        "current_value_eur": 4963.2,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "VOW3.DE",
+        "quantity": 33.0,
+        "purchase_price_total_eur": 4290.0,
+        "current_value_eur": 3422.1,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2400.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "InBank",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2200.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "VWCE",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14670.0,
+        "current_value_eur": 21789.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "CIBR",
+        "quantity": 300.0,
+        "purchase_price_total_eur": 12027.0,
+        "current_value_eur": 12015.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "MEUD",
+        "quantity": 50.0,
+        "purchase_price_total_eur": 12321.06,
+        "current_value_eur": 14252.31,
+        "category": "ETFs"
+      },
+      {
+        "name": "II level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 49650.0,
+        "current_value_eur": 49650.0,
+        "category": "Pension"
+      },
+      {
+        "name": "III level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 50600.0,
+        "current_value_eur": 50600.0,
+        "category": "Pension"
+      },
+      {
+        "name": "Cash (EUR)",
+        "quantity": 16200.0,
+        "purchase_price_total_eur": 16200.0,
+        "current_value_eur": 16200.0,
+        "category": "Cash"
+      },
+      {
+        "name": "Cash (GBP)",
+        "quantity": 16500.0,
+        "purchase_price_total_eur": 18911.392499999998,
+        "current_value_eur": 18911.392499999998,
+        "category": "Cash"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-01-01T10:03:29.588551+00:00",
+    "total_value_eur": 407020.64,
+    "assets": [
+      {
+        "name": "Intel Corp",
+        "quantity": 15.0,
+        "purchase_price_total_eur": 639.24,
+        "current_value_eur": 471.76,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Google",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 5678.75,
+        "current_value_eur": 14710.19,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Snowflake",
+        "quantity": 30.0,
+        "purchase_price_total_eur": 4768.73,
+        "current_value_eur": 5608.95,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Dynatrace",
+        "quantity": 70.0,
+        "purchase_price_total_eur": 2950.31,
+        "current_value_eur": 2585.77,
+        "category": "US Stocks"
+      },
+      {
+        "name": "NextEra Energy",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 4892.32,
+        "current_value_eur": 6842.42,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Schlumberger",
+        "quantity": 35.0,
+        "purchase_price_total_eur": 1261.86,
+        "current_value_eur": 1144.92,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Nebius",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14109.31,
+        "current_value_eur": 10702.16,
+        "category": "US Stocks"
+      },
+      {
+        "name": "Wise",
+        "quantity": 9503.0,
+        "purchase_price_total_eur": 0.0,
+        "current_value_eur": 97046.08,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 1200.0,
+        "purchase_price_total_eur": 4368.0,
+        "current_value_eur": 4296.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Vinci",
+        "quantity": 55.0,
+        "purchase_price_total_eur": 6429.5,
+        "current_value_eur": 6602.75,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "ASML",
+        "quantity": 25.0,
+        "purchase_price_total_eur": 15275.0,
+        "current_value_eur": 23035.0,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Siemens",
+        "quantity": 26.0,
+        "purchase_price_total_eur": 5034.38,
+        "current_value_eur": 6217.9,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "AstraZeneca",
+        "quantity": 100.0,
+        "purchase_price_total_eur": 12078.08,
+        "current_value_eur": 15805.34,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Prysman",
+        "quantity": 180.0,
+        "purchase_price_total_eur": 15444.0,
+        "current_value_eur": 15548.4,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "Sanofi",
+        "quantity": 60.0,
+        "purchase_price_total_eur": 5532.0,
+        "current_value_eur": 4963.2,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "VOW3.DE",
+        "quantity": 33.0,
+        "purchase_price_total_eur": 4290.0,
+        "current_value_eur": 3422.1,
+        "category": "EU Stocks"
+      },
+      {
+        "name": "LHV",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2400.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "InBank",
+        "quantity": 2.0,
+        "purchase_price_total_eur": 2000.0,
+        "current_value_eur": 2200.0,
+        "category": "Bonds"
+      },
+      {
+        "name": "VWCE",
+        "quantity": 150.0,
+        "purchase_price_total_eur": 14670.0,
+        "current_value_eur": 21789.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "CIBR",
+        "quantity": 300.0,
+        "purchase_price_total_eur": 12027.0,
+        "current_value_eur": 12015.0,
+        "category": "ETFs"
+      },
+      {
+        "name": "MEUD",
+        "quantity": 50.0,
+        "purchase_price_total_eur": 12321.06,
+        "current_value_eur": 14252.31,
+        "category": "ETFs"
+      },
+      {
+        "name": "II level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 49650.0,
+        "current_value_eur": 49650.0,
+        "category": "Pension"
+      },
+      {
+        "name": "III level",
+        "quantity": 1.0,
+        "purchase_price_total_eur": 50600.0,
+        "current_value_eur": 50600.0,
+        "category": "Pension"
+      },
+      {
+        "name": "Cash (EUR)",
+        "quantity": 16200.0,
+        "purchase_price_total_eur": 16200.0,
+        "current_value_eur": 16200.0,
+        "category": "Cash"
+      },
+      {
+        "name": "Cash (GBP)",
+        "quantity": 16500.0,
+        "purchase_price_total_eur": 18911.392499999998,
+        "current_value_eur": 18911.392499999998,
+        "category": "Cash"
+      }
+    ]
+  }
+]
