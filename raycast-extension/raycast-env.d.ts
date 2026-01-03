@@ -20,6 +20,8 @@ declare namespace Preferences {
   export type PortfolioStatus = ExtensionPreferences & {}
   /** Preferences accessible in the `upcoming-events` command */
   export type UpcomingEvents = ExtensionPreferences & {}
+  /** Preferences accessible in the `daily-performance` command */
+  export type DailyPerformance = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
@@ -27,5 +29,7 @@ declare namespace Arguments {
   export type PortfolioStatus = {}
   /** Arguments passed to the `upcoming-events` command */
   export type UpcomingEvents = {}
+  /** Arguments passed to the `daily-performance` command */
+  export type DailyPerformance = {}
 }
 

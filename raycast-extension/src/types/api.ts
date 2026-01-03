@@ -70,3 +70,33 @@ export interface PythonScriptError {
 export interface Preferences {
   projectRootPath: string;
 }
+
+export interface DailyPerformanceResponse {
+  success: boolean;
+  data: {
+    winners: DailyPerformanceStock[];
+    losers: DailyPerformanceStock[];
+    summary: {
+      total_stocks: number;
+      total_change_value_eur: number;
+      average_change_pct: number;
+      winners_count: number;
+      losers_count: number;
+    };
+    timestamp: string;
+  };
+  metadata: {
+    timestamp: string;
+    source: string;
+    data_source: string;
+  };
+}
+
+export interface DailyPerformanceStock {
+  name: string;
+  category: string;
+  quantity: number;
+  current_value_eur: number;
+  daily_change_pct: number;
+  change_value_eur: number;
+}
