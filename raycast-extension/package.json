@@ -24,6 +24,13 @@
       "description": "Earnings calendar for portfolio stocks",
       "mode": "view",
       "icon": "📅"
+    },
+    {
+      "name": "daily-performance",
+      "title": "Daily Performance",
+      "description": "View top 5 stock winners and losers for today",
+      "mode": "view",
+      "icon": "📊"
     }
   ],
   "preferences": [

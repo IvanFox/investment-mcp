@@ -348,6 +348,16 @@ def parse_and_normalize_data(raw_data: Dict[str, Any]) -> List[Dict[str, Any]]:
                     except (ValueError, TypeError):
                         current_price_per_unit = 0.0
 
+                    # Parse daily change percentage (column H = index 7)
+                    try:
+                        daily_change_pct = 0.0
+                        if len(row) > 7 and row[7]:
+                            # Handle percentage format (e.g., "5.2%", "-3.1%", or just "5.2")
+                            change_str = str(row[7]).strip().replace('%', '').replace(',', '.')
+                            daily_change_pct = float(change_str) if change_str and change_str not in ['-', 'N/A', '#N/A'] else 0.0
+                    except (ValueError, TypeError):
+                        daily_change_pct = 0.0
+
                     # Determine currency and conversion based on the original currency in the data
                     currency_symbol = ""
                     if len(row) > 3 and row[3]:
@@ -396,6 +406,7 @@ def parse_and_normalize_data(raw_data: Dict[str, Any]) -> List[Dict[str, Any]]:
                         "purchase_price_total_eur": round(purchase_price_total_eur, 2),
                         "current_value_eur": round(current_value_eur, 2),
                         "category": category_name,
+                        "daily_change_pct": round(daily_change_pct, 2),
                     }
 
                     normalized_assets.append(asset_dict)

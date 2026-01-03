@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Required: Raycast Script Command Metadata
+# @raycast.schemaVersion 1
+# @raycast.title Daily Performance
+# @raycast.mode fullOutput
+# @raycast.packageName Investment Portfolio
+# @raycast.icon 📊
+# @raycast.description Top 5 stock winners and losers today
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT"
+exec uv run python3 "$SCRIPT_DIR/lib/daily-performance_impl.py" "$@"

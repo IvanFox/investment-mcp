@@ -361,3 +361,83 @@ class RaycastClient:
             Dictionary with insider trading data
         """
         return insider_trading.get_insider_trades_for_ticker(ticker)
+
+    def get_daily_performance(self) -> Dict[str, Any]:
+        """
+        Get top 5 stock winners and losers based on daily change percentage.
+        
+        Fetches live data from spreadsheet and sorts by daily_change_pct.
+        Only includes stocks (US + EU), excludes Bonds, ETFs, Pension, Cash.
+        
+        Returns:
+            Dictionary with daily performance data including:
+            - winners: Top 5 stocks with highest daily_change_pct
+            - losers: Top 5 stocks with lowest daily_change_pct
+            - Each entry includes: name, category, daily_change_pct, 
+              current_value_eur, change_value_eur (monetary impact)
+        """
+        from datetime import datetime, timezone
+        
+        # Fetch current data from spreadsheet
+        raw_data = sheets_connector.fetch_portfolio_data()
+        normalized_data = sheets_connector.parse_and_normalize_data(raw_data)
+        
+        # Filter to stocks only (exclude Bonds, ETFs, Pension, Cash)
+        stocks = [
+            asset for asset in normalized_data 
+            if asset.get("category") in ["US Stocks", "EU Stocks"]
+        ]
+        
+        if not stocks:
+            return {
+                "error": "No stock data available",
+                "message": "No stocks found in portfolio. Add stocks to track daily performance.",
+            }
+        
+        # Calculate monetary impact (change_value_eur) for each stock
+        # Formula: current_value_eur * (daily_change_pct / 100)
+        enriched_stocks = []
+        for stock in stocks:
+            daily_pct = stock.get("daily_change_pct", 0.0)
+            current_value = stock.get("current_value_eur", 0.0)
+            
+            # Calculate monetary impact
+            # If stock is +5%, then change_value = current_value * 0.05 / (1 + 0.05)
+            # Simplification: change_value ≈ current_value * (daily_pct / 100)
+            change_value_eur = current_value * (daily_pct / 100.0)
+            
+            enriched_stocks.append({
+                "name": stock.get("name"),
+                "category": stock.get("category"),
+                "quantity": stock.get("quantity", 0.0),
+                "current_value_eur": current_value,
+                "daily_change_pct": daily_pct,
+                "change_value_eur": round(change_value_eur, 2),
+            })
+        
+        # Sort by daily_change_pct
+        sorted_stocks = sorted(enriched_stocks, key=lambda x: x["daily_change_pct"], reverse=True)
+        
+        # Top 5 winners (highest positive change)
+        winners = [s for s in sorted_stocks if s["daily_change_pct"] > 0][:5]
+        
+        # Top 5 losers (lowest negative change)
+        losers = [s for s in sorted_stocks if s["daily_change_pct"] < 0][-5:]
+        losers.reverse()  # Show worst first
+        
+        # Calculate summary statistics
+        total_change_value = sum(s["change_value_eur"] for s in enriched_stocks)
+        avg_change_pct = sum(s["daily_change_pct"] for s in enriched_stocks) / len(enriched_stocks) if enriched_stocks else 0.0
+        
+        return {
+            "winners": winners,
+            "losers": losers,
+            "summary": {
+                "total_stocks": len(enriched_stocks),
+                "total_change_value_eur": round(total_change_value, 2),
+                "average_change_pct": round(avg_change_pct, 2),
+                "winners_count": len(winners),
+                "losers_count": len(losers),
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
