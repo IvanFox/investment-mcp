@@ -143,9 +143,15 @@ All tools are defined in `agent/main.py` using `@mcp.tool()` decorator. Availabl
 - `get_portfolio_short_analysis()` - Short selling analysis across portfolio
 
 **Visualization:**
-- `generate_portfolio_dashboard(time_period)` - Interactive HTML dashboard (7d/30d/90d/1y/all)
+- `generate_portfolio_dashboard(view, time_period)` - Interactive HTML dashboard with 4 views
+  - `view="daily"` (default) - Quick check-in with KPIs, attribution, top movers
+  - `view="performance"` - Long-term trends, allocation, benchmarks
+  - `view="transactions"` - Trading history, realized gains
+  - `view="risk"` - Risk metrics, volatility, distribution analysis
+  - `time_period`: "7d", "30d", "90d", "1y", "all" (default: "all")
+- `get_daily_overview()` - Quick text summary of today's changes and top movers (NEW)
 
-**Daily Performance Analysis (NEW):**
+**Daily Performance Analysis:**
 - `get_daily_winners()` - Top performing stocks today vs yesterday snapshot
 - `get_daily_losers()` - Worst performing stocks today vs yesterday snapshot
 
@@ -168,7 +174,12 @@ All tools are defined in `agent/main.py` using `@mcp.tool()` decorator. Availabl
 - `risk_analysis.py` - Portfolio risk metrics (Alpha Vantage historical data)
 - `insider_trading.py` - Insider trading analysis (Fintel API)
 - `short_volume.py` - Short selling monitoring (Fintel API)
-- `visualization.py` - Plotly dashboard generation with benchmark comparisons
+
+**Visualization & UI:**
+- `visualization.py` - Plotly dashboard generation with multi-view system
+- `daily_analysis.py` - Daily change calculations, attribution analysis, win/loss tracking
+- `dashboard_components.py` - Reusable UI components (KPI cards, tables, sparklines)
+- `dashboard_views.py` - View orchestration (Daily, Performance, Transaction, Risk views)
 
 **Validation & Models:**
 - `sell_validation.py` - Sell transaction validation logic
@@ -300,6 +311,84 @@ The system expects specific sheet structure:
 
 **Note:** Ranges are user-configurable in `config.yaml` - these are defaults.
 
+## Dashboard Usage
+
+The portfolio dashboard has been redesigned with 4 specialized views optimized for different analysis needs:
+
+### View 1: Daily Overview (Default)
+**Purpose:** Quick 30-second check-in - see what changed today
+
+**Features:**
+- Large KPI cards: Total value, daily change, benchmark comparison, win/loss ratio
+- Attribution table: Top 5 movers showing which assets drove portfolio changes
+- 7-day sparkline for context
+- Risk summary panel (one-line key metrics)
+
+**Usage:**
+```python
+# Generate daily overview dashboard
+generate_portfolio_dashboard(view="daily", time_period="7d")
+
+# Or get quick text summary (no HTML)
+get_daily_overview()
+```
+
+**Requirements:**
+- Needs yesterday's snapshot to exist for comparison
+- If no yesterday snapshot, shows current portfolio status only
+
+### View 2: Performance Analysis
+**Purpose:** Long-term portfolio trends and allocation analysis
+
+**Features:**
+- Portfolio Performance Hub: Value vs SPY/VT benchmarks
+- Allocation & Composition: Category/currency breakdown
+- Individual Asset Performance: Multi-line chart
+- Gain/Loss Analysis: Current positions
+- HHI Concentration Trend: Diversification tracking
+
+**Usage:**
+```python
+generate_portfolio_dashboard(view="performance", time_period="1y")
+```
+
+### View 3: Transaction History
+**Purpose:** Trading activity and realized gains tracking
+
+**Features:**
+- Transaction Timeline: Buy/sell activity with markers
+- Realized Gains Tracker: Cumulative and monthly P&L
+
+**Usage:**
+```python
+generate_portfolio_dashboard(view="transactions", time_period="all")
+```
+
+### View 4: Risk Analysis
+**Purpose:** Deep risk assessment
+
+**Features:**
+- Risk Metrics Dashboard: Returns, drawdown, volatility
+- Distribution Analysis: Value change histogram
+
+**Usage:**
+```python
+generate_portfolio_dashboard(view="risk", time_period="90d")
+```
+
+### Visual Design Improvements
+
+The new dashboard features:
+- **Modern card-based layout** with subtle shadows and hover effects
+- **Responsive design** that works on mobile (4→2→1 column grid)
+- **Clean color palette:**
+  - Portfolio: `#3B82F6` (blue)
+  - Gains: `#10B981` (green)
+  - Losses: `#EF4444` (red)
+  - Benchmarks: `#F59E0B` (amber), `#8B5CF6` (purple)
+- **Attribution tables** with progress bars showing contribution percentage
+- **Typography:** Inter/SF Pro Display fonts with tabular-nums for metrics
+
 ## Common Gotchas
 
 1. **Transaction validation blocks snapshots** - If you see validation errors, you must add missing transactions to Google Sheets before snapshot creation will succeed.
@@ -312,11 +401,11 @@ The system expects specific sheet structure:
 
 5. **Hybrid storage auto-syncs** - If GCP is unavailable, data is saved locally and auto-uploaded when connection restored. Check `get_storage_status()` to see pending uploads.
 
-6. **Dashboard requires 2+ snapshots** - First run will create snapshot but cannot generate dashboard. Second run creates comparison report and dashboard.
+6. **Dashboard view requirements vary** - Daily view needs only 1 snapshot (but requires yesterday's snapshot for comparison). Performance/Transaction/Risk views need 2+ snapshots.
 
 7. **Credentials in Keychain only** - Never hardcode credentials. Use provided setup scripts or `security add-generic-password` commands.
 
-8. **Daily analysis requires yesterday's snapshot** - Tools like `get_daily_winners()` and `get_daily_losers()` need a snapshot from the previous day to exist. They compare today's live data against yesterday's snapshot to calculate daily performance.
+8. **Daily overview requires yesterday's snapshot** - Tools like `get_daily_overview()`, `get_daily_winners()`, and `get_daily_losers()` need a snapshot from the previous day to exist. They compare today's live data against yesterday's snapshot to calculate daily performance. The Daily dashboard view will show current status only if no yesterday snapshot exists.
 
 ## Raycast Integration
 

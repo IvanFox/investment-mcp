@@ -597,19 +597,35 @@ def _create_quantity_changes_chart(
         
         # Check for quantity changes
         for name in set(list(prev_assets.keys()) + list(curr_assets.keys())):
+            # Skip cash and pension positions (only show securities)
+            if "Cash" in name or "Pension" in name:
+                continue
+
+            # Also check category
+            asset_info = curr_assets.get(name) or prev_assets.get(name)
+            if asset_info:
+                category = asset_info.get("category", "")
+                if category in ["Cash", "Pension"]:
+                    continue
+
             prev_qty = prev_assets.get(name, {}).get("quantity", 0.0)
             curr_qty = curr_assets.get(name, {}).get("quantity", 0.0)
-            
+
             qty_change = curr_qty - prev_qty
-            
+
             if abs(qty_change) > 0.01:  # Threshold to avoid noise
-                curr_value = curr_assets.get(name, {}).get("current_value_eur", 0.0)
-                
+                # For buys, show current value (position after buy)
+                # For sells, show previous value (what was sold)
+                if qty_change > 0:  # Buy
+                    value = curr_assets.get(name, {}).get("current_value_eur", 0.0)
+                else:  # Sell
+                    value = prev_assets.get(name, {}).get("current_value_eur", 0.0)
+
                 transactions.append({
                     "timestamp": timestamp,
                     "name": name,
                     "qty_change": qty_change,
-                    "value": curr_value,
+                    "value": value,
                     "type": "Buy" if qty_change > 0 else "Sell"
                 })
     
@@ -637,32 +653,34 @@ def _create_quantity_changes_chart(
     
     if not buys.empty:
         fig.add_trace(go.Scatter(
-            x=buys["timestamp"],
-            y=buys["value"],
+            x=buys["timestamp"].tolist(),
+            y=buys["value"].tolist(),
             mode="markers",
             name="Buy",
             marker=dict(
-                color="#2ca02c",
-                size=buys["qty_change"].abs() * 2 + 5,
-                symbol="triangle-up"
+                color="#10B981",
+                size=12,
+                symbol="triangle-up",
+                line=dict(color="white", width=1)
             ),
             hovertemplate="<b>BUY: %{customdata}</b><br>Date: %{x}<br>Value: €%{y:,.2f}<extra></extra>",
-            customdata=buys["name"]
+            customdata=buys["name"].tolist()
         ))
     
     if not sells.empty:
         fig.add_trace(go.Scatter(
-            x=sells["timestamp"],
-            y=sells["value"],
+            x=sells["timestamp"].tolist(),
+            y=sells["value"].tolist(),
             mode="markers",
             name="Sell",
             marker=dict(
-                color="#d62728",
-                size=sells["qty_change"].abs() * 2 + 5,
-                symbol="triangle-down"
+                color="#EF4444",
+                size=12,
+                symbol="triangle-down",
+                line=dict(color="white", width=1)
             ),
             hovertemplate="<b>SELL: %{customdata}</b><br>Date: %{x}<br>Value: €%{y:,.2f}<extra></extra>",
-            customdata=sells["name"]
+            customdata=sells["name"].tolist()
         ))
     
     fig.update_layout(
@@ -670,9 +688,24 @@ def _create_quantity_changes_chart(
         xaxis_title="Date",
         yaxis_title="Position Value (EUR)",
         template="plotly_white",
-        height=400
+        height=500,
+        showlegend=True,
+        hovermode='closest',
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        xaxis=dict(
+            showgrid=True,
+            gridcolor='#E5E7EB',
+            zeroline=False
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='#E5E7EB',
+            zeroline=False,
+            rangemode='tozero'
+        )
     )
-    
+
     return fig
 
 
@@ -879,117 +912,826 @@ def _create_metrics_dashboard(
     return fig
 
 
+def _create_correlation_heatmap(correlation_matrix: pd.DataFrame, top_n: int = 10) -> go.Figure:
+    """
+    Create correlation heatmap for top holdings.
+
+    Args:
+        correlation_matrix: Full correlation matrix from risk_analysis.py
+        top_n: Number of top holdings to include (default 10)
+
+    Returns:
+        Plotly heatmap figure
+    """
+    fig = go.Figure()
+
+    if correlation_matrix.empty or len(correlation_matrix) < 2:
+        return fig
+
+    # Limit to top N holdings if needed
+    if len(correlation_matrix) > top_n:
+        # Take first top_n rows and columns
+        corr_subset = correlation_matrix.iloc[:top_n, :top_n]
+    else:
+        corr_subset = correlation_matrix
+
+    # Create heatmap
+    fig.add_trace(go.Heatmap(
+        z=corr_subset.values,
+        x=corr_subset.columns,
+        y=corr_subset.index,
+        colorscale="RdBu",
+        zmid=0,
+        zmin=-1,
+        zmax=1,
+        text=corr_subset.values,
+        texttemplate="%{text:.2f}",
+        textfont={"size": 10},
+        hovertemplate="<b>%{x} vs %{y}</b><br>Correlation: %{z:.3f}<extra></extra>",
+        colorbar=dict(title="Correlation")
+    ))
+
+    fig.update_layout(
+        title=f"Asset Correlation Matrix (Top {len(corr_subset)} Holdings)",
+        xaxis=dict(side="bottom", tickangle=-45),
+        yaxis=dict(autorange="reversed"),
+        template="plotly_white",
+        height=600,
+        width=700
+    )
+
+    return fig
+
+
+def _create_realized_gains_chart(sell_transactions: List[Dict[str, Any]]) -> go.Figure:
+    """
+    Create realized gains tracking charts.
+
+    Args:
+        sell_transactions: List of sell transactions from storage
+
+    Returns:
+        Plotly figure with subplots:
+        - Top: Cumulative realized gains over time
+        - Bottom: Monthly/quarterly realized P&L bars
+    """
+    fig = make_subplots(
+        rows=2, cols=1,
+        row_heights=[0.6, 0.4],
+        subplot_titles=("Cumulative Realized Gains", "Monthly Realized P&L"),
+        vertical_spacing=0.12
+    )
+
+    if not sell_transactions:
+        fig.add_annotation(
+            text="No sell transactions available",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5, showarrow=False,
+            font=dict(size=16, color="gray")
+        )
+        fig.update_layout(height=500, template="plotly_white")
+        return fig
+
+    # Sort transactions by date
+    sorted_txns = sorted(sell_transactions, key=lambda x: x["date"])
+
+    # Calculate cumulative gains
+    cumulative_gains = []
+    cumulative_sum = 0
+    dates = []
+
+    for txn in sorted_txns:
+        # Use the pre-calculated realized gain/loss
+        realized_gain = txn.get("realized_gain_loss_eur", 0)
+        cumulative_sum += realized_gain
+        cumulative_gains.append(cumulative_sum)
+        dates.append(datetime.fromisoformat(txn["date"].replace("Z", "+00:00")))
+
+    # Add cumulative gains line
+    fig.add_trace(
+        go.Scatter(
+            x=dates,
+            y=cumulative_gains,
+            mode="lines+markers",
+            name="Cumulative Gains",
+            line=dict(color="#10B981" if cumulative_sum >= 0 else "#EF4444", width=3),
+            marker=dict(size=6),
+            fill="tozeroy",
+            fillcolor=f"rgba({'16, 185, 129' if cumulative_sum >= 0 else '239, 68, 68'}, 0.1)",
+            hovertemplate="Date: %{x}<br>Cumulative: €%{y:,.2f}<extra></extra>"
+        ),
+        row=1, col=1
+    )
+
+    # Aggregate by month for bar chart
+    monthly_gains = {}
+    for txn in sorted_txns:
+        date = datetime.fromisoformat(txn["date"].replace("Z", "+00:00"))
+        month_key = date.strftime("%Y-%m")
+        # Use the pre-calculated realized gain/loss
+        realized_gain = txn.get("realized_gain_loss_eur", 0)
+        monthly_gains[month_key] = monthly_gains.get(month_key, 0) + realized_gain
+
+    # Add monthly bars
+    months = sorted(monthly_gains.keys())
+    gains = [monthly_gains[m] for m in months]
+    colors = ["#10B981" if g >= 0 else "#EF4444" for g in gains]
+
+    fig.add_trace(
+        go.Bar(
+            x=months,
+            y=gains,
+            name="Monthly P&L",
+            marker=dict(color=colors),
+            hovertemplate="Month: %{x}<br>P&L: €%{y:,.2f}<extra></extra>"
+        ),
+        row=2, col=1
+    )
+
+    fig.update_xaxes(title_text="Date", row=1, col=1)
+    fig.update_xaxes(title_text="Month", row=2, col=1)
+    fig.update_yaxes(title_text="Cumulative Gain (EUR)", row=1, col=1)
+    fig.update_yaxes(title_text="Monthly P&L (EUR)", row=2, col=1)
+
+    fig.update_layout(
+        template="plotly_white",
+        height=600,
+        showlegend=False
+    )
+
+    return fig
+
+
+def _create_cost_basis_waterfall(assets: List[Dict[str, Any]]) -> go.Figure:
+    """
+    Create waterfall chart showing entry prices vs current value.
+
+    Args:
+        assets: List of asset dicts from latest snapshot
+
+    Returns:
+        Plotly waterfall figure
+    """
+    fig = go.Figure()
+
+    if not assets:
+        return fig
+
+    # Filter out cash and pension, focus on traded securities
+    tradeable = [a for a in assets if a.get("category") not in ["Cash", "Pension"] and a.get("quantity", 0) > 0]
+
+    # Sort by unrealized gain/loss
+    for asset in tradeable:
+        cost_basis = asset.get("purchase_price_total_eur", 0)
+        current_value = asset.get("current_value_eur", 0)
+        asset["unrealized_gain"] = current_value - cost_basis
+
+    tradeable.sort(key=lambda x: x["unrealized_gain"], reverse=True)
+
+    # Limit to top 15 for readability
+    top_assets = tradeable[:15]
+
+    # Build waterfall data
+    names = [a["name"] for a in top_assets]
+    cost_basis = [a.get("purchase_price_total_eur", 0) for a in top_assets]
+    current_values = [a.get("current_value_eur", 0) for a in top_assets]
+    gains = [a["unrealized_gain"] for a in top_assets]
+
+    # Create grouped bar chart (cost basis vs current value)
+    fig.add_trace(go.Bar(
+        name="Cost Basis",
+        x=names,
+        y=cost_basis,
+        marker=dict(color="#94A3B8"),
+        hovertemplate="<b>%{x}</b><br>Cost Basis: €%{y:,.2f}<extra></extra>"
+    ))
+
+    fig.add_trace(go.Bar(
+        name="Current Value",
+        x=names,
+        y=current_values,
+        marker=dict(
+            color=["#10B981" if g >= 0 else "#EF4444" for g in gains]
+        ),
+        hovertemplate="<b>%{x}</b><br>Current: €%{y:,.2f}<extra></extra>"
+    ))
+
+    fig.update_layout(
+        title="Cost Basis vs Current Value (Top 15 Positions)",
+        xaxis_title="Asset",
+        yaxis_title="Value (EUR)",
+        xaxis=dict(tickangle=-45),
+        barmode="group",
+        template="plotly_white",
+        height=500,
+        hovermode="x unified"
+    )
+
+    return fig
+
+
+def _create_attribution_chart(movers: List[Dict[str, Any]]) -> go.Figure:
+    """
+    Create bar chart showing which assets contributed to portfolio change.
+
+    Args:
+        movers: List of {name, change_eur, contribution_pct, is_gainer}
+
+    Returns:
+        Plotly bar figure
+    """
+    fig = go.Figure()
+
+    if not movers:
+        return fig
+
+    # Take top 10 by absolute contribution
+    top_movers = sorted(movers, key=lambda x: abs(x.get("contribution_pct", 0)), reverse=True)[:10]
+
+    names = [m["name"] for m in top_movers]
+    contributions = [m["contribution_pct"] for m in top_movers]
+    colors = ["#10B981" if m.get("is_gainer", False) else "#EF4444" for m in top_movers]
+
+    fig.add_trace(go.Bar(
+        x=contributions,
+        y=names,
+        orientation="h",
+        marker=dict(color=colors),
+        hovertemplate="<b>%{y}</b><br>Contribution: %{x:.1f}%<extra></extra>"
+    ))
+
+    fig.update_layout(
+        title="Top 10 Contributors to Portfolio Change",
+        xaxis_title="Contribution to Total Change (%)",
+        yaxis_title="Asset",
+        template="plotly_white",
+        height=500
+    )
+
+    return fig
+
+
+def _create_hhi_trend_chart(snapshots: List[Dict[str, Any]]) -> go.Figure:
+    """
+    Create line chart showing HHI concentration index over time.
+
+    Args:
+        snapshots: List of portfolio snapshots
+
+    Returns:
+        Plotly line figure
+    """
+    fig = go.Figure()
+
+    if len(snapshots) < 2:
+        return fig
+
+    # Calculate HHI for each snapshot
+    dates = []
+    hhi_values = []
+
+    for snapshot in snapshots:
+        total_value = snapshot.get("total_value_eur", 0)
+        if total_value == 0:
+            continue
+
+        # Calculate HHI (sum of squared weight percentages)
+        hhi = 0
+        for asset in snapshot.get("assets", []):
+            weight = asset.get("current_value_eur", 0) / total_value
+            hhi += weight ** 2
+
+        dates.append(datetime.fromisoformat(snapshot["timestamp"].replace("Z", "+00:00")))
+        hhi_values.append(hhi * 10000)  # Scale to 0-10000
+
+    fig.add_trace(go.Scatter(
+        x=dates,
+        y=hhi_values,
+        mode="lines+markers",
+        name="HHI",
+        line=dict(color="#8B5CF6", width=2),
+        marker=dict(size=6),
+        hovertemplate="Date: %{x}<br>HHI: %{y:.0f}<extra></extra>"
+    ))
+
+    # Add reference lines
+    fig.add_hline(y=1500, line_dash="dash", line_color="gray",
+                  annotation_text="Unconcentrated (< 1500)")
+    fig.add_hline(y=2500, line_dash="dash", line_color="orange",
+                  annotation_text="Moderately Concentrated (> 2500)")
+
+    fig.update_layout(
+        title="Portfolio Concentration Over Time (HHI Index)",
+        xaxis_title="Date",
+        yaxis_title="HHI (0-10000)",
+        template="plotly_white",
+        height=400
+    )
+
+    return fig
+
+
+def _create_volatility_by_category_chart(risk_data: Dict[str, Any]) -> go.Figure:
+    """
+    Create bar chart comparing volatility across categories.
+
+    Args:
+        risk_data: Risk analysis results from risk_analysis.py
+
+    Returns:
+        Plotly bar figure
+    """
+    fig = go.Figure()
+
+    volatility_by_cat = risk_data.get("volatility", {}).get("by_category", {})
+
+    if not volatility_by_cat:
+        return fig
+
+    categories = list(volatility_by_cat.keys())
+    volatilities = list(volatility_by_cat.values())
+
+    # Color code by volatility level
+    colors = []
+    for vol in volatilities:
+        if vol < 15:
+            colors.append("#10B981")  # Low volatility - green
+        elif vol < 25:
+            colors.append("#F59E0B")  # Medium volatility - amber
+        else:
+            colors.append("#EF4444")  # High volatility - red
+
+    fig.add_trace(go.Bar(
+        x=categories,
+        y=volatilities,
+        marker=dict(color=colors),
+        hovertemplate="<b>%{x}</b><br>Volatility: %{y:.1f}%<extra></extra>"
+    ))
+
+    fig.update_layout(
+        title="Annualized Volatility by Category",
+        xaxis_title="Category",
+        yaxis_title="Volatility (%)",
+        xaxis=dict(tickangle=-45),
+        template="plotly_white",
+        height=400
+    )
+
+    return fig
+
+
 def _create_dashboard_css() -> str:
     """
-    Generate CSS styles for dashboard.
-    
+    Generate modern CSS styles for dashboard with design system.
+
     Returns:
-        CSS string with responsive layout rules
+        CSS string with responsive layout rules and component styles
     """
     return """
     <style>
+        :root {
+            /* Color Palette */
+            --portfolio-primary: #3B82F6;
+            --portfolio-gain: #10B981;
+            --portfolio-loss: #EF4444;
+            --benchmark-spy: #F59E0B;
+            --benchmark-vt: #8B5CF6;
+
+            /* Neutrals */
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F9FAFB;
+            --bg-card: #FFFFFF;
+            --border: #E5E7EB;
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+
+            /* Categories */
+            --cat-us-stocks: #3B82F6;
+            --cat-eu-stocks: #F59E0B;
+            --cat-bonds: #10B981;
+            --cat-etfs: #EF4444;
+            --cat-pension: #8B5CF6;
+            --cat-cash: #6B7280;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f5f5f5;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
         }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .header {
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
+
+        /* View Headers */
+        .view-header {
+            margin-bottom: 32px;
         }
-        .header h1 {
-            margin: 0 0 10px 0;
-            color: #1f77b4;
+
+        .view-title {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin: 0 0 8px 0;
+            color: var(--text-primary);
         }
-        .header .subtitle {
-            color: #666;
-            font-size: 14px;
-        }
-        .controls {
-            position: sticky;
-            top: 20px;
-            background-color: white;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-        .controls label {
-            font-weight: 600;
-            margin-right: 10px;
-        }
-        .controls select {
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            background-color: white;
-            cursor: pointer;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        .stat-card {
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-            border-left: 4px solid #1f77b4;
-        }
-        .stat-card h3 {
-            margin: 0 0 5px 0;
-            font-size: 14px;
-            color: #666;
-        }
-        .stat-card p {
+
+        .view-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
             margin: 0;
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
         }
+
+        .view-updated {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Grid System */
+        .grid {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        /* KPI Cards */
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            border: 1px solid var(--border);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .kpi-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .kpi-value {
+            font-size: 36px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 8px;
+        }
+
+        .kpi-card.positive .kpi-value {
+            color: var(--portfolio-gain);
+        }
+
+        .kpi-card.negative .kpi-value {
+            color: var(--portfolio-loss);
+        }
+
+        .kpi-change {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .kpi-change.positive {
+            color: var(--portfolio-gain);
+        }
+
+        .kpi-change.negative {
+            color: var(--portfolio-loss);
+        }
+
+        .kpi-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* Sections */
+        .section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        /* Attribution Table */
+        .attribution-table-container {
+            overflow-x: auto;
+        }
+
+        .attribution-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .attribution-table thead th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid var(--border);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .attribution-table tbody tr {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .attribution-table tbody tr:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .attribution-table td {
+            padding: 16px 12px;
+        }
+
+        .attr-icon {
+            font-size: 16px;
+            width: 24px;
+        }
+
+        .attribution-row.gainer .attr-icon {
+            color: var(--portfolio-gain);
+        }
+
+        .attribution-row.loser .attr-icon {
+            color: var(--portfolio-loss);
+        }
+
+        .attr-name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .attr-change {
+            font-family: 'SF Mono', 'Roboto Mono', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .change-eur {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .change-pct {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .attr-change.positive .change-eur {
+            color: var(--portfolio-gain);
+        }
+
+        .attr-change.negative .change-eur {
+            color: var(--portfolio-loss);
+        }
+
+        .contribution-bar-container {
+            position: relative;
+            height: 24px;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .contribution-bar {
+            position: absolute;
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .contribution-bar.gainer {
+            background: var(--portfolio-gain);
+        }
+
+        .contribution-bar.loser {
+            background: var(--portfolio-loss);
+        }
+
+        .contribution-text {
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+
+        /* Chart Sections */
         .chart-section {
             margin-bottom: 40px;
         }
+
         .chart-section h2 {
-            margin-bottom: 15px;
-            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
         }
+
+        /* View Switcher */
+        .view-switcher {
+            display: flex;
+            gap: 8px;
+            padding: 16px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .view-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .view-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .view-btn.active {
+            background: var(--portfolio-primary);
+            color: white;
+        }
+
+        /* Controls */
+        .controls {
+            position: sticky;
+            top: 20px;
+            background-color: var(--bg-card);
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+            border: 1px solid var(--border);
+        }
+
+        .controls label {
+            font-weight: 600;
+            margin-right: 12px;
+            color: var(--text-primary);
+        }
+
+        .controls select {
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .controls select:focus {
+            outline: none;
+            border-color: var(--portfolio-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Stats (legacy) */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background-color: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-card p {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Sparkline */
+        .sparkline-container {
+            width: 100%;
+            height: 60px;
+        }
+
+        /* Footer */
         .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
             text-align: center;
-            color: #999;
-            font-size: 12px;
+            color: var(--text-secondary);
+            font-size: 14px;
         }
-        
-        /* Mobile responsiveness */
+
+        /* Info Messages */
+        .info-message {
+            background: #EFF6FF;
+            border-left: 4px solid var(--portfolio-primary);
+            padding: 16px;
+            border-radius: 8px;
+            margin: 24px 0;
+        }
+
+        .info-message p {
+            margin: 8px 0;
+            color: #1E40AF;
+        }
+
+        /* Mobile Responsiveness */
         @media (max-width: 768px) {
             body {
                 padding: 10px;
             }
-            .container {
-                padding: 15px;
+
+            .view-title {
+                font-size: 24px;
             }
-            .stats {
-                grid-template-columns: 1fr;
+
+            .grid {
+                grid-template-columns: 1fr !important;
             }
+
+            .kpi-value {
+                font-size: 28px;
+            }
+
             .controls {
                 position: relative;
                 top: 0;
+            }
+
+            .view-switcher {
+                flex-wrap: wrap;
+            }
+
+            .attribution-table {
+                font-size: 14px;
+            }
+
+            .attr-name {
+                font-size: 14px;
             }
         }
     </style>
@@ -1029,6 +1771,58 @@ def _create_time_selector_js() -> str:
         });
     </script>
     """
+
+
+def _wrap_view_html(
+    view_content: str,
+    title: str,
+    snapshots: List[Dict[str, Any]],
+    period: str
+) -> str:
+    """
+    Wrap view content in complete HTML page with headers, CSS, and scripts.
+
+    Args:
+        view_content: HTML content from view (e.g., DailyOverviewView)
+        title: Page title
+        snapshots: All snapshots for metadata
+        period: Current time period selection
+
+    Returns:
+        Complete HTML string
+    """
+    html_parts = []
+
+    # HTML header
+    html_parts.append(f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{title} - Investment MCP Agent</title>
+        <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    """)
+
+    html_parts.append(_create_dashboard_css())
+    html_parts.append("</head><body>")
+
+    # Container
+    html_parts.append('<div class="container">')
+
+    # Main content
+    html_parts.append(view_content)
+
+    # Footer
+    html_parts.append(f"""
+    <div class="footer">
+        Investment MCP Agent Dashboard | Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+    </div>
+    """)
+
+    html_parts.append("</div></body></html>")
+
+    return '\n'.join(html_parts)
 
 
 def _generate_dashboard_html(
@@ -1179,16 +1973,18 @@ def _generate_dashboard_html(
 
 
 def generate_portfolio_dashboard(
+    view: str = "daily",
     time_period: str = "all",
     force_regenerate: bool = False
 ) -> Dict[str, Any]:
     """
     Generate interactive HTML dashboard with portfolio visualizations.
-    
+
     Args:
+        view: Dashboard view - "daily", "performance", "transactions", "risk" (default: "daily")
         time_period: One of "7d", "30d", "90d", "1y", "all" (default: "all")
         force_regenerate: If True, regenerate even if recent dashboard exists
-    
+
     Returns:
         dict: {
             "success": bool,
@@ -1196,78 +1992,102 @@ def generate_portfolio_dashboard(
             "file_url": str (file:// URL),
             "snapshot_count": int,
             "date_range": {"start": str, "end": str},
+            "view": str,
             "generated_at": str,
             "error": str (if success=False)
         }
-    
+
     Raises:
         ValueError: If insufficient snapshots (need at least 2)
         IOError: If dashboard directory cannot be created
     """
     try:
-        logger.info(f"Generating portfolio dashboard for period: {time_period}")
-        
+        logger.info(f"Generating portfolio dashboard - view: {view}, period: {time_period}")
+
+        # Validate view parameter
+        valid_views = ["daily", "performance", "transactions", "risk"]
+        if view not in valid_views:
+            logger.warning(f"Invalid view '{view}', defaulting to 'daily'")
+            view = "daily"
+
         # Get all snapshots
         all_snapshots = storage.get_all_snapshots()
-        
-        if len(all_snapshots) < 2:
+
+        # Daily view only needs 1 snapshot (will show current status if no yesterday snapshot)
+        min_snapshots = 1 if view == "daily" else 2
+
+        if len(all_snapshots) < min_snapshots:
             return {
                 "success": False,
-                "error": f"Need at least 2 snapshots to generate dashboard (found {len(all_snapshots)})"
+                "error": f"Need at least {min_snapshots} snapshot(s) to generate dashboard (found {len(all_snapshots)})"
             }
-        
+
         # Filter by time period
         snapshots = _filter_snapshots_by_period(all_snapshots, time_period)
-        
-        if len(snapshots) < 2:
+
+        if len(snapshots) < min_snapshots:
             return {
                 "success": False,
-                "error": f"Need at least 2 snapshots in selected period (found {len(snapshots)})"
+                "error": f"Need at least {min_snapshots} snapshot(s) in selected period (found {len(snapshots)})"
             }
-        
-        logger.info(f"Processing {len(snapshots)} snapshots")
-        
-        # Prepare data
-        portfolio_df = _prepare_portfolio_timeseries(snapshots)
-        category_df = _prepare_category_timeseries(snapshots)
-        asset_df = _prepare_asset_timeseries(snapshots)
-        
-        # Get benchmark data
-        spy_df, vt_df = _prepare_benchmark_data(snapshots)
-        
-        # Get top assets
-        top_assets = _get_top_assets_by_value(snapshots[-1], n=10)
-        
-        # Generate all charts
-        figures = {}
-        
-        logger.info("Creating portfolio value chart...")
-        figures["portfolio_value"] = _create_portfolio_value_chart(portfolio_df, spy_df, vt_df)
-        
-        logger.info("Creating category allocation chart...")
-        figures["category_allocation"] = _create_category_allocation_chart(category_df)
-        
-        logger.info("Creating asset performance chart...")
-        figures["asset_performance"] = _create_asset_performance_chart(asset_df, top_assets)
-        
-        logger.info("Creating top holdings chart...")
-        figures["top_holdings"] = _create_top_holdings_chart(snapshots)
-        
-        logger.info("Creating gain/loss chart...")
-        figures["gainloss"] = _create_gainloss_chart(snapshots[-1])
-        
-        logger.info("Creating transaction timeline...")
-        figures["transactions"] = _create_quantity_changes_chart(snapshots)
-        
-        logger.info("Creating currency exposure chart...")
-        figures["currency"] = _create_currency_exposure_chart(snapshots)
-        
-        logger.info("Creating metrics dashboard...")
-        figures["metrics"] = _create_metrics_dashboard(snapshots)
-        
-        # Generate HTML
-        logger.info("Generating HTML dashboard...")
-        html_content = _generate_dashboard_html(figures, snapshots, time_period)
+
+        logger.info(f"Processing {len(snapshots)} snapshots for {view} view")
+
+        # Route to appropriate view
+        html_content = None
+
+        if view == "daily":
+            # Daily Overview - uses new view system
+            from . import dashboard_views
+            daily_view = dashboard_views.DailyOverviewView(snapshots, time_period)
+            view_result = daily_view.generate()
+
+            if not view_result.get("success"):
+                return {
+                    "success": False,
+                    "error": view_result.get("error", "Failed to generate daily view")
+                }
+
+            # Wrap in full HTML page
+            html_content = _wrap_view_html(view_result["html"], "Daily Overview", snapshots, time_period)
+
+        else:
+            # Performance/Transaction/Risk views - use legacy chart generation for now
+            # Prepare data
+            portfolio_df = _prepare_portfolio_timeseries(snapshots)
+            category_df = _prepare_category_timeseries(snapshots)
+            asset_df = _prepare_asset_timeseries(snapshots)
+
+            # Get benchmark data
+            spy_df, vt_df = _prepare_benchmark_data(snapshots)
+
+            # Get top assets
+            top_assets = _get_top_assets_by_value(snapshots[-1], n=10)
+
+            # Generate charts based on view
+            figures = {}
+
+            if view == "performance":
+                logger.info("Creating performance view charts...")
+                figures["portfolio_value"] = _create_portfolio_value_chart(portfolio_df, spy_df, vt_df)
+                figures["category_allocation"] = _create_category_allocation_chart(category_df)
+                figures["asset_performance"] = _create_asset_performance_chart(asset_df, top_assets)
+                figures["gainloss"] = _create_gainloss_chart(snapshots[-1])
+                figures["hhi_trend"] = _create_hhi_trend_chart(snapshots)
+
+            elif view == "transactions":
+                logger.info("Creating transaction view charts...")
+                figures["transactions"] = _create_quantity_changes_chart(snapshots)
+                # TODO: Add realized gains chart when transaction data is available
+
+            elif view == "risk":
+                logger.info("Creating risk view charts...")
+                figures["metrics"] = _create_metrics_dashboard(snapshots)
+                # TODO: Add correlation heatmap and volatility charts when risk data is available
+
+            # Generate HTML for legacy views
+            logger.info("Generating HTML dashboard...")
+            html_content = _generate_dashboard_html(figures, snapshots, time_period)
         
         # Ensure dashboard directory exists
         dashboard_path = Path(DASHBOARD_DIR)
@@ -1291,6 +2111,7 @@ def generate_portfolio_dashboard(
             "file_path": str(abs_path),
             "file_url": file_url,
             "snapshot_count": len(snapshots),
+            "view": view,
             "date_range": {
                 "start": start_date,
                 "end": end_date

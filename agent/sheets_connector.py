@@ -644,12 +644,54 @@ def parse_transactions(
             if quantity <= 0:
                 logger.warning(f"Row {row_num}: Invalid quantity {quantity} for {asset_name}, skipping")
                 continue
-            
+
+            # Parse purchase price (column D, index 3)
+            if len(row) <= 3 or not row[3]:
+                logger.warning(f"Row {row_num}: Missing purchase price for {asset_name}, skipping")
+                continue
+
+            purchase_price_str = str(row[3]).strip()
+
+            # Detect currency from purchase price
+            purchase_currency = None
+            if purchase_price_str.startswith('£'):
+                purchase_currency = 'GBP'
+            elif purchase_price_str.startswith('$'):
+                purchase_currency = 'USD'
+            elif purchase_price_str.startswith('€'):
+                purchase_currency = 'EUR'
+            else:
+                logger.warning(
+                    f"Row {row_num}: Unknown currency in purchase price '{purchase_price_str}' "
+                    f"for {asset_name}, skipping"
+                )
+                continue
+
+            # Parse numeric value
+            purchase_price_original = parse_currency_value(purchase_price_str)
+
+            # Allow zero purchase price for stock compensation, dividends, etc.
+            # Only reject negative prices
+            if purchase_price_original < 0:
+                logger.warning(
+                    f"Row {row_num}: Invalid purchase price {purchase_price_original} for {asset_name}, "
+                    f"skipping"
+                )
+                continue
+
+            # Convert purchase price to EUR
+            if purchase_currency == 'GBP':
+                purchase_price_eur = purchase_price_original * gbp_to_eur
+            elif purchase_currency == 'USD':
+                purchase_price_eur = purchase_price_original * usd_to_eur
+            else:  # EUR
+                purchase_price_eur = purchase_price_original
+
             # Parse sell price (column E, index 4)
             if len(row) <= 4 or not row[4]:
                 logger.warning(f"Row {row_num}: Missing sell price for {asset_name}, skipping")
                 continue
-            
+
             sell_price_str = str(row[4]).strip()
             
             # Detect currency
@@ -685,18 +727,24 @@ def parse_transactions(
             else:  # EUR
                 sell_price_eur = sell_price_original
             
-            # Calculate total value
-            total_value_eur = sell_price_eur * quantity
-            
+            # Calculate total values
+            total_sell_value_eur = sell_price_eur * quantity
+            total_purchase_value_eur = purchase_price_eur * quantity
+            realized_gain_loss_eur = total_sell_value_eur - total_purchase_value_eur
+
             # Create transaction object
             transaction = {
                 "date": txn_date.isoformat(),
                 "asset_name": asset_name,  # EXACT case preserved
                 "quantity": quantity,
+                "purchase_price_per_unit": purchase_price_original,
+                "purchase_price_per_unit_eur": round(purchase_price_eur, 4),
                 "sell_price_per_unit": sell_price_original,
                 "currency": currency,
                 "sell_price_per_unit_eur": round(sell_price_eur, 4),
-                "total_value_eur": round(total_value_eur, 2)
+                "total_value_eur": round(total_sell_value_eur, 2),
+                "purchase_price_total_eur": round(total_purchase_value_eur, 2),
+                "realized_gain_loss_eur": round(realized_gain_loss_eur, 2)
             }
             
             transactions.append(transaction)
@@ -881,14 +929,16 @@ def parse_buy_transactions(
             
             # Parse numeric value (reuse existing function)
             purchase_price_original = parse_currency_value(purchase_price_str)
-            
-            if purchase_price_original <= 0:
+
+            # Allow zero purchase price for stock compensation, dividends, etc.
+            # Only reject negative prices
+            if purchase_price_original < 0:
                 logger.warning(
                     f"Row {row_num}: Invalid purchase price {purchase_price_original} for {asset_name}, "
                     f"skipping"
                 )
                 continue
-            
+
             # Convert to EUR
             if currency == 'GBP':
                 purchase_price_eur = purchase_price_original * gbp_to_eur

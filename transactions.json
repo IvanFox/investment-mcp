@@ -1,257 +1,369 @@
 {
-  "last_updated": "2026-01-02T20:15:27.547673+00:00",
+  "last_updated": "2026-01-07T19:00:37.203339+00:00",
   "sell_transactions": [
     {
       "date": "2025-02-03T00:00:00+00:00",
       "asset_name": "Wise",
       "quantity": 183.0,
+      "purchase_price_per_unit": 0.0,
+      "purchase_price_per_unit_eur": 0.0,
       "sell_price_per_unit": 11.0,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 12.6282,
-      "total_value_eur": 2310.96
+      "sell_price_per_unit_eur": 12.6818,
+      "total_value_eur": 2320.78,
+      "purchase_price_total_eur": 0.0,
+      "realized_gain_loss_eur": 2320.78
     },
     {
       "date": "2025-02-11T00:00:00+00:00",
       "asset_name": "Wise",
       "quantity": 817.0,
+      "purchase_price_per_unit": 0.0,
+      "purchase_price_per_unit_eur": 0.0,
       "sell_price_per_unit": 10.95,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 12.5708,
-      "total_value_eur": 10270.36
+      "sell_price_per_unit_eur": 12.6242,
+      "total_value_eur": 10313.97,
+      "purchase_price_total_eur": 0.0,
+      "realized_gain_loss_eur": 10313.97
     },
     {
       "date": "2025-02-14T00:00:00+00:00",
       "asset_name": "Wise",
       "quantity": 1000.0,
+      "purchase_price_per_unit": 0.0,
+      "purchase_price_per_unit_eur": 0.0,
       "sell_price_per_unit": 10.67,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 12.2494,
-      "total_value_eur": 12249.37
+      "sell_price_per_unit_eur": 12.3014,
+      "total_value_eur": 12301.39,
+      "purchase_price_total_eur": 0.0,
+      "realized_gain_loss_eur": 12301.39
     },
     {
       "date": "2025-02-14T00:00:00+00:00",
       "asset_name": "Wise",
       "quantity": 2000.0,
+      "purchase_price_per_unit": 0.0,
+      "purchase_price_per_unit_eur": 0.0,
       "sell_price_per_unit": 10.5,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 12.0542,
-      "total_value_eur": 24108.42
+      "sell_price_per_unit_eur": 12.1054,
+      "total_value_eur": 24210.8,
+      "purchase_price_total_eur": 0.0,
+      "realized_gain_loss_eur": 24210.8
     },
     {
       "date": "2025-02-14T00:00:00+00:00",
       "asset_name": "Wise",
       "quantity": 1000.0,
+      "purchase_price_per_unit": 0.0,
+      "purchase_price_per_unit_eur": 0.0,
       "sell_price_per_unit": 10.3,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 11.8246,
-      "total_value_eur": 11824.61
+      "sell_price_per_unit_eur": 11.8748,
+      "total_value_eur": 11874.82,
+      "purchase_price_total_eur": 0.0,
+      "realized_gain_loss_eur": 11874.82
     },
     {
       "date": "2025-02-14T00:00:00+00:00",
       "asset_name": "Wise",
       "quantity": 850.0,
+      "purchase_price_per_unit": 0.0,
+      "purchase_price_per_unit_eur": 0.0,
       "sell_price_per_unit": 10.61,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 12.1805,
-      "total_value_eur": 10353.42
+      "sell_price_per_unit_eur": 12.2322,
+      "total_value_eur": 10397.38,
+      "purchase_price_total_eur": 0.0,
+      "realized_gain_loss_eur": 10397.38
     },
     {
       "date": "2025-02-25T00:00:00+00:00",
       "asset_name": "Wise",
       "quantity": 1000.0,
+      "purchase_price_per_unit": 0.0,
+      "purchase_price_per_unit_eur": 0.0,
       "sell_price_per_unit": 10.0,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 11.4802,
-      "total_value_eur": 11480.2
+      "sell_price_per_unit_eur": 11.529,
+      "total_value_eur": 11528.95,
+      "purchase_price_total_eur": 0.0,
+      "realized_gain_loss_eur": 11528.95
     },
     {
       "date": "2025-04-03T00:00:00+00:00",
       "asset_name": "Wise",
       "quantity": 500.0,
+      "purchase_price_per_unit": 0.0,
+      "purchase_price_per_unit_eur": 0.0,
       "sell_price_per_unit": 10.4,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 11.9394,
-      "total_value_eur": 5969.7
+      "sell_price_per_unit_eur": 11.9901,
+      "total_value_eur": 5995.05,
+      "purchase_price_total_eur": 0.0,
+      "realized_gain_loss_eur": 5995.05
     },
     {
       "date": "2025-04-03T00:00:00+00:00",
       "asset_name": "Wise",
       "quantity": 500.0,
+      "purchase_price_per_unit": 0.0,
+      "purchase_price_per_unit_eur": 0.0,
       "sell_price_per_unit": 10.75,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 12.3412,
-      "total_value_eur": 6170.61
+      "sell_price_per_unit_eur": 12.3936,
+      "total_value_eur": 6196.81,
+      "purchase_price_total_eur": 0.0,
+      "realized_gain_loss_eur": 6196.81
     },
     {
       "date": "2025-06-05T00:00:00+00:00",
       "asset_name": "Wise",
       "quantity": 850.0,
+      "purchase_price_per_unit": 0.0,
+      "purchase_price_per_unit_eur": 0.0,
       "sell_price_per_unit": 12.05,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 13.8336,
-      "total_value_eur": 11758.59
+      "sell_price_per_unit_eur": 13.8924,
+      "total_value_eur": 11808.53,
+      "purchase_price_total_eur": 0.0,
+      "realized_gain_loss_eur": 11808.53
     },
     {
       "date": "2025-06-26T00:00:00+00:00",
       "asset_name": "Wise",
       "quantity": 1000.0,
+      "purchase_price_per_unit": 0.0,
+      "purchase_price_per_unit_eur": 0.0,
       "sell_price_per_unit": 10.4,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 11.9394,
-      "total_value_eur": 11939.41
+      "sell_price_per_unit_eur": 11.9901,
+      "total_value_eur": 11990.11,
+      "purchase_price_total_eur": 0.0,
+      "realized_gain_loss_eur": 11990.11
     },
     {
       "date": "2025-11-07T00:00:00+00:00",
       "asset_name": "Wise",
       "quantity": 1000.0,
+      "purchase_price_per_unit": 0.0,
+      "purchase_price_per_unit_eur": 0.0,
       "sell_price_per_unit": 9.5,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 10.9062,
-      "total_value_eur": 10906.19
+      "sell_price_per_unit_eur": 10.9525,
+      "total_value_eur": 10952.5,
+      "purchase_price_total_eur": 0.0,
+      "realized_gain_loss_eur": 10952.5
     },
     {
       "date": "2025-01-02T00:00:00+00:00",
       "asset_name": "J.P. Morgan chase",
       "quantity": 10.0,
+      "purchase_price_per_unit": 169.7,
+      "purchase_price_per_unit_eur": 145.236,
       "sell_price_per_unit": 242.3,
       "currency": "USD",
-      "sell_price_per_unit_eur": 206.7497,
-      "total_value_eur": 2067.5
+      "sell_price_per_unit_eur": 207.37,
+      "total_value_eur": 2073.7,
+      "purchase_price_total_eur": 1452.36,
+      "realized_gain_loss_eur": 621.34
     },
     {
       "date": "2025-01-28T00:00:00+00:00",
       "asset_name": "Acro Vara",
       "quantity": 216.0,
+      "purchase_price_per_unit": 2.25,
+      "purchase_price_per_unit_eur": 2.25,
       "sell_price_per_unit": 1.4,
       "currency": "EUR",
       "sell_price_per_unit_eur": 1.4,
-      "total_value_eur": 302.4
+      "total_value_eur": 302.4,
+      "purchase_price_total_eur": 486.0,
+      "realized_gain_loss_eur": -183.6
     },
     {
       "date": "2025-02-11T00:00:00+00:00",
       "asset_name": "Cloudflare",
       "quantity": 65.0,
+      "purchase_price_per_unit": 75.0,
+      "purchase_price_per_unit_eur": 64.188,
       "sell_price_per_unit": 173.5,
       "currency": "USD",
-      "sell_price_per_unit_eur": 148.0441,
-      "total_value_eur": 9622.87
+      "sell_price_per_unit_eur": 148.4882,
+      "total_value_eur": 9651.74,
+      "purchase_price_total_eur": 4172.22,
+      "realized_gain_loss_eur": 5479.52
     },
     {
       "date": "2025-02-20T00:00:00+00:00",
       "asset_name": "Tallinnk",
       "quantity": 4000.0,
+      "purchase_price_per_unit": 0.65,
+      "purchase_price_per_unit_eur": 0.65,
       "sell_price_per_unit": 0.65,
       "currency": "EUR",
       "sell_price_per_unit_eur": 0.65,
-      "total_value_eur": 2600.0
+      "total_value_eur": 2600.0,
+      "purchase_price_total_eur": 2600.0,
+      "realized_gain_loss_eur": 0.0
     },
     {
       "date": "2025-02-20T00:00:00+00:00",
       "asset_name": "Enefit Green",
       "quantity": 2000.0,
+      "purchase_price_per_unit": 3.14,
+      "purchase_price_per_unit_eur": 3.14,
       "sell_price_per_unit": 3.36,
       "currency": "EUR",
       "sell_price_per_unit_eur": 3.36,
-      "total_value_eur": 6720.0
+      "total_value_eur": 6720.0,
+      "purchase_price_total_eur": 6280.0,
+      "realized_gain_loss_eur": 440.0
     },
     {
       "date": "2025-05-02T00:00:00+00:00",
       "asset_name": "ASML",
       "quantity": 9.0,
+      "purchase_price_per_unit": 591.0,
+      "purchase_price_per_unit_eur": 591.0,
       "sell_price_per_unit": 597.8,
       "currency": "EUR",
       "sell_price_per_unit_eur": 597.8,
-      "total_value_eur": 5380.2
+      "total_value_eur": 5380.2,
+      "purchase_price_total_eur": 5319.0,
+      "realized_gain_loss_eur": 61.2
     },
     {
       "date": "2025-05-02T00:00:00+00:00",
       "asset_name": "Kaubamaja",
       "quantity": 260.0,
-      "sell_price_per_unit": 9.65,
+      "purchase_price_per_unit": 9.89,
+      "purchase_price_per_unit_eur": 9.89,
+      "sell_price_per_unit": 9.76,
       "currency": "EUR",
-      "sell_price_per_unit_eur": 9.65,
-      "total_value_eur": 2509.0
+      "sell_price_per_unit_eur": 9.76,
+      "total_value_eur": 2537.6,
+      "purchase_price_total_eur": 2571.4,
+      "realized_gain_loss_eur": -33.8
     },
     {
       "date": "2025-07-11T00:00:00+00:00",
       "asset_name": "Microsoft",
       "quantity": 10.0,
+      "purchase_price_per_unit": 220.5,
+      "purchase_price_per_unit_eur": 188.7127,
       "sell_price_per_unit": 522.0,
       "currency": "USD",
-      "sell_price_per_unit_eur": 445.4122,
-      "total_value_eur": 4454.12
+      "sell_price_per_unit_eur": 446.7485,
+      "total_value_eur": 4467.48,
+      "purchase_price_total_eur": 1887.13,
+      "realized_gain_loss_eur": 2580.36
     },
     {
       "date": "2025-07-11T00:00:00+00:00",
       "asset_name": "Okta",
       "quantity": 20.0,
+      "purchase_price_per_unit": 62.5,
+      "purchase_price_per_unit_eur": 53.49,
       "sell_price_per_unit": 82.15,
       "currency": "USD",
-      "sell_price_per_unit_eur": 70.097,
-      "total_value_eur": 1401.94
+      "sell_price_per_unit_eur": 70.3073,
+      "total_value_eur": 1406.15,
+      "purchase_price_total_eur": 1069.8,
+      "realized_gain_loss_eur": 336.35
     },
     {
       "date": "2025-07-11T00:00:00+00:00",
       "asset_name": "Coca Cola",
       "quantity": 50.0,
+      "purchase_price_per_unit": 53.5,
+      "purchase_price_per_unit_eur": 45.7874,
       "sell_price_per_unit": 71.45,
       "currency": "USD",
-      "sell_price_per_unit_eur": 60.9669,
-      "total_value_eur": 3048.34
+      "sell_price_per_unit_eur": 61.1498,
+      "total_value_eur": 3057.49,
+      "purchase_price_total_eur": 2289.37,
+      "realized_gain_loss_eur": 768.12
     },
     {
       "date": "2025-10-30T00:00:00+00:00",
       "asset_name": "Fiserv",
       "quantity": 100.0,
+      "purchase_price_per_unit": 99.78,
+      "purchase_price_per_unit_eur": 85.3957,
       "sell_price_per_unit": 66.4,
       "currency": "USD",
-      "sell_price_per_unit_eur": 56.6578,
-      "total_value_eur": 5665.78
+      "sell_price_per_unit_eur": 56.8278,
+      "total_value_eur": 5682.78,
+      "purchase_price_total_eur": 8539.57,
+      "realized_gain_loss_eur": -2856.79
     },
     {
       "date": "2025-11-30T00:00:00+00:00",
       "asset_name": "Confluent",
       "quantity": 310.0,
+      "purchase_price_per_unit": 16.8,
+      "purchase_price_per_unit_eur": 14.3781,
       "sell_price_per_unit": 29.8,
       "currency": "USD",
-      "sell_price_per_unit_eur": 25.4277,
-      "total_value_eur": 7882.6
+      "sell_price_per_unit_eur": 25.504,
+      "total_value_eur": 7906.25,
+      "purchase_price_total_eur": 4457.21,
+      "realized_gain_loss_eur": 3449.04
     },
     {
       "date": "2025-11-30T00:00:00+00:00",
       "asset_name": "Johnson & Johnson",
       "quantity": 20.0,
+      "purchase_price_per_unit": 160.9,
+      "purchase_price_per_unit_eur": 137.7047,
       "sell_price_per_unit": 202.64,
       "currency": "USD",
-      "sell_price_per_unit_eur": 172.9087,
-      "total_value_eur": 3458.17
+      "sell_price_per_unit_eur": 173.4274,
+      "total_value_eur": 3468.55,
+      "purchase_price_total_eur": 2754.09,
+      "realized_gain_loss_eur": 714.46
     },
     {
       "date": "2025-12-23T00:00:00+00:00",
       "asset_name": "Banco Santander",
       "quantity": 1500.0,
+      "purchase_price_per_unit": 4.62,
+      "purchase_price_per_unit_eur": 4.62,
       "sell_price_per_unit": 9.96,
       "currency": "EUR",
       "sell_price_per_unit_eur": 9.96,
-      "total_value_eur": 14940.0
+      "total_value_eur": 14940.0,
+      "purchase_price_total_eur": 6930.0,
+      "realized_gain_loss_eur": 8010.0
     },
     {
       "date": "2025-12-29T00:00:00+00:00",
       "asset_name": "Artea bank",
       "quantity": 4100.0,
+      "purchase_price_per_unit": 0.62,
+      "purchase_price_per_unit_eur": 0.62,
       "sell_price_per_unit": 0.93,
       "currency": "EUR",
       "sell_price_per_unit_eur": 0.93,
-      "total_value_eur": 3813.0
+      "total_value_eur": 3813.0,
+      "purchase_price_total_eur": 2542.0,
+      "realized_gain_loss_eur": 1271.0
     },
     {
       "date": "2025-12-29T00:00:00+00:00",
       "asset_name": "Ignitis",
       "quantity": 300.0,
+      "purchase_price_per_unit": 19.37,
+      "purchase_price_per_unit_eur": 19.37,
       "sell_price_per_unit": 21.0,
       "currency": "EUR",
       "sell_price_per_unit_eur": 21.0,
-      "total_value_eur": 6300.0
+      "total_value_eur": 6300.0,
+      "purchase_price_total_eur": 5811.0,
+      "realized_gain_loss_eur": 489.0
     }
   ],
   "buy_transactions": [
@@ -261,8 +373,8 @@
       "quantity": 60.0,
       "purchase_price_per_unit": 110.8,
       "currency": "GBP",
-      "purchase_price_per_unit_eur": 127.2006,
-      "total_value_eur": 7632.04
+      "purchase_price_per_unit_eur": 127.7408,
+      "total_value_eur": 7664.45
     },
     {
       "date": "2025-01-26T00:00:00+00:00",
@@ -270,8 +382,8 @@
       "quantity": 35.0,
       "purchase_price_per_unit": 42.3,
       "currency": "USD",
-      "purchase_price_per_unit_eur": 36.0937,
-      "total_value_eur": 1263.28
+      "purchase_price_per_unit_eur": 36.202,
+      "total_value_eur": 1267.07
     },
     {
       "date": "2025-02-12T00:00:00+00:00",
@@ -279,8 +391,8 @@
       "quantity": 30.0,
       "purchase_price_per_unit": 186.5,
       "currency": "USD",
-      "purchase_price_per_unit_eur": 159.1367,
-      "total_value_eur": 4774.1
+      "purchase_price_per_unit_eur": 159.6142,
+      "total_value_eur": 4788.42
     },
     {
       "date": "2025-02-13T00:00:00+00:00",
@@ -288,8 +400,8 @@
       "quantity": 50.0,
       "purchase_price_per_unit": 215.0,
       "currency": "GBP",
-      "purchase_price_per_unit_eur": 246.8243,
-      "total_value_eur": 12341.22
+      "purchase_price_per_unit_eur": 247.8724,
+      "total_value_eur": 12393.62
     },
     {
       "date": "2025-03-17T00:00:00+00:00",
@@ -297,8 +409,8 @@
       "quantity": 70.0,
       "purchase_price_per_unit": 49.45,
       "currency": "USD",
-      "purchase_price_per_unit_eur": 42.1947,
-      "total_value_eur": 2953.63
+      "purchase_price_per_unit_eur": 42.3213,
+      "total_value_eur": 2962.49
     },
     {
       "date": "2025-03-31T00:00:00+00:00",
@@ -306,8 +418,8 @@
       "quantity": 11.0,
       "purchase_price_per_unit": 209.5,
       "currency": "USD",
-      "purchase_price_per_unit_eur": 178.7622,
-      "total_value_eur": 1966.38
+      "purchase_price_per_unit_eur": 179.2985,
+      "total_value_eur": 1972.28
     },
     {
       "date": "2025-04-04T00:00:00+00:00",
@@ -315,8 +427,8 @@
       "quantity": 16.0,
       "purchase_price_per_unit": 182.0,
       "currency": "USD",
-      "purchase_price_per_unit_eur": 155.297,
-      "total_value_eur": 2484.75
+      "purchase_price_per_unit_eur": 155.7629,
+      "total_value_eur": 2492.21
     },
     {
       "date": "2025-04-07T00:00:00+00:00",
@@ -324,8 +436,8 @@
       "quantity": 35.0,
       "purchase_price_per_unit": 142.0,
       "currency": "USD",
-      "purchase_price_per_unit_eur": 121.1658,
-      "total_value_eur": 4240.8
+      "purchase_price_per_unit_eur": 121.5293,
+      "total_value_eur": 4253.52
     },
     {
       "date": "2025-04-09T00:00:00+00:00",
@@ -333,8 +445,8 @@
       "quantity": 40.0,
       "purchase_price_per_unit": 97.0,
       "currency": "GBP",
-      "purchase_price_per_unit_eur": 111.3579,
-      "total_value_eur": 4454.32
+      "purchase_price_per_unit_eur": 111.8308,
+      "total_value_eur": 4473.23
     },
     {
       "date": "2025-04-25T00:00:00+00:00",
@@ -369,8 +481,8 @@
       "quantity": 1000.0,
       "purchase_price_per_unit": 10.2,
       "currency": "GBP",
-      "purchase_price_per_unit_eur": 11.7098,
-      "total_value_eur": 11709.8
+      "purchase_price_per_unit_eur": 11.7595,
+      "total_value_eur": 11759.53
     },
     {
       "date": "2025-07-29T00:00:00+00:00",
@@ -387,8 +499,8 @@
       "quantity": 310.0,
       "purchase_price_per_unit": 16.8,
       "currency": "USD",
-      "purchase_price_per_unit_eur": 14.3351,
-      "total_value_eur": 4443.88
+      "purchase_price_per_unit_eur": 14.3781,
+      "total_value_eur": 4457.21
     },
     {
       "date": "2025-12-29T00:00:00+00:00",
@@ -403,12 +515,12 @@
   "metadata": {
     "sell_count": 28,
     "buy_count": 16,
-    "sell_hash": "sha256:c64ba2ecfc1b19487ae1b3505fc7b26f7d210fba426ff2ea1c65f272581a07b8",
-    "buy_hash": "sha256:2a67f0b45cee5d3df756254e5f643776ddfc5c1abc67aa21e83e63dea2d6a23e",
+    "sell_hash": "sha256:ec4ec4a289976d877981a4dbd2aa210386c7b1313cb35ca617ae2afcccf61fe2",
+    "buy_hash": "sha256:a50193c8cbcd33b4cea3bf6bf44c597bff29ed6479272d7b74259f06522b1f63",
     "source_sheet": "Transactions",
     "currency_rates": {
-      "gbp_to_eur": 1.14802,
-      "usd_to_eur": 0.85328
+      "gbp_to_eur": 1.152895,
+      "usd_to_eur": 0.85584
     }
   }
 }
