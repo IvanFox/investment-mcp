@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-01-02T20:15:27.547673+00:00",
+  "last_updated": "2026-01-07T18:33:08.757054+00:00",
   "sell_transactions": [
     {
       "date": "2025-02-03T00:00:00+00:00",
@@ -7,8 +7,8 @@
       "quantity": 183.0,
       "sell_price_per_unit": 11.0,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 12.6282,
-      "total_value_eur": 2310.96
+      "sell_price_per_unit_eur": 12.6768,
+      "total_value_eur": 2319.85
     },
     {
       "date": "2025-02-11T00:00:00+00:00",
@@ -16,8 +16,8 @@
       "quantity": 817.0,
       "sell_price_per_unit": 10.95,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 12.5708,
-      "total_value_eur": 10270.36
+      "sell_price_per_unit_eur": 12.6192,
+      "total_value_eur": 10309.86
     },
     {
       "date": "2025-02-14T00:00:00+00:00",
@@ -25,8 +25,8 @@
       "quantity": 1000.0,
       "sell_price_per_unit": 10.67,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 12.2494,
-      "total_value_eur": 12249.37
+      "sell_price_per_unit_eur": 12.2965,
+      "total_value_eur": 12296.48
     },
     {
       "date": "2025-02-14T00:00:00+00:00",
@@ -34,8 +34,8 @@
       "quantity": 2000.0,
       "sell_price_per_unit": 10.5,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 12.0542,
-      "total_value_eur": 24108.42
+      "sell_price_per_unit_eur": 12.1006,
+      "total_value_eur": 24201.14
     },
     {
       "date": "2025-02-14T00:00:00+00:00",
@@ -43,8 +43,8 @@
       "quantity": 1000.0,
       "sell_price_per_unit": 10.3,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 11.8246,
-      "total_value_eur": 11824.61
+      "sell_price_per_unit_eur": 11.8701,
+      "total_value_eur": 11870.08
     },
     {
       "date": "2025-02-14T00:00:00+00:00",
@@ -52,8 +52,8 @@
       "quantity": 850.0,
       "sell_price_per_unit": 10.61,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 12.1805,
-      "total_value_eur": 10353.42
+      "sell_price_per_unit_eur": 12.2273,
+      "total_value_eur": 10393.24
     },
     {
       "date": "2025-02-25T00:00:00+00:00",
@@ -61,8 +61,8 @@
       "quantity": 1000.0,
       "sell_price_per_unit": 10.0,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 11.4802,
-      "total_value_eur": 11480.2
+      "sell_price_per_unit_eur": 11.5244,
+      "total_value_eur": 11524.35
     },
     {
       "date": "2025-04-03T00:00:00+00:00",
@@ -70,8 +70,8 @@
       "quantity": 500.0,
       "sell_price_per_unit": 10.4,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 11.9394,
-      "total_value_eur": 5969.7
+      "sell_price_per_unit_eur": 11.9853,
+      "total_value_eur": 5992.66
     },
     {
       "date": "2025-04-03T00:00:00+00:00",
@@ -79,8 +79,8 @@
       "quantity": 500.0,
       "sell_price_per_unit": 10.75,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 12.3412,
-      "total_value_eur": 6170.61
+      "sell_price_per_unit_eur": 12.3887,
+      "total_value_eur": 6194.34
     },
     {
       "date": "2025-06-05T00:00:00+00:00",
@@ -88,8 +88,8 @@
       "quantity": 850.0,
       "sell_price_per_unit": 12.05,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 13.8336,
-      "total_value_eur": 11758.59
+      "sell_price_per_unit_eur": 13.8868,
+      "total_value_eur": 11803.82
     },
     {
       "date": "2025-06-26T00:00:00+00:00",
@@ -97,8 +97,8 @@
       "quantity": 1000.0,
       "sell_price_per_unit": 10.4,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 11.9394,
-      "total_value_eur": 11939.41
+      "sell_price_per_unit_eur": 11.9853,
+      "total_value_eur": 11985.32
     },
     {
       "date": "2025-11-07T00:00:00+00:00",
@@ -106,8 +106,8 @@
       "quantity": 1000.0,
       "sell_price_per_unit": 9.5,
       "currency": "GBP",
-      "sell_price_per_unit_eur": 10.9062,
-      "total_value_eur": 10906.19
+      "sell_price_per_unit_eur": 10.9481,
+      "total_value_eur": 10948.13
     },
     {
       "date": "2025-01-02T00:00:00+00:00",
@@ -115,8 +115,8 @@
       "quantity": 10.0,
       "sell_price_per_unit": 242.3,
       "currency": "USD",
-      "sell_price_per_unit_eur": 206.7497,
-      "total_value_eur": 2067.5
+      "sell_price_per_unit_eur": 207.3022,
+      "total_value_eur": 2073.02
     },
     {
       "date": "2025-01-28T00:00:00+00:00",
@@ -133,8 +133,8 @@
       "quantity": 65.0,
       "sell_price_per_unit": 173.5,
       "currency": "USD",
-      "sell_price_per_unit_eur": 148.0441,
-      "total_value_eur": 9622.87
+      "sell_price_per_unit_eur": 148.4397,
+      "total_value_eur": 9648.58
     },
     {
       "date": "2025-02-20T00:00:00+00:00",
@@ -167,10 +167,10 @@
       "date": "2025-05-02T00:00:00+00:00",
       "asset_name": "Kaubamaja",
       "quantity": 260.0,
-      "sell_price_per_unit": 9.65,
+      "sell_price_per_unit": 9.76,
       "currency": "EUR",
-      "sell_price_per_unit_eur": 9.65,
-      "total_value_eur": 2509.0
+      "sell_price_per_unit_eur": 9.76,
+      "total_value_eur": 2537.6
     },
     {
       "date": "2025-07-11T00:00:00+00:00",
@@ -178,8 +178,8 @@
       "quantity": 10.0,
       "sell_price_per_unit": 522.0,
       "currency": "USD",
-      "sell_price_per_unit_eur": 445.4122,
-      "total_value_eur": 4454.12
+      "sell_price_per_unit_eur": 446.6023,
+      "total_value_eur": 4466.02
     },
     {
       "date": "2025-07-11T00:00:00+00:00",
@@ -187,8 +187,8 @@
       "quantity": 20.0,
       "sell_price_per_unit": 82.15,
       "currency": "USD",
-      "sell_price_per_unit_eur": 70.097,
-      "total_value_eur": 1401.94
+      "sell_price_per_unit_eur": 70.2843,
+      "total_value_eur": 1405.69
     },
     {
       "date": "2025-07-11T00:00:00+00:00",
@@ -196,8 +196,8 @@
       "quantity": 50.0,
       "sell_price_per_unit": 71.45,
       "currency": "USD",
-      "sell_price_per_unit_eur": 60.9669,
-      "total_value_eur": 3048.34
+      "sell_price_per_unit_eur": 61.1298,
+      "total_value_eur": 3056.49
     },
     {
       "date": "2025-10-30T00:00:00+00:00",
@@ -205,8 +205,8 @@
       "quantity": 100.0,
       "sell_price_per_unit": 66.4,
       "currency": "USD",
-      "sell_price_per_unit_eur": 56.6578,
-      "total_value_eur": 5665.78
+      "sell_price_per_unit_eur": 56.8092,
+      "total_value_eur": 5680.92
     },
     {
       "date": "2025-11-30T00:00:00+00:00",
@@ -214,8 +214,8 @@
       "quantity": 310.0,
       "sell_price_per_unit": 29.8,
       "currency": "USD",
-      "sell_price_per_unit_eur": 25.4277,
-      "total_value_eur": 7882.6
+      "sell_price_per_unit_eur": 25.4957,
+      "total_value_eur": 7903.66
     },
     {
       "date": "2025-11-30T00:00:00+00:00",
@@ -223,8 +223,8 @@
       "quantity": 20.0,
       "sell_price_per_unit": 202.64,
       "currency": "USD",
-      "sell_price_per_unit_eur": 172.9087,
-      "total_value_eur": 3458.17
+      "sell_price_per_unit_eur": 173.3707,
+      "total_value_eur": 3467.41
     },
     {
       "date": "2025-12-23T00:00:00+00:00",
@@ -261,8 +261,8 @@
       "quantity": 60.0,
       "purchase_price_per_unit": 110.8,
       "currency": "GBP",
-      "purchase_price_per_unit_eur": 127.2006,
-      "total_value_eur": 7632.04
+      "purchase_price_per_unit_eur": 127.6898,
+      "total_value_eur": 7661.39
     },
     {
       "date": "2025-01-26T00:00:00+00:00",
@@ -270,8 +270,8 @@
       "quantity": 35.0,
       "purchase_price_per_unit": 42.3,
       "currency": "USD",
-      "purchase_price_per_unit_eur": 36.0937,
-      "total_value_eur": 1263.28
+      "purchase_price_per_unit_eur": 36.1902,
+      "total_value_eur": 1266.66
     },
     {
       "date": "2025-02-12T00:00:00+00:00",
@@ -279,8 +279,8 @@
       "quantity": 30.0,
       "purchase_price_per_unit": 186.5,
       "currency": "USD",
-      "purchase_price_per_unit_eur": 159.1367,
-      "total_value_eur": 4774.1
+      "purchase_price_per_unit_eur": 159.5619,
+      "total_value_eur": 4786.86
     },
     {
       "date": "2025-02-13T00:00:00+00:00",
@@ -288,8 +288,8 @@
       "quantity": 50.0,
       "purchase_price_per_unit": 215.0,
       "currency": "GBP",
-      "purchase_price_per_unit_eur": 246.8243,
-      "total_value_eur": 12341.22
+      "purchase_price_per_unit_eur": 247.7735,
+      "total_value_eur": 12388.68
     },
     {
       "date": "2025-03-17T00:00:00+00:00",
@@ -297,8 +297,8 @@
       "quantity": 70.0,
       "purchase_price_per_unit": 49.45,
       "currency": "USD",
-      "purchase_price_per_unit_eur": 42.1947,
-      "total_value_eur": 2953.63
+      "purchase_price_per_unit_eur": 42.3074,
+      "total_value_eur": 2961.52
     },
     {
       "date": "2025-03-31T00:00:00+00:00",
@@ -306,8 +306,8 @@
       "quantity": 11.0,
       "purchase_price_per_unit": 209.5,
       "currency": "USD",
-      "purchase_price_per_unit_eur": 178.7622,
-      "total_value_eur": 1966.38
+      "purchase_price_per_unit_eur": 179.2398,
+      "total_value_eur": 1971.64
     },
     {
       "date": "2025-04-04T00:00:00+00:00",
@@ -315,8 +315,8 @@
       "quantity": 16.0,
       "purchase_price_per_unit": 182.0,
       "currency": "USD",
-      "purchase_price_per_unit_eur": 155.297,
-      "total_value_eur": 2484.75
+      "purchase_price_per_unit_eur": 155.7119,
+      "total_value_eur": 2491.39
     },
     {
       "date": "2025-04-07T00:00:00+00:00",
@@ -324,8 +324,8 @@
       "quantity": 35.0,
       "purchase_price_per_unit": 142.0,
       "currency": "USD",
-      "purchase_price_per_unit_eur": 121.1658,
-      "total_value_eur": 4240.8
+      "purchase_price_per_unit_eur": 121.4895,
+      "total_value_eur": 4252.13
     },
     {
       "date": "2025-04-09T00:00:00+00:00",
@@ -333,8 +333,8 @@
       "quantity": 40.0,
       "purchase_price_per_unit": 97.0,
       "currency": "GBP",
-      "purchase_price_per_unit_eur": 111.3579,
-      "total_value_eur": 4454.32
+      "purchase_price_per_unit_eur": 111.7862,
+      "total_value_eur": 4471.45
     },
     {
       "date": "2025-04-25T00:00:00+00:00",
@@ -369,8 +369,8 @@
       "quantity": 1000.0,
       "purchase_price_per_unit": 10.2,
       "currency": "GBP",
-      "purchase_price_per_unit_eur": 11.7098,
-      "total_value_eur": 11709.8
+      "purchase_price_per_unit_eur": 11.7548,
+      "total_value_eur": 11754.84
     },
     {
       "date": "2025-07-29T00:00:00+00:00",
@@ -387,8 +387,8 @@
       "quantity": 310.0,
       "purchase_price_per_unit": 16.8,
       "currency": "USD",
-      "purchase_price_per_unit_eur": 14.3351,
-      "total_value_eur": 4443.88
+      "purchase_price_per_unit_eur": 14.3734,
+      "total_value_eur": 4455.76
     },
     {
       "date": "2025-12-29T00:00:00+00:00",
@@ -403,12 +403,12 @@
   "metadata": {
     "sell_count": 28,
     "buy_count": 16,
-    "sell_hash": "sha256:c64ba2ecfc1b19487ae1b3505fc7b26f7d210fba426ff2ea1c65f272581a07b8",
-    "buy_hash": "sha256:2a67f0b45cee5d3df756254e5f643776ddfc5c1abc67aa21e83e63dea2d6a23e",
+    "sell_hash": "sha256:2e6ff1703ea60b297f5775bbdb7279b68d58a5c3a6b6b91614028b4d559eb180",
+    "buy_hash": "sha256:1ef1dc36ed9b5f8496af45b3ec92f53fc149641511fc78c9422e9b2f7ed6de8b",
     "source_sheet": "Transactions",
     "currency_rates": {
-      "gbp_to_eur": 1.14802,
-      "usd_to_eur": 0.85328
+      "gbp_to_eur": 1.152435,
+      "usd_to_eur": 0.85556
     }
   }
 }

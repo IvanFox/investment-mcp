@@ -858,25 +858,26 @@ No assets found in portfolio snapshot.
 
 
 @mcp.tool()
-def generate_portfolio_dashboard(time_period: str = "all") -> str:
+def generate_portfolio_dashboard(view: str = "daily", time_period: str = "all") -> str:
     """
     Generate interactive HTML dashboard with portfolio visualizations.
-    
-    Creates a comprehensive dashboard showing portfolio performance, allocation,
-    individual asset trends, benchmark comparisons, and risk metrics over time.
-    
+
+    Creates a dashboard with different views optimized for various analysis needs.
+
     Args:
+        view: Dashboard view - "daily" (quick check-in), "performance" (trends),
+              "transactions" (trading history), "risk" (deep analysis) (default: "daily")
         time_period: One of "7d", "30d", "90d", "1y", "all" (default: "all")
-    
+
     Returns:
         str: Path to generated HTML file with instructions to open
     """
     try:
         from . import visualization
-        
-        logger.info(f"Generating portfolio dashboard for period: {time_period}")
-        
-        result = visualization.generate_portfolio_dashboard(time_period)
+
+        logger.info(f"Generating portfolio dashboard - view: {view}, period: {time_period}")
+
+        result = visualization.generate_portfolio_dashboard(view, time_period)
         
         if not result.get("success"):
             return f"""# 📊 Portfolio Dashboard Generation Failed
@@ -891,8 +892,35 @@ def generate_portfolio_dashboard(time_period: str = "all") -> str:
         snapshot_count = result.get("snapshot_count", 0)
         date_range = result.get("date_range", {})
         
+        view_type = result.get("view", view)
+
+        # View-specific descriptions
+        view_descriptions = {
+            "daily": [
+                "- **KPI Cards:** Total value, daily change, return %, winners count",
+                "- **Top Movers:** Attribution analysis showing which assets drove changes",
+                "- **7-Day Trend:** Portfolio value sparkline",
+                "- **Risk Summary:** Key metrics at a glance"
+            ],
+            "performance": [
+                "- **Portfolio Value Trend** (vs S&P 500 & All-World Index)",
+                "- **Category Allocation Over Time** (stacked areas)",
+                "- **Individual Asset Performance** (multi-line chart)",
+                "- **Gain/Loss Analysis** (current positions)",
+                "- **HHI Concentration Trend** (diversification tracking)"
+            ],
+            "transactions": [
+                "- **Transaction Timeline** (buy/sell activity with markers)",
+                "- **Realized Gains Tracker** (cumulative and monthly P&L)"
+            ],
+            "risk": [
+                "- **Risk Metrics Dashboard** (returns, drawdown, volatility)",
+                "- **Distribution Analysis** (value change histogram)"
+            ]
+        }
+
         output_lines = [
-            "# ✅ Portfolio Dashboard Generated Successfully!",
+            f"# ✅ Portfolio Dashboard Generated Successfully! ({view_type.title()} View)",
             "",
             "## 📊 Dashboard Location",
             f"**File Path:** `{file_path}`",
@@ -902,25 +930,21 @@ def generate_portfolio_dashboard(time_period: str = "all") -> str:
             "- Click the URL above (in supported clients)",
             f"- Or run: `open {file_path}`",
             "",
-            "## 📈 Dashboard Includes:",
-            "- **Portfolio Value Trend** (vs S&P 500 & All-World Index)",
-            "- **Category Allocation Over Time** (stacked areas)",
-            "- **Individual Asset Performance** (top 10 by default, all selectable)",
-            "- **Top Holdings Evolution** (position changes)",
-            "- **Gain/Loss Analysis** (current positions)",
-            "- **Transaction Timeline** (buy/sell activity)",
-            "- **Currency Exposure Breakdown**",
-            "- **Risk Metrics Dashboard** (Sharpe, Drawdown, Returns, Contribution)",
+            f"## 📈 {view_type.title()} View Includes:",
+        ]
+
+        output_lines.extend(view_descriptions.get(view_type, ["- Dashboard visualizations"]))
+
+        output_lines.extend([
             "",
             "## 📅 Data Range:",
+            f"- **View:** {view_type}",
             f"- **Period:** {time_period}",
             f"- **Start Date:** {date_range.get('start', 'N/A')}",
             f"- **End Date:** {date_range.get('end', 'N/A')}",
             f"- **Snapshots:** {snapshot_count}",
             "",
             "## 🎛️ Interactive Features:",
-            "- **Time Period Selector:** Change date range with dropdown",
-            "- **Asset Selector:** Multi-select which assets to display",
             "- **Zoom & Pan:** Interactive chart controls",
             "- **Hover Details:** Detailed tooltips on all data points",
             "- **Toggle Series:** Click legend items to show/hide",
@@ -928,7 +952,7 @@ def generate_portfolio_dashboard(time_period: str = "all") -> str:
             "---",
             f"*Generated at: {result.get('generated_at', 'Unknown')}*",
             "*Dashboard by Investment MCP Agent*"
-        ]
+        ])
         
         return "\n".join(output_lines)
         
@@ -941,6 +965,115 @@ def generate_portfolio_dashboard(time_period: str = "all") -> str:
 {error_msg}
 
 *Dashboard generation by Investment MCP Agent*"""
+
+
+@mcp.tool()
+def get_daily_overview() -> str:
+    """
+    Get daily portfolio overview with today's changes and top movers.
+
+    Quick check-in tool optimized for seeing what changed today. Shows KPI metrics,
+    attribution analysis (which assets drove the change), and win/loss ratio.
+
+    Requires yesterday's snapshot to exist for comparison.
+
+    Returns:
+        str: Daily overview summary with KPIs and top movers
+    """
+    try:
+        from . import storage, daily_analysis
+
+        logger.info("Fetching daily portfolio overview...")
+
+        # Get today's and yesterday's snapshots
+        all_snapshots = storage.get_all_snapshots()
+
+        if not all_snapshots:
+            return """# 📊 Daily Overview
+
+## ⚠️ No Data Available
+No portfolio snapshots found. Run portfolio analysis first.
+
+*Daily Overview by Investment MCP Agent*"""
+
+        today_snapshot = all_snapshots[-1]
+        yesterday_snapshot = daily_analysis.get_yesterday_snapshot()
+
+        if not yesterday_snapshot:
+            # Show current status without comparison
+            total_value = today_snapshot.get("total_value_eur", 0)
+            timestamp = today_snapshot.get("timestamp", "Unknown")
+
+            return f"""# 📊 Daily Overview
+
+## 💼 Current Portfolio Status
+**Total Value:** €{total_value:,.2f}
+**Snapshot Time:** {timestamp}
+
+## ⚠️ No Daily Comparison Available
+Yesterday's snapshot not found. Daily changes require a snapshot from the previous day.
+
+Run portfolio analysis tomorrow to see daily changes and attribution.
+
+*Daily Overview by Investment MCP Agent*"""
+
+        # Calculate daily changes
+        daily_data = daily_analysis.calculate_daily_changes(today_snapshot, yesterday_snapshot)
+
+        # Calculate attribution
+        attribution = daily_analysis.calculate_attribution(
+            daily_data["asset_changes"],
+            daily_data["total_change_eur"]
+        )
+
+        # Get win/loss ratio
+        win_loss = daily_analysis.get_win_loss_ratio(daily_data["asset_changes"])
+
+        # Format output
+        output_lines = [
+            "# 📊 Daily Portfolio Overview",
+            "",
+            "## 💼 Key Metrics",
+            f"**Total Value:** €{daily_data['today_value_eur']:,.2f}",
+            f"**Daily Change:** €{daily_data['total_change_eur']:+,.2f} ({daily_data['total_change_pct']:+.2f}%)",
+            f"**Winners:** {win_loss['winners']}/{win_loss['total']} positions ({win_loss['win_ratio']:.0f}%)",
+            f"**Losers:** {win_loss['losers']}/{win_loss['total']} positions",
+            "",
+            "## 📈 Top 5 Movers (by contribution to change)",
+            ""
+        ]
+
+        # Add top 5 movers
+        top_movers = attribution[:5]
+        for i, mover in enumerate(top_movers, 1):
+            icon = "🟢" if mover["is_gainer"] else "🔴"
+            output_lines.append(
+                f"{i}. {icon} **{mover['name']}**: €{abs(mover['change_eur']):,.2f} "
+                f"({mover['change_pct']:+.1f}%) - {abs(mover['contribution_pct']):.0f}% of total change"
+            )
+
+        output_lines.extend([
+            "",
+            "## 📅 Period",
+            f"**Yesterday:** {daily_data.get('timestamp_yesterday', 'Unknown')}",
+            f"**Today:** {daily_data.get('timestamp_today', 'Unknown')}",
+            "",
+            "---",
+            "*For detailed visualizations, use: `generate_portfolio_dashboard(view='daily')`*",
+            "*Daily Overview by Investment MCP Agent*"
+        ])
+
+        return "\n".join(output_lines)
+
+    except Exception as e:
+        error_msg = f"Failed to get daily overview: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return f"""# 📊 Daily Overview Failed
+
+## ❌ Error
+{error_msg}
+
+*Daily Overview by Investment MCP Agent*"""
 
 
 @mcp.tool()
