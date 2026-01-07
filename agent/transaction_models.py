@@ -12,24 +12,32 @@ from pydantic import BaseModel, Field, field_validator
 class SellTransaction(BaseModel):
     """
     Represents a single sell transaction from Transactions sheet.
-    
+
     Attributes:
         date: Transaction date (contractual/trade date)
         asset_name: Name of asset sold (exact match with portfolio)
         quantity: Number of shares sold
-        sell_price_per_unit: Price per unit in original currency
+        purchase_price_per_unit: Original purchase price per unit in original currency
+        purchase_price_per_unit_eur: Purchase price per unit converted to EUR
+        sell_price_per_unit: Sale price per unit in original currency
         currency: Original currency (USD, GBP, or EUR)
-        sell_price_per_unit_eur: Price per unit converted to EUR
-        total_value_eur: Total transaction value in EUR
+        sell_price_per_unit_eur: Sale price per unit converted to EUR
+        total_value_eur: Total sale proceeds in EUR
+        purchase_price_total_eur: Total cost basis in EUR
+        realized_gain_loss_eur: Realized gain/loss in EUR
     """
-    
+
     date: datetime
     asset_name: str
     quantity: float
+    purchase_price_per_unit: float
+    purchase_price_per_unit_eur: float
     sell_price_per_unit: float
     currency: Literal["USD", "GBP", "EUR"]
     sell_price_per_unit_eur: float
     total_value_eur: float
+    purchase_price_total_eur: float
+    realized_gain_loss_eur: float
     
     @field_validator('date', mode='before')
     @classmethod

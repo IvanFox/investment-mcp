@@ -597,19 +597,35 @@ def _create_quantity_changes_chart(
         
         # Check for quantity changes
         for name in set(list(prev_assets.keys()) + list(curr_assets.keys())):
+            # Skip cash and pension positions (only show securities)
+            if "Cash" in name or "Pension" in name:
+                continue
+
+            # Also check category
+            asset_info = curr_assets.get(name) or prev_assets.get(name)
+            if asset_info:
+                category = asset_info.get("category", "")
+                if category in ["Cash", "Pension"]:
+                    continue
+
             prev_qty = prev_assets.get(name, {}).get("quantity", 0.0)
             curr_qty = curr_assets.get(name, {}).get("quantity", 0.0)
-            
+
             qty_change = curr_qty - prev_qty
-            
+
             if abs(qty_change) > 0.01:  # Threshold to avoid noise
-                curr_value = curr_assets.get(name, {}).get("current_value_eur", 0.0)
-                
+                # For buys, show current value (position after buy)
+                # For sells, show previous value (what was sold)
+                if qty_change > 0:  # Buy
+                    value = curr_assets.get(name, {}).get("current_value_eur", 0.0)
+                else:  # Sell
+                    value = prev_assets.get(name, {}).get("current_value_eur", 0.0)
+
                 transactions.append({
                     "timestamp": timestamp,
                     "name": name,
                     "qty_change": qty_change,
-                    "value": curr_value,
+                    "value": value,
                     "type": "Buy" if qty_change > 0 else "Sell"
                 })
     
@@ -637,32 +653,34 @@ def _create_quantity_changes_chart(
     
     if not buys.empty:
         fig.add_trace(go.Scatter(
-            x=buys["timestamp"],
-            y=buys["value"],
+            x=buys["timestamp"].tolist(),
+            y=buys["value"].tolist(),
             mode="markers",
             name="Buy",
             marker=dict(
-                color="#2ca02c",
-                size=buys["qty_change"].abs() * 2 + 5,
-                symbol="triangle-up"
+                color="#10B981",
+                size=12,
+                symbol="triangle-up",
+                line=dict(color="white", width=1)
             ),
             hovertemplate="<b>BUY: %{customdata}</b><br>Date: %{x}<br>Value: €%{y:,.2f}<extra></extra>",
-            customdata=buys["name"]
+            customdata=buys["name"].tolist()
         ))
     
     if not sells.empty:
         fig.add_trace(go.Scatter(
-            x=sells["timestamp"],
-            y=sells["value"],
+            x=sells["timestamp"].tolist(),
+            y=sells["value"].tolist(),
             mode="markers",
             name="Sell",
             marker=dict(
-                color="#d62728",
-                size=sells["qty_change"].abs() * 2 + 5,
-                symbol="triangle-down"
+                color="#EF4444",
+                size=12,
+                symbol="triangle-down",
+                line=dict(color="white", width=1)
             ),
             hovertemplate="<b>SELL: %{customdata}</b><br>Date: %{x}<br>Value: €%{y:,.2f}<extra></extra>",
-            customdata=sells["name"]
+            customdata=sells["name"].tolist()
         ))
     
     fig.update_layout(
@@ -670,9 +688,24 @@ def _create_quantity_changes_chart(
         xaxis_title="Date",
         yaxis_title="Position Value (EUR)",
         template="plotly_white",
-        height=400
+        height=500,
+        showlegend=True,
+        hovermode='closest',
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        xaxis=dict(
+            showgrid=True,
+            gridcolor='#E5E7EB',
+            zeroline=False
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='#E5E7EB',
+            zeroline=False,
+            rangemode='tozero'
+        )
     )
-    
+
     return fig
 
 
@@ -968,7 +1001,8 @@ def _create_realized_gains_chart(sell_transactions: List[Dict[str, Any]]) -> go.
     dates = []
 
     for txn in sorted_txns:
-        realized_gain = txn.get("total_value_eur", 0) - txn.get("purchase_price_total_eur", 0)
+        # Use the pre-calculated realized gain/loss
+        realized_gain = txn.get("realized_gain_loss_eur", 0)
         cumulative_sum += realized_gain
         cumulative_gains.append(cumulative_sum)
         dates.append(datetime.fromisoformat(txn["date"].replace("Z", "+00:00")))
@@ -994,7 +1028,8 @@ def _create_realized_gains_chart(sell_transactions: List[Dict[str, Any]]) -> go.
     for txn in sorted_txns:
         date = datetime.fromisoformat(txn["date"].replace("Z", "+00:00"))
         month_key = date.strftime("%Y-%m")
-        realized_gain = txn.get("total_value_eur", 0) - txn.get("purchase_price_total_eur", 0)
+        # Use the pre-calculated realized gain/loss
+        realized_gain = txn.get("realized_gain_loss_eur", 0)
         monthly_gains[month_key] = monthly_gains.get(month_key, 0) + realized_gain
 
     # Add monthly bars
