@@ -96,47 +96,92 @@ def load_config(config_path: str = CONFIG_FILE) -> InvestmentConfig:
         )
 
 
+def _validate_env_override(key: str, value: str) -> bool:
+    """
+    Validate environment variable override before applying.
+
+    Security: Prevents invalid or malicious values from being applied to configuration.
+    Invalid values are logged and ignored, allowing the application to continue with
+    values from config.yaml.
+
+    Args:
+        key: Environment variable name
+        value: Environment variable value
+
+    Returns:
+        bool: True if value is valid and should be applied, False otherwise
+    """
+    # Define validators for each environment variable
+    validators = {
+        "INVESTMENT_STORAGE_BACKEND": lambda v: v in ["hybrid", "gcp", "local"],
+        "INVESTMENT_GCP_BUCKET": lambda v: bool(v) and not v.startswith("YOUR_"),
+        "INVESTMENT_SHEET_ID": lambda v: bool(v) and "YOUR_" not in v.upper(),
+        "INVESTMENT_LOG_LEVEL": lambda v: v.upper() in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+    }
+
+    validator = validators.get(key)
+    if validator is None:
+        # No validator defined - allow it (Pydantic will validate later)
+        return True
+
+    if not validator(value):
+        logger.warning(
+            f"⚠️  Invalid environment variable override ignored: {key}={value}\n"
+            f"   Using value from config.yaml instead."
+        )
+        return False
+
+    return True
+
+
 def _apply_env_overrides(yaml_data: dict) -> dict:
     """
     Apply environment variable overrides to configuration.
-    
+
+    Security: Validates environment variables before applying them.
+    Invalid values are logged and ignored.
+
     Supported environment variables:
     - INVESTMENT_GCP_BUCKET: Override storage.gcp.bucket_name
     - INVESTMENT_SHEET_ID: Override google_sheets.sheet_id
-    - INVESTMENT_STORAGE_BACKEND: Override storage.backend
-    - INVESTMENT_LOG_LEVEL: Override logging.level
-    
+    - INVESTMENT_STORAGE_BACKEND: Override storage.backend (must be: hybrid, gcp, or local)
+    - INVESTMENT_LOG_LEVEL: Override logging.level (must be: DEBUG, INFO, WARNING, ERROR, or CRITICAL)
+
     Args:
         yaml_data: Loaded YAML data
-        
+
     Returns:
         dict: YAML data with environment variable overrides applied
     """
-    
+
     # GCP Bucket override
     if "INVESTMENT_GCP_BUCKET" in os.environ:
         bucket_name = os.environ["INVESTMENT_GCP_BUCKET"]
-        yaml_data.setdefault("storage", {}).setdefault("gcp", {})["bucket_name"] = bucket_name
-        logger.info(f"   ENV override: GCP bucket = {bucket_name}")
-    
+        if _validate_env_override("INVESTMENT_GCP_BUCKET", bucket_name):
+            yaml_data.setdefault("storage", {}).setdefault("gcp", {})["bucket_name"] = bucket_name
+            logger.info(f"   ENV override: GCP bucket = {bucket_name}")
+
     # Sheet ID override
     if "INVESTMENT_SHEET_ID" in os.environ:
         sheet_id = os.environ["INVESTMENT_SHEET_ID"]
-        yaml_data.setdefault("google_sheets", {})["sheet_id"] = sheet_id
-        logger.info(f"   ENV override: Sheet ID = {sheet_id[:20]}...")
-    
+        if _validate_env_override("INVESTMENT_SHEET_ID", sheet_id):
+            yaml_data.setdefault("google_sheets", {})["sheet_id"] = sheet_id
+            logger.info(f"   ENV override: Sheet ID = {sheet_id[:20]}...")
+
     # Storage backend override
     if "INVESTMENT_STORAGE_BACKEND" in os.environ:
         backend = os.environ["INVESTMENT_STORAGE_BACKEND"]
-        yaml_data.setdefault("storage", {})["backend"] = backend
-        logger.info(f"   ENV override: Storage backend = {backend}")
-    
+        if _validate_env_override("INVESTMENT_STORAGE_BACKEND", backend):
+            yaml_data.setdefault("storage", {})["backend"] = backend
+            logger.info(f"   ENV override: Storage backend = {backend}")
+
     # Log level override
     if "INVESTMENT_LOG_LEVEL" in os.environ:
         log_level = os.environ["INVESTMENT_LOG_LEVEL"]
-        yaml_data.setdefault("logging", {})["level"] = log_level
-        logger.info(f"   ENV override: Log level = {log_level}")
-    
+        if _validate_env_override("INVESTMENT_LOG_LEVEL", log_level):
+            yaml_data.setdefault("logging", {})["level"] = log_level
+            logger.info(f"   ENV override: Log level = {log_level}")
+
     return yaml_data
 
 

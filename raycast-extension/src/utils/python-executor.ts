@@ -57,6 +57,23 @@ function findUvExecutable(): string {
  */
 export async function executePythonScript<T>(scriptName: string): Promise<T> {
   const { projectRootPath } = getPreferenceValues<Preferences>();
+
+  // Security: Validate that projectRootPath points to the legitimate investment-mcp project
+  // This prevents execution of arbitrary Python scripts if preferences are compromised
+  const configPath = `${projectRootPath}/config.yaml`;
+  const pyprojectPath = `${projectRootPath}/pyproject.toml`;
+
+  if (!existsSync(configPath) || !existsSync(pyprojectPath)) {
+    throw new Error(
+      `Invalid project root: Expected investment-mcp project structure not found.
+
+The project root must contain both 'config.yaml' and 'pyproject.toml' files.
+Current setting: ${projectRootPath}
+
+Please verify your Raycast extension preferences point to the correct directory.`,
+    );
+  }
+
   const scriptPath = `${projectRootPath}/raycast-scripts/lib/${scriptName}_impl.py`;
 
   // Find uv executable
