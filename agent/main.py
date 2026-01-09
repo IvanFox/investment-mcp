@@ -1,7 +1,7 @@
 """
 Main Entry Point for Investment MCP Agent
 
-This is the main entry point where the fastmcp agent is defined and 
+This is the main entry point where the fastmcp agent is defined and
 the scheduled task is orchestrated.
 """
 
@@ -22,6 +22,7 @@ from . import insider_trading
 from . import short_volume
 from .sell_validation import validate_sells_have_transactions, SellValidationError
 from .buy_validation import validate_buys_have_transactions, BuyValidationError
+from .utils import sanitize_error_message
 
 # Configure logging
 logging.basicConfig(
@@ -38,16 +39,18 @@ mcp = FastMCP("Investment Portfolio Agent")
 def run_portfolio_analysis() -> str:
     """
     Manually trigger a portfolio analysis run.
-    
+
     Returns:
         str: Analysis result message
     """
     try:
         return _run_weekly_analysis()
     except Exception as e:
-        error_msg = f"Portfolio analysis failed: {str(e)}"
-        logger.error(error_msg)
-        return error_msg
+        # Log full error details for debugging
+        logger.error(f"Portfolio analysis failed: {str(e)}", exc_info=True)
+        # Return sanitized error message to client
+        sanitized = sanitize_error_message(e)
+        return f"Portfolio analysis failed: {sanitized}"
 
 
 @mcp.tool()
@@ -69,17 +72,19 @@ def get_portfolio_status() -> str:
         asset_count = len(latest_snapshot.get('assets', []))
         
         return f"""📊 Latest Portfolio Status
-        
+
 **Last Updated:** {timestamp}
 **Total Value:** €{total_value:,.2f}
 **Number of Assets:** {asset_count}
 
 Run portfolio analysis to generate a new snapshot and comparison report."""
-        
+
     except Exception as e:
-        error_msg = f"Failed to get portfolio status: {str(e)}"
-        logger.error(error_msg)
-        return error_msg
+        # Log full error for debugging
+        logger.error(f"Failed to get portfolio status: {str(e)}", exc_info=True)
+        # Return sanitized error to client
+        sanitized = sanitize_error_message(e)
+        return f"Failed to get portfolio status: {sanitized}"
 
 
 @mcp.tool()
@@ -120,11 +125,13 @@ def get_portfolio_history_summary() -> str:
 - Initial Value: €{first_value:,.2f}
 - Current Value: €{latest_value:,.2f}
 - Total Change: {change_emoji} {change_sign}€{total_change:,.2f} ({change_sign}{total_change_percent:.2f}%)"""
-        
+
     except Exception as e:
-        error_msg = f"Failed to get portfolio history: {str(e)}"
-        logger.error(error_msg)
-        return error_msg
+        # Log full error for debugging
+        logger.error(f"Failed to get portfolio history: {str(e)}", exc_info=True)
+        # Return sanitized error to client
+        sanitized = sanitize_error_message(e)
+        return f"Failed to get portfolio history: {sanitized}"
 
 
 @mcp.tool()

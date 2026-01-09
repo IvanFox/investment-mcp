@@ -1,12 +1,13 @@
 """
 Portfolio Risk Analysis Module
 
-Calculates comprehensive risk metrics including beta, VaR, 
+Calculates comprehensive risk metrics including beta, VaR,
 concentration risk, correlations, and volatility.
 """
 
 import json
 import os
+import re
 import time
 import logging
 from datetime import datetime, timedelta, timezone
@@ -74,9 +75,38 @@ def ensure_cache_dir() -> None:
         logger.info(f"Created cache directory: {CACHE_DIR}")
 
 
+def sanitize_ticker(ticker: str) -> str:
+    """
+    Sanitize ticker symbol for safe use in file paths.
+
+    Removes any characters that could be used for path traversal attacks
+    or other filesystem exploits. Only allows alphanumeric characters,
+    dots, underscores, and hyphens.
+
+    Args:
+        ticker: Stock ticker symbol (potentially unsafe)
+
+    Returns:
+        str: Sanitized ticker safe for use in file paths
+
+    Example:
+        >>> sanitize_ticker("AAPL")
+        'AAPL'
+        >>> sanitize_ticker("../../etc/passwd")
+        '_____etc_passwd'
+        >>> sanitize_ticker("WISE.L")
+        'WISE.L'
+    """
+    # Replace any character that's not alphanumeric, dot, underscore, or hyphen
+    safe_ticker = re.sub(r'[^A-Za-z0-9._-]', '_', ticker)
+    return safe_ticker
+
+
 def get_cache_path(ticker: str) -> str:
     """
     Get cache file path for a ticker.
+
+    Security: Sanitizes ticker symbol to prevent path traversal attacks.
 
     Args:
         ticker: Stock ticker symbol
@@ -85,7 +115,8 @@ def get_cache_path(ticker: str) -> str:
         str: Path to cache file
     """
     ensure_cache_dir()
-    return os.path.join(CACHE_DIR, f"{ticker}_prices.json")
+    safe_ticker = sanitize_ticker(ticker)
+    return os.path.join(CACHE_DIR, f"{safe_ticker}_prices.json")
 
 
 def is_cache_valid(cache_path: str) -> bool:
